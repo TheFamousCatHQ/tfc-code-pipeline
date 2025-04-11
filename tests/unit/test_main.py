@@ -19,8 +19,10 @@ class TestMain(unittest.TestCase):
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.unlink')
+    @patch('builtins.open', new_callable=unittest.mock.mock_open)
     @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
-    def test_main_success(self, mock_load_dotenv, mock_exists, mock_run):
+    def test_main_success(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when Docker command succeeds."""
         # Setup the mocks
         mock_exists.return_value = True  # Pretend .env file exists
@@ -45,18 +47,36 @@ class TestMain(unittest.TestCase):
             # Verify that load_dotenv was called
             mock_load_dotenv.assert_called_once()
 
-            # Verify that subprocess.run was called with the correct arguments
-            mock_run.assert_called_once()
-            args, kwargs = mock_run.call_args
-            docker_cmd = args[0]
+            # Verify that a Dockerfile was created
+            mock_open.assert_called_once()
+            file_handle = mock_open()
+            file_content = file_handle.write.call_args[0][0]
+            self.assertIn("FROM python:3.12-slim", file_content)
+            self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
+            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
 
-            # Check that we're using Python 3.12
-            self.assertIn("python:3.12-slim", docker_cmd)
+            # Verify that the Docker build command was run
+            self.assertEqual(mock_run.call_count, 2)  # Build and run
+            build_args, build_kwargs = mock_run.call_args_list[0]
+            build_cmd = build_args[0]
+            self.assertEqual(build_cmd[0], "docker")
+            self.assertEqual(build_cmd[1], "build")
+            self.assertIn("-t", build_cmd)
+            self.assertIn("tfc-test-writer-aider:python3.12", build_cmd)
 
-            # Check that we're installing aider and running it with the message "Hello"
-            bash_cmd = docker_cmd[-1]
-            self.assertIn("pip install aider-chat", bash_cmd)
-            self.assertIn("aider --message \"Hello\"", bash_cmd)
+            # Verify that the temporary Dockerfile was removed
+            mock_unlink.assert_called_once()
+
+            # Verify that the Docker run command was called with the correct arguments
+            run_args, run_kwargs = mock_run.call_args_list[1]
+            docker_cmd = run_args[0]
+
+            # Check that we're using the custom image
+            self.assertIn("tfc-test-writer-aider:python3.12", docker_cmd)
+
+            # Check that we're running aider with the message "Hello"
+            self.assertIn("--message", docker_cmd)
+            self.assertIn("Hello", docker_cmd)
 
             # Check that environment variables are passed to Docker
             for key, value in test_env.items():
@@ -65,7 +85,9 @@ class TestMain(unittest.TestCase):
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
-    def test_main_docker_error(self, mock_exists, mock_run):
+    @patch('pathlib.Path.unlink')
+    @patch('builtins.open', new_callable=unittest.mock.mock_open)
+    def test_main_docker_error(self, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when Docker command fails."""
         # Setup the mocks
         mock_exists.return_value = False  # Pretend .env file doesn't exist
@@ -77,9 +99,17 @@ class TestMain(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 1)
 
+        # Verify that a Dockerfile was created
+        mock_open.assert_called_once()
+
+        # Verify that the temporary Dockerfile was removed (cleanup should happen even on error)
+        mock_unlink.assert_called_once()
+
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
-    def test_main_no_env_file(self, mock_exists, mock_run):
+    @patch('pathlib.Path.unlink')
+    @patch('builtins.open', new_callable=unittest.mock.mock_open)
+    def test_main_no_env_file(self, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when .env file doesn't exist."""
         # Setup the mocks
         mock_exists.return_value = False  # Pretend .env file doesn't exist
@@ -97,10 +127,32 @@ class TestMain(unittest.TestCase):
             # Verify the result
             self.assertEqual(result, 0)
 
-            # Verify that subprocess.run was called with the correct arguments
-            mock_run.assert_called_once()
-            args, kwargs = mock_run.call_args
-            docker_cmd = args[0]
+            # Verify that a Dockerfile was created
+            mock_open.assert_called_once()
+            file_handle = mock_open()
+            file_content = file_handle.write.call_args[0][0]
+            self.assertIn("FROM python:3.12-slim", file_content)
+            self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
+            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+
+            # Verify that the Docker build command was run
+            self.assertEqual(mock_run.call_count, 2)  # Build and run
+            build_args, build_kwargs = mock_run.call_args_list[0]
+            build_cmd = build_args[0]
+            self.assertEqual(build_cmd[0], "docker")
+            self.assertEqual(build_cmd[1], "build")
+            self.assertIn("-t", build_cmd)
+            self.assertIn("tfc-test-writer-aider:python3.12", build_cmd)
+
+            # Verify that the temporary Dockerfile was removed
+            mock_unlink.assert_called_once()
+
+            # Verify that the Docker run command was called with the correct arguments
+            run_args, run_kwargs = mock_run.call_args_list[1]
+            docker_cmd = run_args[0]
+
+            # Check that we're using the custom image
+            self.assertIn("tfc-test-writer-aider:python3.12", docker_cmd)
 
             # Check that environment variables are still passed to Docker
             # even without a .env file

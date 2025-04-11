@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Any, Tuple, Set, Callable, Iterator, IO, TypeVar, cast
+from typing import Dict, List, Optional, Union
 
 # Third-party imports
 try:
@@ -80,13 +80,26 @@ ENTRYPOINT ["aider"]
             result = subprocess.run(build_cmd, check=True)
 
             # Remove the temporary Dockerfile
-            dockerfile_path.unlink()
+            # dockerfile_path.unlink()
 
             print(f"Docker image built successfully: {IMAGE_NAME}")
             print(f"You can now run it with: docker run --rm -it {IMAGE_NAME} --message \"Your message\"")
 
             return result.returncode
         else:
+            # Create a Dockerfile
+            dockerfile_path = Path("Dockerfile")
+            with open(dockerfile_path, "w") as f:
+                f.write(DOCKERFILE_CONTENT)
+
+            # Build the Docker image if it doesn't exist
+            print(f"Building Docker image: {IMAGE_NAME}")
+            build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
+            subprocess.run(build_cmd, check=True)
+
+            # Remove the temporary Dockerfile
+            # dockerfile_path.unlink()
+
             # Create Docker command with environment variables
             docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
 
@@ -96,9 +109,8 @@ ENTRYPOINT ["aider"]
 
             # Add the image and command
             docker_cmd.extend([
-                "python:3.12-slim",
-                "bash", "-c",
-                "pip install aider-chat && aider --message \"Hello\""
+                IMAGE_NAME,
+                "--message", "Hello"
             ])
 
             # Run the Docker command
