@@ -29,6 +29,64 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def is_config_file(file_path: Path) -> bool:
+    """Check if a file is a configuration file.
+
+    Args:
+        file_path: Path to the file.
+
+    Returns:
+        True if the file is a configuration file, False otherwise.
+    """
+    # Common configuration file names and patterns
+    config_file_names = {
+        # General config files
+        'config.js', 'config.ts', 'config.json', 'config.yaml', 'config.yml',
+        'config.toml', 'config.ini', 'config.xml', 'config.env',
+        # Package managers
+        'package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
+        'composer.json', 'composer.lock', 'Gemfile', 'Gemfile.lock',
+        'requirements.txt', 'pyproject.toml', 'poetry.lock', 'Pipfile', 'Pipfile.lock',
+        # Build tools
+        'webpack.config.js', 'rollup.config.js', 'vite.config.js', 'babel.config.js',
+        'tsconfig.json', 'tslint.json', 'eslintrc.js', '.eslintrc.js', '.eslintrc.json',
+        'jest.config.js', 'vitest.config.js', 'karma.conf.js',
+        # CI/CD
+        '.travis.yml', '.gitlab-ci.yml', '.github/workflows/main.yml',
+        'Jenkinsfile', 'azure-pipelines.yml', 'bitbucket-pipelines.yml',
+        # Docker
+        'Dockerfile', 'docker-compose.yml', 'docker-compose.yaml',
+        # Other
+        '.env', '.env.example', '.env.local', '.env.development', '.env.production',
+        '.gitignore', '.gitattributes', '.editorconfig', '.prettierrc', '.prettierrc.js',
+        'README.md', 'LICENSE', 'CHANGELOG.md', 'CONTRIBUTING.md'
+    }
+
+    # Check if the file name matches a known config file
+    if file_path.name in config_file_names:
+        return True
+
+    # Check for common config file patterns
+    config_patterns = [
+        # Config files with .config. in the name
+        '.config.',
+        # Files starting with dot
+        '.eslintrc', '.babelrc', '.stylelintrc',
+        # Common config file suffixes
+        'rc.js', 'rc.json', 'rc.yaml', 'rc.yml',
+        # Test config files
+        'test.config.', 'jest.config.', 'vitest.config.', 'karma.config.',
+        # Build config files
+        'webpack.', 'rollup.', 'vite.', 'babel.', 'postcss.config.'
+    ]
+
+    for pattern in config_patterns:
+        if pattern in file_path.name:
+            return True
+
+    return False
+
+
 def is_source_file(file_path: Path) -> bool:
     """Check if a file is a source file.
 
@@ -72,6 +130,11 @@ def is_source_file(file_path: Path) -> bool:
         '.r', '.pl', '.pm', '.lua', '.groovy', '.dart', '.elm'
     }
 
+    # First check if it's a config file - if so, it's not a source file
+    if is_config_file(file_path):
+        return False
+
+    # Otherwise, check if it has a source file extension
     return file_path.suffix.lower() in source_extensions
 
 

@@ -6,7 +6,8 @@ authors = ["Michael Lahr <michael.lahr@gmail.com>"]
 readme = "README.md"
 packages = [
     {include = "tfc_test_writer_aider", from = "src"},
-    {include = "find_source_files", from = "src"}
+    {include = "find_source_files", from = "src"},
+    {include = "explain_code", from = "src"}
 ]
 
 [tool.poetry.dependencies]
@@ -16,6 +17,7 @@ python-dotenv = "^1.0.0"
 [tool.poetry.scripts]
 tfc-test-writer = "src.tfc_test_writer_aider.cli:cli"
 find-source-files = "src.find_source_files:main"
+explain-code = "src.explain_code:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

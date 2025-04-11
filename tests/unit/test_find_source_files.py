@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / 'src'))
 from find_source_files import (
     parse_args,
     is_source_file,
+    is_config_file,
     should_skip_directory,
     find_source_files,
     main
@@ -36,6 +37,31 @@ class TestFindSourceFiles(unittest.TestCase):
                 args = parse_args()
                 self.assertEqual(args.directory, "/path/to/dir")
 
+    def test_is_config_file(self):
+        """Test is_config_file with various file names."""
+        # Test common configuration files
+        self.assertTrue(is_config_file(Path("config.js")))
+        self.assertTrue(is_config_file(Path("webpack.config.js")))
+        self.assertTrue(is_config_file(Path("vitest.config.js")))
+        self.assertTrue(is_config_file(Path("jest.config.js")))
+        self.assertTrue(is_config_file(Path("babel.config.js")))
+        self.assertTrue(is_config_file(Path("tsconfig.json")))
+        self.assertTrue(is_config_file(Path("package.json")))
+        self.assertTrue(is_config_file(Path("pyproject.toml")))
+        self.assertTrue(is_config_file(Path(".eslintrc.js")))
+        self.assertTrue(is_config_file(Path(".prettierrc")))
+        self.assertTrue(is_config_file(Path("Dockerfile")))
+        self.assertTrue(is_config_file(Path(".env")))
+        self.assertTrue(is_config_file(Path(".gitignore")))
+
+        # Test files that are not configuration files
+        self.assertFalse(is_config_file(Path("app.js")))
+        self.assertFalse(is_config_file(Path("main.py")))
+        self.assertFalse(is_config_file(Path("index.ts")))
+        self.assertFalse(is_config_file(Path("component.jsx")))
+        self.assertFalse(is_config_file(Path("styles.css")))
+        self.assertFalse(is_config_file(Path("data.json")))
+
     def test_is_source_file(self):
         """Test is_source_file with various file extensions."""
         # Test Python files
@@ -44,10 +70,10 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertTrue(is_source_file(Path("file.pyi")))
 
         # Test JavaScript/TypeScript files
-        self.assertTrue(is_source_file(Path("file.js")))
-        self.assertTrue(is_source_file(Path("file.jsx")))
-        self.assertTrue(is_source_file(Path("file.ts")))
-        self.assertTrue(is_source_file(Path("file.tsx")))
+        self.assertTrue(is_source_file(Path("app.js")))
+        self.assertTrue(is_source_file(Path("component.jsx")))
+        self.assertTrue(is_source_file(Path("index.ts")))
+        self.assertTrue(is_source_file(Path("component.tsx")))
 
         # Test other common source files
         self.assertTrue(is_source_file(Path("file.java")))
@@ -60,6 +86,17 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertFalse(is_source_file(Path("file.md")))
         self.assertFalse(is_source_file(Path("file.json")))
         self.assertFalse(is_source_file(Path("file.csv")))
+
+        # Test configuration files (should not be considered source files)
+        self.assertFalse(is_source_file(Path("config.js")))
+        self.assertFalse(is_source_file(Path("webpack.config.js")))
+        self.assertFalse(is_source_file(Path("vitest.config.js")))
+        self.assertFalse(is_source_file(Path("jest.config.js")))
+        self.assertFalse(is_source_file(Path("babel.config.js")))
+        self.assertFalse(is_source_file(Path("tsconfig.json")))
+        self.assertFalse(is_source_file(Path("package.json")))
+        self.assertFalse(is_source_file(Path("pyproject.toml")))
+        self.assertFalse(is_source_file(Path(".eslintrc.js")))
 
     def test_should_skip_directory(self):
         """Test should_skip_directory with various directory names."""
@@ -94,7 +131,7 @@ class TestFindSourceFiles(unittest.TestCase):
             # Create some source files
             source_files_to_create = [
                 "file1.py",
-                "file2.js",
+                "app.js",
                 "file3.java",
                 "subdir/file4.cpp"
             ]
@@ -106,8 +143,20 @@ class TestFindSourceFiles(unittest.TestCase):
                 "subdir/file7.json"
             ]
 
+            # Create some config files (should be skipped even though they have source extensions)
+            config_files = [
+                "webpack.config.js",
+                "vitest.config.js",
+                "jest.config.js",
+                "babel.config.js",
+                "tsconfig.json",
+                "package.json",
+                "pyproject.toml",
+                ".eslintrc.js"
+            ]
+
             # Create the files
-            for file_path in source_files_to_create + non_source_files:
+            for file_path in source_files_to_create + non_source_files + config_files:
                 full_path = Path(temp_dir) / file_path
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.touch()
@@ -131,6 +180,11 @@ class TestFindSourceFiles(unittest.TestCase):
 
             # Check that non-source files are not in the result
             for file_path in non_source_files:
+                full_path = str(Path(temp_dir) / file_path)
+                self.assertNotIn(full_path, found_files)
+
+            # Check that config files are not in the result (even though some have .js extension)
+            for file_path in config_files:
                 full_path = str(Path(temp_dir) / file_path)
                 self.assertNotIn(full_path, found_files)
 
