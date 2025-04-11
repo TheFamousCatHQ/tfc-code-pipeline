@@ -27,11 +27,13 @@ Each processor only needs to define its specific message and description, while 
 - **Purpose**: Writes unit tests for source files without using mocks
 - **Default Message**: "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality."
 
-### TokenUtilsTestProcessor
+### TokenUtilsTestProcessor (Planned)
 
-- **Script**: `write-token-utils-tests`
+- **Script**: `write-token-utils-tests` (not yet implemented)
 - **Purpose**: Specialized processor for writing tests for tokenUtils.js
 - **Default Message**: "write unit tests without using mocks for all functions found in tokenUtils.js. If tests already exists, check if their are up to date, if not update them to cover the current functionality."
+
+Note: This processor is planned but not yet implemented as a Poetry script.
 
 ## Creating a New Processor
 
@@ -88,32 +90,113 @@ This project uses Poetry for dependency management. To install and use the comma
 
 After installation, all commands will be available in your PATH when the Poetry environment is active.
 
-## Usage
+## Poetry Scripts
 
-Each processor can be used with the following arguments:
+This project provides several Poetry scripts that can be used to process code files. All scripts are available after installation when the Poetry environment is active.
 
+### find-source-files
+
+Finds source files in a directory, excluding dependencies, tests, and other non-core files.
+
+**Usage:**
+```bash
+find-source-files --directory /path/to/source
+```
+
+**Options:**
+- `--directory`: Directory to search for source files (required)
+
+**Example:**
+```bash
+# Find source files in a directory
+find-source-files --directory /path/to/project
+```
+
+### explain-code
+
+Explains code in source files using aider. This script finds source files in a specified directory and then calls aider for each file with the message "explain this code".
+
+**Usage:**
+```bash
+explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
+```
+
+**Options:**
 - `--directory`: Directory to search for source files (required)
 - `--file`: Specific file to process (optional, overrides directory search)
-- `--message`: Custom message to pass to aider (optional, defaults to the processor's default message)
+- `--message`: Custom message to pass to aider (optional, defaults to "explain this code")
 
-Example:
-
+**Example:**
 ```bash
-# Activate the Poetry environment first
-poetry shell
-
 # Explain code in a directory
 explain-code --directory /path/to/source
 
+# Explain a specific file with a custom message
+explain-code --file /path/to/file.js --message "explain this code in detail"
+```
+
+### write-tests
+
+Writes unit tests for source files using aider. This script finds source files in a specified directory and then calls aider for each file with a message to write unit tests without using mocks.
+
+**Usage:**
+```bash
+write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
+```
+
+**Options:**
+- `--directory`: Directory to search for source files (required)
+- `--file`: Specific file to process (optional, overrides directory search)
+- `--message`: Custom message to pass to aider (optional, defaults to "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality.")
+
+**Example:**
+```bash
+# Write tests for all source files in a directory
+write-tests --directory /path/to/source
+
 # Write tests for a specific file with a custom message
 write-tests --file /path/to/file.js --message "write comprehensive unit tests for this file"
-
-# Write tests for tokenUtils.js
-write-token-utils-tests --directory /path/to/project
 ```
 
-Alternatively, you can run the commands without activating the environment:
+### tfc-code-pipeline
 
+A Docker-based wrapper for the other scripts. It creates a Docker container based on Python 3.12, installs Aider and the package itself in the container, and runs the specified command with the provided messages.
+
+**Usage:**
 ```bash
-poetry run explain-code --directory /path/to/source
+tfc-code-pipeline [--build-only] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests]
 ```
+
+**Options:**
+- `--build-only`: Only build the Docker image without running the container
+- `--run`: Run the Docker container with the provided messages
+- `--src`: Directory to mount in the Docker container under /src
+- `--messages`: Custom message to pass to aider (default: "Hello")
+- `--cmd`: Command to run in the Docker container (choices: "explain_code" or "write_tests", default: "explain_code")
+
+**Example:**
+```bash
+# Build the Docker image only
+tfc-code-pipeline --build-only
+
+# Run explain-code in a Docker container
+tfc-code-pipeline --run --src /path/to/source --messages "explain this code" --cmd explain_code
+
+# Run write-tests in a Docker container
+tfc-code-pipeline --run --src /path/to/source --cmd write_tests
+```
+
+## Running Scripts
+
+You can run the scripts in two ways:
+
+1. **Activate the Poetry environment first:**
+   ```bash
+   poetry shell
+   explain-code --directory /path/to/source
+   ```
+
+2. **Run without activating the environment:**
+   ```bash
+   poetry run explain-code --directory /path/to/source
+   ```
