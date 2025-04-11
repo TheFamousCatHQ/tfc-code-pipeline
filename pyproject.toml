@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "tfc-test-writer-aider"
+name = "tfc-code-pipeline"
 version = "0.1.0"
 description = "A tool to assist with writing tests for TFC"
 authors = ["Michael Lahr <michael.lahr@gmail.com>"]
 readme = "README.md"
 packages = [
-    {include = "tfc_test_writer_aider", from = "src"},
+    {include = "tfc_code_pipeline", from = "src"},
     {include = "find_source_files", from = "src"},
     {include = "explain_code", from = "src"},
     {include = "write_tests", from = "src"},
@@ -18,7 +18,7 @@ python = ">=3.11"
 python-dotenv = "^1.0.0"
 
 [tool.poetry.scripts]
-tfc-test-writer = "tfc_test_writer_aider.cli:cli"
+tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
 find-source-files = "find_source_files:main"
 explain-code = "explain_code:main"
 write-tests = "write_tests:main"

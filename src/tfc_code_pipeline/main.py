@@ -1,6 +1,6 @@
-"""Main module for TFC Test Writer Aider.
+"""Main module for TFC Code Pipeline.
 
-This module provides the main functionality for the TFC Test Writer Aider,
+This module provides the main functionality for the TFC Code Pipeline,
 including Docker container creation and environment variable handling.
 """
 
@@ -48,7 +48,7 @@ def main(build_only: bool = False, run: bool = False, src: Optional[str] = None,
         Exit code (0 for success, non-zero for failure).
     """
     # Define constants
-    IMAGE_NAME = "tfc-test-writer-aider:python3.12"
+    IMAGE_NAME = "tfc-code-pipeline:python3.12"
     DOCKERFILE_CONTENT = """\
 FROM python:3.12-slim
 
@@ -63,11 +63,11 @@ ENTRYPOINT ["/bin/bash"]
 """
 
     if build_only:
-        print(f"TFC Test Writer Aider - Building Docker image: {IMAGE_NAME}...")
+        print(f"TFC Code Pipeline - Building Docker image: {IMAGE_NAME}...")
     elif run:
-        print(f"TFC Test Writer Aider - Running {cmd} in Docker container...")
+        print(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
-        print(f"TFC Test Writer Aider - Starting {cmd} in Docker container...")
+        print(f"TFC Code Pipeline - Starting {cmd} in Docker container...")
 
     try:
         # Load environment variables from .env file

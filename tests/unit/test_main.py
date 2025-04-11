@@ -1,6 +1,6 @@
 """Tests for the main module.
 
-This module contains tests for the main functionality of the TFC Test Writer Aider.
+This module contains tests for the main functionality of the TFC Code Pipeline.
 """
 
 import os
@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 from unittest.mock import patch, MagicMock
 
 # Local application imports
-from src.tfc_test_writer_aider.main import main
+from src.tfc_code_pipeline.main import main
 
 
 class TestMain(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_success(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when Docker command succeeds."""
         # Setup the mocks
@@ -53,7 +53,7 @@ class TestMain(unittest.TestCase):
             file_content = file_handle.write.call_args[0][0]
             self.assertIn("FROM python:3.12-slim", file_content)
             self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+            self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
 
             # Verify that the Docker build command was run
             self.assertEqual(mock_run.call_count, 2)  # Build and run
@@ -62,7 +62,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfc-test-writer-aider:python3.12", build_cmd)
+            self.assertIn("tfc-code-pipeline:python3.12", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -72,7 +72,7 @@ class TestMain(unittest.TestCase):
             docker_cmd = run_args[0]
 
             # Check that we're using the custom image
-            self.assertIn("tfc-test-writer-aider:python3.12", docker_cmd)
+            self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
 
             # Check that we're running aider with the message "Hello"
             self.assertIn("--message", docker_cmd)
@@ -134,7 +134,7 @@ class TestMain(unittest.TestCase):
             file_content = file_handle.write.call_args[0][0]
             self.assertIn("FROM python:3.12-slim", file_content)
             self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+            self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
 
             # Verify that the Docker build command was run
             self.assertEqual(mock_run.call_count, 2)  # Build and run
@@ -143,7 +143,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfc-test-writer-aider:python3.12", build_cmd)
+            self.assertIn("tfc-code-pipeline:python3.12", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -153,7 +153,7 @@ class TestMain(unittest.TestCase):
             docker_cmd = run_args[0]
 
             # Check that we're using the custom image
-            self.assertIn("tfc-test-writer-aider:python3.12", docker_cmd)
+            self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
 
             # Check that environment variables are still passed to Docker
             # even without a .env file
@@ -184,7 +184,7 @@ class TestMain(unittest.TestCase):
         file_content = file_handle.write.call_args[0][0]
         self.assertIn("FROM python:3.12-slim", file_content)
         self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-        self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+        self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
 
         # Verify that the Docker build command was run
         mock_run.assert_called_once()
@@ -193,7 +193,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(docker_cmd[0], "docker")
         self.assertEqual(docker_cmd[1], "build")
         self.assertIn("-t", docker_cmd)
-        self.assertIn("tfc-test-writer-aider:python3.12", docker_cmd)
+        self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
 
         # Verify that the temporary Dockerfile was removed
         mock_unlink.assert_called_once()
@@ -202,7 +202,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function with run=True."""
         # Setup the mocks
@@ -236,7 +236,7 @@ class TestMain(unittest.TestCase):
             file_content = file_handle.write.call_args[0][0]
             self.assertIn("FROM python:3.12-slim", file_content)
             self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+            self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
 
             # Since we're simulating Docker not being available, we don't need to check
             # the Docker command arguments
@@ -245,7 +245,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run_with_src(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option."""
         # Setup the mocks
@@ -283,7 +283,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run_with_src_not_exists(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option when src doesn't exist."""
         # Setup the mocks
@@ -318,7 +318,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run_with_src_not_dir(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option when src is not a directory."""
         # Setup the mocks
@@ -348,7 +348,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run_with_custom_message(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function with run=True and custom message."""
         # Setup the mocks
@@ -383,7 +383,7 @@ class TestMain(unittest.TestCase):
             file_content = file_handle.write.call_args[0][0]
             self.assertIn("FROM python:3.12-slim", file_content)
             self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-            self.assertIn("ENTRYPOINT [\"aider\"]", file_content)
+            self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
 
             # Since we're simulating Docker not being available, we don't need to check
             # the Docker command arguments
