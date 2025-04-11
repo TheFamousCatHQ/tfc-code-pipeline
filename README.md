@@ -66,6 +66,28 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
+## Installation
+
+This project uses Poetry for dependency management. To install and use the commands:
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd tfc-test-writer-aider
+   ```
+
+2. Install the package using Poetry:
+   ```bash
+   poetry install
+   ```
+
+3. Activate the Poetry virtual environment:
+   ```bash
+   poetry shell
+   ```
+
+After installation, all commands will be available in your PATH when the Poetry environment is active.
+
 ## Usage
 
 Each processor can be used with the following arguments:
@@ -77,6 +99,9 @@ Each processor can be used with the following arguments:
 Example:
 
 ```bash
+# Activate the Poetry environment first
+poetry shell
+
 # Explain code in a directory
 explain-code --directory /path/to/source
 
@@ -85,4 +110,10 @@ write-tests --file /path/to/file.js --message "write comprehensive unit tests fo
 
 # Write tests for tokenUtils.js
 write-token-utils-tests --directory /path/to/project
+```
+
+Alternatively, you can run the commands without activating the environment:
+
+```bash
+poetry run explain-code --directory /path/to/source
 ```

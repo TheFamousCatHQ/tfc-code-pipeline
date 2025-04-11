@@ -22,7 +22,6 @@ tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
 find-source-files = "find_source_files:main"
 explain-code = "explain_code:main"
 write-tests = "write_tests:main"
-write-token-utils-tests = "write_token_utils_tests:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
