@@ -37,6 +37,11 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default="Hello",
         help="Messages to pass to the Docker container"
     )
+    parser.add_argument(
+        "--src",
+        type=str,
+        help="Directory to mount in the Docker container under /src"
+    )
     return parser.parse_args(args)
 
 
@@ -49,7 +54,7 @@ def cli() -> int:
         Exit code (0 for success, non-zero for failure).
     """
     args = parse_args()
-    return main(build_only=args.build_only, run=args.run, messages=args.messages)
+    return main(build_only=args.build_only, run=args.run, messages=args.messages, src=args.src)
 
 
 if __name__ == "__main__":

@@ -28,17 +28,19 @@ except ImportError:
         return False
 
 
-def main(build_only: bool = False, run: bool = False, messages: str = "Hello") -> int:
+def main(build_only: bool = False, run: bool = False, messages: str = "Hello", src: Optional[str] = None) -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
     installs Aider, and runs the command 'aider --message "<messages>"'.
     Exposes all environment variables from .env file to the Docker container.
+    Optionally mounts a source directory in the container under /src.
 
     Args:
         build_only: If True, only build the Docker image without running the container.
         run: If True, run the Docker container with the provided messages.
         messages: Messages to pass to the Docker container. Defaults to "Hello".
+        src: Directory to mount in the Docker container under /src. Defaults to None.
 
     Returns:
         Exit code (0 for success, non-zero for failure).
@@ -109,6 +111,18 @@ ENTRYPOINT ["aider"]
             for key, value in env_vars.items():
                 docker_cmd.extend(["-e", f"{key}={value}"])
 
+            # Mount source directory if provided
+            if src:
+                src_path = Path(src).resolve()
+                if not src_path.exists():
+                    print(f"Error: Source directory '{src}' does not exist.", file=sys.stderr)
+                    return 1
+                if not src_path.is_dir():
+                    print(f"Error: '{src}' is not a directory.", file=sys.stderr)
+                    return 1
+                print(f"Mounting source directory: {src_path} -> /src")
+                docker_cmd.extend(["-v", f"{src_path}:/src"])
+
             # Add the image and command
             docker_cmd.extend([
                 IMAGE_NAME,
@@ -139,6 +153,18 @@ ENTRYPOINT ["aider"]
             # Add each environment variable to the Docker command
             for key, value in env_vars.items():
                 docker_cmd.extend(["-e", f"{key}={value}"])
+
+            # Mount source directory if provided
+            if src:
+                src_path = Path(src).resolve()
+                if not src_path.exists():
+                    print(f"Error: Source directory '{src}' does not exist.", file=sys.stderr)
+                    return 1
+                if not src_path.is_dir():
+                    print(f"Error: '{src}' is not a directory.", file=sys.stderr)
+                    return 1
+                print(f"Mounting source directory: {src_path} -> /src")
+                docker_cmd.extend(["-v", f"{src_path}:/src"])
 
             # Add the image and command
             docker_cmd.extend([

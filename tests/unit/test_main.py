@@ -243,6 +243,109 @@ class TestMain(unittest.TestCase):
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.is_dir')
+    @patch('pathlib.Path.resolve')
+    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    def test_main_run_with_src(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
+        """Test the main function with run=True and src option."""
+        # Setup the mocks
+        mock_exists.return_value = True  # Pretend both .env and src directory exist
+        mock_is_dir.return_value = True  # Pretend src is a directory
+        mock_resolve.return_value = Path("/resolved/path/to/src")  # Resolved path
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+
+        # Set some test environment variables
+        test_env = {
+            'TEST_VAR1': 'value1',
+            'TEST_VAR2': 'value2',
+            'PATH': '/usr/bin:/bin'  # Common environment variable
+        }
+
+        with patch.dict(os.environ, test_env, clear=True):
+            # Call the main function with run=True and src option
+            with patch('builtins.open', new_callable=unittest.mock.mock_open) as mock_open:
+                result = main(run=True, src="/path/to/src")
+
+                # Verify the result
+                self.assertEqual(result, 0)
+
+                # Verify that the Docker run command was called with the correct arguments
+                run_args, run_kwargs = mock_run.call_args_list[0]
+                docker_cmd = run_args[0]
+
+                # Check that we're mounting the source directory
+                self.assertIn("-v", docker_cmd)
+                self.assertIn("/resolved/path/to/src:/src", docker_cmd)
+
+    @patch('subprocess.run')
+    @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.is_dir')
+    @patch('pathlib.Path.resolve')
+    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    def test_main_run_with_src_not_exists(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
+        """Test the main function with run=True and src option when src doesn't exist."""
+        # Setup the mocks
+        # Set up mock to return False for src_dir
+        def exists_side_effect(path):
+            if hasattr(path, 'name') and path.name == "src_dir":
+                return False
+            return True
+        mock_exists.side_effect = exists_side_effect
+        mock_is_dir.return_value = False  # Not relevant as we'll fail on exists check
+        mock_resolve.return_value = Path("/resolved/path/to/src_dir")  # Resolved path
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+
+        # Set some test environment variables
+        test_env = {
+            'TEST_VAR1': 'value1',
+            'TEST_VAR2': 'value2',
+            'PATH': '/usr/bin:/bin'  # Common environment variable
+        }
+
+        with patch.dict(os.environ, test_env, clear=True):
+            # Call the main function with run=True and src option
+            with patch('builtins.open', new_callable=unittest.mock.mock_open):
+                result = main(run=True, src="src_dir")
+
+                # Verify the result - should be 1 because src doesn't exist
+                self.assertEqual(result, 1)
+
+    @patch('subprocess.run')
+    @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.is_dir')
+    @patch('pathlib.Path.resolve')
+    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    def test_main_run_with_src_not_dir(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
+        """Test the main function with run=True and src option when src is not a directory."""
+        # Setup the mocks
+        mock_exists.return_value = True  # Pretend src exists
+        mock_is_dir.return_value = False  # But it's not a directory
+        mock_resolve.return_value = Path("/resolved/path/to/src_file")  # Resolved path
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_run.return_value = mock_result
+
+        # Set some test environment variables
+        test_env = {
+            'TEST_VAR1': 'value1',
+            'TEST_VAR2': 'value2',
+            'PATH': '/usr/bin:/bin'  # Common environment variable
+        }
+
+        with patch.dict(os.environ, test_env, clear=True):
+            # Call the main function with run=True and src option
+            with patch('builtins.open', new_callable=unittest.mock.mock_open):
+                result = main(run=True, src="src_file")
+
+                # Verify the result - should be 1 because src is not a directory
+                self.assertEqual(result, 1)
+
+    @patch('subprocess.run')
+    @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
     @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
