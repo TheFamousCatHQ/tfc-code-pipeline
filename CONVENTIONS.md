@@ -11,6 +11,14 @@ This document outlines the basic coding conventions for the TFC Test Writer Aide
 - Use UPPERCASE for constants
 - Use CamelCase for class names
 
+## Type Hints
+
+- Make extensive use of type hints for all function parameters and return values
+- Follow [PEP 484](https://www.python.org/dev/peps/pep-0484/) for type annotations
+- Use the typing module for complex types (List, Dict, Optional, etc.)
+- Type hint class attributes in class definitions or __init__ methods
+- Use type hints for variables when their type is not obvious
+
 ## Documentation
 
 - All modules, classes, and functions should have docstrings
