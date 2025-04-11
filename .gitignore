@@ -41,3 +41,4 @@ htmlcov/
 *.log
 .aider*
 Dockerfile
+.output.txt
