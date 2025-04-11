@@ -2,8 +2,10 @@
 name = "tfc-test-writer-aider"
 version = "0.1.0"
 description = ""
+package-mode = false
+
 authors = [
-    {name = "Michael Lahr",email = "michael.lahr@gmail.com"}
+    { name = "Michael Lahr", email = "michael.lahr@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.11"
