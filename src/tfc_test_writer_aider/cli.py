@@ -5,10 +5,10 @@ including argument parsing and execution of the main functionality.
 """
 
 import argparse
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Optional, Sequence
 
 # Local application imports
-from src.tfc_test_writer_aider.main import main
+from tfc_test_writer_aider.main import main
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -40,7 +40,8 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--src",
         type=str,
-        help="Directory to mount in the Docker container under /src"
+        required=True,
+        help="Directory to mount in the Docker container under /src (required for explain-code)"
     )
     return parser.parse_args(args)
 

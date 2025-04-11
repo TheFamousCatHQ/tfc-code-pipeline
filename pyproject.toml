@@ -15,9 +15,9 @@ python = ">=3.11"
 python-dotenv = "^1.0.0"
 
 [tool.poetry.scripts]
-tfc-test-writer = "src.tfc_test_writer_aider.cli:cli"
-find-source-files = "src.find_source_files:main"
-explain-code = "src.explain_code:main"
+tfc-test-writer = "tfc_test_writer_aider.cli:cli"
+find-source-files = "find_source_files:main"
+explain-code = "explain_code:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

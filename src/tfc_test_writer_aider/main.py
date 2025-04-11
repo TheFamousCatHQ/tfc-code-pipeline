@@ -32,7 +32,8 @@ def main(build_only: bool = False, run: bool = False, messages: str = "Hello", s
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
-    installs Aider, and runs the command 'aider --message "<messages>"'.
+    installs Aider and the explain-code script, and runs the command 
+    'explain-code --directory "/src" --message "<messages>"'.
     Exposes all environment variables from .env file to the Docker container.
     Optionally mounts a source directory in the container under /src.
 
@@ -50,17 +51,22 @@ def main(build_only: bool = False, run: bool = False, messages: str = "Hello", s
     DOCKERFILE_CONTENT = """\
 FROM python:3.12-slim
 
+# Install aider-chat and our package
 RUN pip install --no-cache-dir aider-chat
+COPY . /app
+WORKDIR /app
+RUN pip install --no-cache-dir -e .
 
-ENTRYPOINT ["aider"]
+# Use explain-code script as entrypoint
+ENTRYPOINT ["explain-code"]
 """
 
     if build_only:
         print(f"TFC Test Writer Aider - Building Docker image: {IMAGE_NAME}...")
     elif run:
-        print(f"TFC Test Writer Aider - Running Docker container with message: '{messages}'...")
+        print(f"TFC Test Writer Aider - Running explain-code in Docker container with message: '{messages}'...")
     else:
-        print("TFC Test Writer Aider - Starting Docker container...")
+        print("TFC Test Writer Aider - Starting explain-code in Docker container...")
 
     try:
         # Load environment variables from .env file
@@ -89,7 +95,7 @@ ENTRYPOINT ["aider"]
             dockerfile_path.unlink()
 
             print(f"Docker image built successfully: {IMAGE_NAME}")
-            print(f"You can now run it with: docker run --rm -it {IMAGE_NAME} --message \"Your message\"")
+            print(f"You can now run it with: docker run --rm -it -v /path/to/source:/src {IMAGE_NAME} --directory \"/src\" --message \"Your message\"")
 
             return result.returncode
         elif run:
@@ -126,11 +132,12 @@ ENTRYPOINT ["aider"]
             # Add the image and command
             docker_cmd.extend([
                 IMAGE_NAME,
+                "--directory", "/src",
                 "--message", messages
             ])
 
             # Run the Docker command
-            print(f"Running Docker container with message: '{messages}'")
+            print(f"Running explain-code in Docker container with message: '{messages}'")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
         else:
@@ -169,6 +176,7 @@ ENTRYPOINT ["aider"]
             # Add the image and command
             docker_cmd.extend([
                 IMAGE_NAME,
+                "--directory", "/src",
                 "--message", "Hello"
             ])
 

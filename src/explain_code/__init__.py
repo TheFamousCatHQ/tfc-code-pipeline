@@ -11,7 +11,7 @@ import subprocess
 import sys
 from typing import List, Optional, Sequence
 
-from src.find_source_files import find_source_files
+from find_source_files import find_source_files
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -53,11 +53,11 @@ def explain_files(directory: str, message: str) -> List[str]:
     """
     # Find source files in the directory
     source_files = find_source_files(directory)
-    
+
     if not source_files:
         print(f"No source files found in directory: {directory}", file=sys.stderr)
         return []
-    
+
     # Process each file with aider
     processed_files = []
     for file_path in source_files:
@@ -75,7 +75,7 @@ def explain_files(directory: str, message: str) -> List[str]:
         except FileNotFoundError:
             print("Error: 'aider' command not found. Please ensure it is installed.", file=sys.stderr)
             break
-    
+
     return processed_files
 
 
@@ -88,11 +88,11 @@ def main() -> int:
     try:
         args = parse_args()
         processed_files = explain_files(args.directory, args.message)
-        
+
         print(f"\nProcessed {len(processed_files)} files:")
         for file in processed_files:
             print(f"  - {file}")
-        
+
         return 0
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
