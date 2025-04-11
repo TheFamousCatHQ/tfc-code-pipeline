@@ -7,7 +7,6 @@ package-mode = false
 authors = [
     { name = "Michael Lahr", email = "michael.lahr@gmail.com" }
 ]
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
 ]
