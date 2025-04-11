@@ -1,14 +1,17 @@
 [tool.poetry]
 name = "tfc-test-writer-aider"
 version = "0.1.0"
-description = ""
+description = "A tool to assist with writing tests for TFC"
 authors = ["Michael Lahr <michael.lahr@gmail.com>"]
-package-mode = false
 readme = "README.md"
+packages = [{include = "tfc_test_writer_aider"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-dotenv = "^0.9.9"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.scripts]
+tfc-test-writer = "tfc_test_writer_aider.cli:cli"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
