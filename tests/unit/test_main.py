@@ -1,11 +1,16 @@
-"""Tests for the main module."""
+"""Tests for the main module.
+
+This module contains tests for the main functionality of the TFC Test Writer Aider.
+"""
 
 import os
 import subprocess
 import unittest
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union, cast
 from unittest.mock import patch, MagicMock
 
+# Local application imports
 from tfc_test_writer_aider.main import main
 
 

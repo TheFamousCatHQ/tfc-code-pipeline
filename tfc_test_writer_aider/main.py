@@ -1,20 +1,34 @@
-"""Main module for TFC Test Writer Aider."""
+"""Main module for TFC Test Writer Aider.
+
+This module provides the main functionality for the TFC Test Writer Aider,
+including Docker container creation and environment variable handling.
+"""
 
 import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional, Union, Any, Tuple, Set, Callable, Iterator, IO, TypeVar, cast
+
+# Third-party imports
 try:
     from dotenv import load_dotenv
 except ImportError:
     # Fallback if dotenv is not installed
-    def load_dotenv(dotenv_path=None):
-        """Dummy function if dotenv is not installed."""
+    def load_dotenv(dotenv_path: Optional[Union[str, Path]] = None) -> bool:
+        """Dummy function if dotenv is not installed.
+
+        Args:
+            dotenv_path: Path to the .env file. Defaults to None.
+
+        Returns:
+            bool: Always False as no environment variables are loaded.
+        """
         print("Warning: python-dotenv package not installed. Environment variables from .env file will not be loaded.")
         return False
 
 
-def main(build_only=False):
+def main(build_only: bool = False) -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
@@ -22,16 +36,23 @@ def main(build_only=False):
     Exposes all environment variables from .env file to the Docker container.
 
     Args:
-        build_only (bool): If True, only build the Docker image without running the container.
+        build_only: If True, only build the Docker image without running the container.
 
     Returns:
-        int: Exit code (0 for success, non-zero for failure)
+        Exit code (0 for success, non-zero for failure).
     """
-    # Define the Docker image name
-    image_name = "tfc-test-writer-aider:python3.12"
+    # Define constants
+    IMAGE_NAME = "tfc-test-writer-aider:python3.12"
+    DOCKERFILE_CONTENT = """\
+FROM python:3.12-slim
+
+RUN pip install --no-cache-dir aider-chat
+
+ENTRYPOINT ["aider"]
+"""
 
     if build_only:
-        print(f"TFC Test Writer Aider - Building Docker image: {image_name}...")
+        print(f"TFC Test Writer Aider - Building Docker image: {IMAGE_NAME}...")
     else:
         print("TFC Test Writer Aider - Starting Docker container...")
 
@@ -45,36 +66,29 @@ def main(build_only=False):
             print("No .env file found. Using system environment variables.")
 
         # Get all environment variables
-        env_vars = os.environ
+        env_vars: Dict[str, str] = dict(os.environ)
 
         if build_only:
             # Create a Dockerfile
-            dockerfile_content = """\
-FROM python:3.12-slim
-
-RUN pip install --no-cache-dir aider-chat
-
-ENTRYPOINT ["aider"]
-"""
             dockerfile_path = Path("Dockerfile")
             with open(dockerfile_path, "w") as f:
-                f.write(dockerfile_content)
+                f.write(DOCKERFILE_CONTENT)
 
             # Build the Docker image
-            print(f"Building Docker image: {image_name}")
-            build_cmd = ["docker", "build", "-t", image_name, "."]
+            print(f"Building Docker image: {IMAGE_NAME}")
+            build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
             result = subprocess.run(build_cmd, check=True)
 
             # Remove the temporary Dockerfile
             dockerfile_path.unlink()
 
-            print(f"Docker image built successfully: {image_name}")
-            print(f"You can now run it with: docker run --rm -it {image_name} --message \"Your message\"")
+            print(f"Docker image built successfully: {IMAGE_NAME}")
+            print(f"You can now run it with: docker run --rm -it {IMAGE_NAME} --message \"Your message\"")
 
             return result.returncode
         else:
             # Create Docker command with environment variables
-            docker_cmd = ["docker", "run", "--rm", "-it"]
+            docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
 
             # Add each environment variable to the Docker command
             for key, value in env_vars.items():
