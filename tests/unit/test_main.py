@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 from unittest.mock import patch, MagicMock
 
 # Local application imports
-from tfc_test_writer_aider.main import main
+from src.tfc_test_writer_aider.main import main
 
 
 class TestMain(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_success(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when Docker command succeeds."""
         # Setup the mocks
@@ -202,7 +202,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_run(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function with run=True."""
         # Setup the mocks
@@ -245,7 +245,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_run_with_src(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option."""
         # Setup the mocks
@@ -283,7 +283,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_run_with_src_not_exists(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option when src doesn't exist."""
         # Setup the mocks
@@ -318,7 +318,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_run_with_src_not_dir(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option when src is not a directory."""
         # Setup the mocks
@@ -348,7 +348,7 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.exists')
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('tfc_test_writer_aider.main.load_dotenv', autospec=True)
+    @patch('src.tfc_test_writer_aider.main.load_dotenv', autospec=True)
     def test_main_run_with_custom_message(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function with run=True and custom message."""
         # Setup the mocks

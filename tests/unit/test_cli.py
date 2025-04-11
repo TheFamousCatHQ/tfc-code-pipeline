@@ -4,11 +4,12 @@ This module contains tests for the command-line interface of the TFC Test Writer
 """
 
 import unittest
-from unittest.mock import patch, MagicMock
 from argparse import Namespace
+from unittest.mock import patch
+
 
 # Local application imports
-from tfc_test_writer_aider.cli import parse_args, cli
+from src.tfc_test_writer_aider.cli import parse_args, cli
 
 
 class TestCli(unittest.TestCase):
@@ -64,8 +65,8 @@ class TestCli(unittest.TestCase):
             self.assertEqual(args.messages, "Hello")
             self.assertEqual(args.src, "/path/to/src")
 
-    @patch('tfc_test_writer_aider.cli.parse_args')
-    @patch('tfc_test_writer_aider.cli.main')
+    @patch('src.tfc_test_writer_aider.cli.parse_args')
+    @patch('src.tfc_test_writer_aider.cli.main')
     def test_cli(self, mock_main, mock_parse_args):
         """Test the cli function."""
         # Setup mocks
@@ -80,8 +81,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=False, messages="Hello", src=None)
 
-    @patch('tfc_test_writer_aider.cli.parse_args')
-    @patch('tfc_test_writer_aider.cli.main')
+    @patch('src.tfc_test_writer_aider.cli.parse_args')
+    @patch('src.tfc_test_writer_aider.cli.main')
     def test_cli_build_only(self, mock_main, mock_parse_args):
         """Test the cli function with build_only=True."""
         # Setup mocks
@@ -96,8 +97,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=True, run=False, messages="Hello", src=None)
 
-    @patch('tfc_test_writer_aider.cli.parse_args')
-    @patch('tfc_test_writer_aider.cli.main')
+    @patch('src.tfc_test_writer_aider.cli.parse_args')
+    @patch('src.tfc_test_writer_aider.cli.main')
     def test_cli_run(self, mock_main, mock_parse_args):
         """Test the cli function with run=True."""
         # Setup mocks
@@ -112,8 +113,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=True, messages="Hello", src=None)
 
-    @patch('tfc_test_writer_aider.cli.parse_args')
-    @patch('tfc_test_writer_aider.cli.main')
+    @patch('src.tfc_test_writer_aider.cli.parse_args')
+    @patch('src.tfc_test_writer_aider.cli.main')
     def test_cli_run_with_messages(self, mock_main, mock_parse_args):
         """Test the cli function with run=True and custom messages."""
         # Setup mocks
@@ -128,8 +129,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=True, messages="Custom message", src=None)
 
-    @patch('tfc_test_writer_aider.cli.parse_args')
-    @patch('tfc_test_writer_aider.cli.main')
+    @patch('src.tfc_test_writer_aider.cli.parse_args')
+    @patch('src.tfc_test_writer_aider.cli.main')
     def test_cli_run_with_src(self, mock_main, mock_parse_args):
         """Test the cli function with run=True and src option."""
         # Setup mocks

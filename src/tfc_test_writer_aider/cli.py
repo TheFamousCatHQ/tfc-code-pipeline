@@ -8,7 +8,7 @@ import argparse
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 # Local application imports
-from tfc_test_writer_aider.main import main
+from src.tfc_test_writer_aider.main import main
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
