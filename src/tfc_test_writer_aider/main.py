@@ -28,20 +28,20 @@ except ImportError:
         return False
 
 
-def main(build_only: bool = False, run: bool = False, messages: str = "Hello", src: Optional[str] = None) -> int:
+def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, messages: str = "Hello") -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
-    installs Aider and the explain-code script, and runs the command 
-    'explain-code --directory "/src" --message "<messages>"'.
+    installs Aider and the explain-code script, and runs the command
+    'aider --message "<messages>"'.
     Exposes all environment variables from .env file to the Docker container.
     Optionally mounts a source directory in the container under /src.
 
     Args:
         build_only: If True, only build the Docker image without running the container.
         run: If True, run the Docker container with the provided messages.
-        messages: Messages to pass to the Docker container. Defaults to "Hello".
         src: Directory to mount in the Docker container under /src. Defaults to None.
+        messages: Custom message to pass to aider. Defaults to "Hello".
 
     Returns:
         Exit code (0 for success, non-zero for failure).
@@ -57,14 +57,14 @@ COPY . /app
 WORKDIR /app
 RUN pip install --no-cache-dir -e .
 
-# Use explain-code script as entrypoint
-ENTRYPOINT ["explain-code"]
+# Use aider as entrypoint by default
+ENTRYPOINT ["aider"]
 """
 
     if build_only:
         print(f"TFC Test Writer Aider - Building Docker image: {IMAGE_NAME}...")
     elif run:
-        print(f"TFC Test Writer Aider - Running explain-code in Docker container with message: '{messages}'...")
+        print(f"TFC Test Writer Aider - Running explain-code in Docker container...")
     else:
         print("TFC Test Writer Aider - Starting explain-code in Docker container...")
 
@@ -95,7 +95,10 @@ ENTRYPOINT ["explain-code"]
             dockerfile_path.unlink()
 
             print(f"Docker image built successfully: {IMAGE_NAME}")
-            print(f"You can now run it with: docker run --rm -it -v /path/to/source:/src {IMAGE_NAME} --directory \"/src\" --message \"Your message\"")
+            print(
+                f"You can now run it with: docker run --rm -it -v /path/to/source:/src {IMAGE_NAME} --message \"Your message\"")
+            print(
+                f"Or use one of the scripts: docker run --rm -it -v /path/to/source:/src --entrypoint write-token-utils-tests {IMAGE_NAME} --directory \"/src\"")
 
             return result.returncode
         elif run:
@@ -132,12 +135,11 @@ ENTRYPOINT ["explain-code"]
             # Add the image and command
             docker_cmd.extend([
                 IMAGE_NAME,
-                "--directory", "/src",
                 "--message", messages
             ])
 
             # Run the Docker command
-            print(f"Running explain-code in Docker container with message: '{messages}'")
+            print(f"Running aider in Docker container")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
         else:
@@ -176,8 +178,7 @@ ENTRYPOINT ["explain-code"]
             # Add the image and command
             docker_cmd.extend([
                 IMAGE_NAME,
-                "--directory", "/src",
-                "--message", "Hello"
+                "--message", messages
             ])
 
             # Run the Docker command

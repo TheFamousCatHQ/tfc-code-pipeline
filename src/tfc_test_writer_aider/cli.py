@@ -8,7 +8,7 @@ import argparse
 from typing import Optional, Sequence
 
 # Local application imports
-from tfc_test_writer_aider.main import main
+from .main import main
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -32,16 +32,15 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="Run the Docker container with the provided messages"
     )
     parser.add_argument(
+        "--src",
+        type=str,
+        help="Directory to mount in the Docker container under /src"
+    )
+    parser.add_argument(
         "--messages",
         type=str,
         default="Hello",
-        help="Messages to pass to the Docker container"
-    )
-    parser.add_argument(
-        "--src",
-        type=str,
-        required=True,
-        help="Directory to mount in the Docker container under /src (required for explain-code)"
+        help="Custom message to pass to aider"
     )
     return parser.parse_args(args)
 
@@ -55,7 +54,7 @@ def cli() -> int:
         Exit code (0 for success, non-zero for failure).
     """
     args = parse_args()
-    return main(build_only=args.build_only, run=args.run, messages=args.messages, src=args.src)
+    return main(build_only=args.build_only, run=args.run, src=args.src, messages=args.messages)
 
 
 if __name__ == "__main__":
