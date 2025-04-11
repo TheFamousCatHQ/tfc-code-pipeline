@@ -28,15 +28,17 @@ except ImportError:
         return False
 
 
-def main(build_only: bool = False) -> int:
+def main(build_only: bool = False, run: bool = False, messages: str = "Hello") -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
-    installs Aider, and runs the command 'aider --message "Hello"'.
+    installs Aider, and runs the command 'aider --message "<messages>"'.
     Exposes all environment variables from .env file to the Docker container.
 
     Args:
         build_only: If True, only build the Docker image without running the container.
+        run: If True, run the Docker container with the provided messages.
+        messages: Messages to pass to the Docker container. Defaults to "Hello".
 
     Returns:
         Exit code (0 for success, non-zero for failure).
@@ -53,6 +55,8 @@ ENTRYPOINT ["aider"]
 
     if build_only:
         print(f"TFC Test Writer Aider - Building Docker image: {IMAGE_NAME}...")
+    elif run:
+        print(f"TFC Test Writer Aider - Running Docker container with message: '{messages}'...")
     else:
         print("TFC Test Writer Aider - Starting Docker container...")
 
@@ -80,11 +84,40 @@ ENTRYPOINT ["aider"]
             result = subprocess.run(build_cmd, check=True)
 
             # Remove the temporary Dockerfile
-            # dockerfile_path.unlink()
+            dockerfile_path.unlink()
 
             print(f"Docker image built successfully: {IMAGE_NAME}")
             print(f"You can now run it with: docker run --rm -it {IMAGE_NAME} --message \"Your message\"")
 
+            return result.returncode
+        elif run:
+            # Create a Dockerfile if it doesn't exist
+            dockerfile_path = Path("Dockerfile")
+            if not dockerfile_path.exists():
+                with open(dockerfile_path, "w") as f:
+                    f.write(DOCKERFILE_CONTENT)
+
+                # Build the Docker image
+                print(f"Building Docker image: {IMAGE_NAME}")
+                build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
+                subprocess.run(build_cmd, check=True)
+
+            # Create Docker command with environment variables
+            docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
+
+            # Add each environment variable to the Docker command
+            for key, value in env_vars.items():
+                docker_cmd.extend(["-e", f"{key}={value}"])
+
+            # Add the image and command
+            docker_cmd.extend([
+                IMAGE_NAME,
+                "--message", messages
+            ])
+
+            # Run the Docker command
+            print(f"Running Docker container with message: '{messages}'")
+            result = subprocess.run(docker_cmd, check=True)
             return result.returncode
         else:
             # Create a Dockerfile
@@ -98,7 +131,7 @@ ENTRYPOINT ["aider"]
             subprocess.run(build_cmd, check=True)
 
             # Remove the temporary Dockerfile
-            # dockerfile_path.unlink()
+            dockerfile_path.unlink()
 
             # Create Docker command with environment variables
             docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]

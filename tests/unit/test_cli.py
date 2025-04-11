@@ -17,23 +17,45 @@ class TestCli(unittest.TestCase):
     def test_parse_args_default(self):
         """Test parse_args with default arguments."""
         with patch('argparse.ArgumentParser.parse_args') as mock_parse_args:
-            mock_parse_args.return_value = Namespace(build_only=False)
+            mock_parse_args.return_value = Namespace(build_only=False, run=False, messages="Hello")
             args = parse_args([])
             self.assertFalse(args.build_only)
+            self.assertFalse(args.run)
+            self.assertEqual(args.messages, "Hello")
 
     def test_parse_args_build_only(self):
         """Test parse_args with --build-only flag."""
         with patch('argparse.ArgumentParser.parse_args') as mock_parse_args:
-            mock_parse_args.return_value = Namespace(build_only=True)
+            mock_parse_args.return_value = Namespace(build_only=True, run=False, messages="Hello")
             args = parse_args(['--build-only'])
             self.assertTrue(args.build_only)
+            self.assertFalse(args.run)
+            self.assertEqual(args.messages, "Hello")
+
+    def test_parse_args_run(self):
+        """Test parse_args with --run flag."""
+        with patch('argparse.ArgumentParser.parse_args') as mock_parse_args:
+            mock_parse_args.return_value = Namespace(build_only=False, run=True, messages="Hello")
+            args = parse_args(['--run'])
+            self.assertFalse(args.build_only)
+            self.assertTrue(args.run)
+            self.assertEqual(args.messages, "Hello")
+
+    def test_parse_args_messages(self):
+        """Test parse_args with --messages option."""
+        with patch('argparse.ArgumentParser.parse_args') as mock_parse_args:
+            mock_parse_args.return_value = Namespace(build_only=False, run=True, messages="Custom message")
+            args = parse_args(['--run', '--messages', 'Custom message'])
+            self.assertFalse(args.build_only)
+            self.assertTrue(args.run)
+            self.assertEqual(args.messages, "Custom message")
 
     @patch('tfc_test_writer_aider.cli.parse_args')
     @patch('tfc_test_writer_aider.cli.main')
     def test_cli(self, mock_main, mock_parse_args):
         """Test the cli function."""
         # Setup mocks
-        mock_parse_args.return_value = Namespace(build_only=False)
+        mock_parse_args.return_value = Namespace(build_only=False, run=False, messages="Hello")
         mock_main.return_value = 0
 
         # Call the cli function
@@ -42,14 +64,14 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False)
+        mock_main.assert_called_once_with(build_only=False, run=False, messages="Hello")
 
     @patch('tfc_test_writer_aider.cli.parse_args')
     @patch('tfc_test_writer_aider.cli.main')
     def test_cli_build_only(self, mock_main, mock_parse_args):
         """Test the cli function with build_only=True."""
         # Setup mocks
-        mock_parse_args.return_value = Namespace(build_only=True)
+        mock_parse_args.return_value = Namespace(build_only=True, run=False, messages="Hello")
         mock_main.return_value = 0
 
         # Call the cli function
@@ -58,4 +80,36 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=True)
+        mock_main.assert_called_once_with(build_only=True, run=False, messages="Hello")
+
+    @patch('tfc_test_writer_aider.cli.parse_args')
+    @patch('tfc_test_writer_aider.cli.main')
+    def test_cli_run(self, mock_main, mock_parse_args):
+        """Test the cli function with run=True."""
+        # Setup mocks
+        mock_parse_args.return_value = Namespace(build_only=False, run=True, messages="Hello")
+        mock_main.return_value = 0
+
+        # Call the cli function
+        result = cli()
+
+        # Verify the result
+        self.assertEqual(result, 0)
+        mock_parse_args.assert_called_once()
+        mock_main.assert_called_once_with(build_only=False, run=True, messages="Hello")
+
+    @patch('tfc_test_writer_aider.cli.parse_args')
+    @patch('tfc_test_writer_aider.cli.main')
+    def test_cli_run_with_messages(self, mock_main, mock_parse_args):
+        """Test the cli function with run=True and custom messages."""
+        # Setup mocks
+        mock_parse_args.return_value = Namespace(build_only=False, run=True, messages="Custom message")
+        mock_main.return_value = 0
+
+        # Call the cli function
+        result = cli()
+
+        # Verify the result
+        self.assertEqual(result, 0)
+        mock_parse_args.assert_called_once()
+        mock_main.assert_called_once_with(build_only=False, run=True, messages="Custom message")
