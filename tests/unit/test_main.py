@@ -21,7 +21,8 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.unlink')
     @patch('builtins.open', new_callable=unittest.mock.mock_open)
     @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
-    def test_main_success(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
+    @patch('src.tfc_code_pipeline.main.read_env_file', autospec=True)
+    def test_main_success(self, mock_read_env_file, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
         """Test the main function when Docker command succeeds."""
         # Setup the mocks
         mock_exists.return_value = True  # Pretend .env file exists
@@ -29,11 +30,19 @@ class TestMain(unittest.TestCase):
         mock_result.returncode = 0
         mock_run.return_value = mock_result
 
-        # Set some test environment variables
+        # Set up environment variables that would be in the .env file
+        env_from_file = {
+            'TEST_VAR1': 'value1',
+            'TEST_VAR2': 'value2',
+        }
+        mock_read_env_file.return_value = env_from_file
+
+        # Set some test environment variables (these should not be passed to Docker)
         test_env = {
             'TEST_VAR1': 'value1',
             'TEST_VAR2': 'value2',
-            'PATH': '/usr/bin:/bin'  # Common environment variable
+            'PATH': '/usr/bin:/bin',  # Common environment variable
+            'SYSTEM_VAR': 'should_not_be_passed'  # This should not be passed to Docker
         }
 
         with patch.dict(os.environ, test_env, clear=True):
@@ -45,6 +54,9 @@ class TestMain(unittest.TestCase):
 
             # Verify that load_dotenv was called
             mock_load_dotenv.assert_called_once()
+
+            # Verify that read_env_file was called
+            mock_read_env_file.assert_called_once()
 
             # Verify that a Dockerfile was created
             mock_open.assert_called_once()
@@ -76,10 +88,13 @@ class TestMain(unittest.TestCase):
             # Check that we're running the explain-code command
             self.assertIn("explain-code", docker_cmd)
 
-            # Check that environment variables are passed to Docker
-            for key, value in test_env.items():
+            # Check that only environment variables from the .env file are passed to Docker
+            for key, value in env_from_file.items():
                 self.assertIn(f"-e", docker_cmd)
                 self.assertIn(f"{key}={value}", docker_cmd)
+
+            # Check that system environment variables not in the .env file are not passed to Docker
+            self.assertNotIn("SYSTEM_VAR=should_not_be_passed", str(docker_cmd))
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
