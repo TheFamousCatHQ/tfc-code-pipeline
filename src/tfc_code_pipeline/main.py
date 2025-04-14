@@ -132,11 +132,11 @@ ENTRYPOINT ["/bin/bash"]
         if env_file.exists():
             print("Loading environment variables from .env file...")
             load_dotenv(env_file)
+            # Get only environment variables from .env file
+            env_vars: Dict[str, str] = read_env_file(env_file)
         else:
-            print("No .env file found. Using system environment variables.")
-
-        # Get all environment variables
-        env_vars: Dict[str, str] = dict(os.environ)
+            print("No .env file found. No environment variables will be passed to Docker.")
+            env_vars = {}
 
         if build_only:
             # Create a Dockerfile
