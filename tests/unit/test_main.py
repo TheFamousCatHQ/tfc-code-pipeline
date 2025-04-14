@@ -73,9 +73,8 @@ class TestMain(unittest.TestCase):
             # Check that we're using the custom image
             self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
 
-            # Check that we're running aider with the message "Hello"
-            self.assertIn("--message", docker_cmd)
-            self.assertIn("Hello", docker_cmd)
+            # Check that we're running the explain-code command
+            self.assertIn("explain-code", docker_cmd)
 
             # Check that environment variables are passed to Docker
             for key, value in test_env.items():

@@ -55,6 +55,7 @@ def cli() -> int:
         Exit code (0 for success, non-zero for failure).
     """
     args = parse_args()
+    # Note: messages parameter is parsed but not used in the main function
     return main(build_only=args.build_only, run=args.run, src=args.src, cmd=args.cmd)
 
 

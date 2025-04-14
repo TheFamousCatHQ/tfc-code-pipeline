@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Sequence
 
 # Third-party imports
 try:
@@ -26,6 +26,63 @@ except ImportError:
         """
         print("Warning: python-dotenv package not installed. Environment variables from .env file will not be loaded.")
         return False
+
+
+def read_env_file(env_file_path: Union[str, Path]) -> Dict[str, str]:
+    """Read environment variables from a .env file.
+
+    Args:
+        env_file_path: Path to the .env file.
+
+    Returns:
+        Dict[str, str]: Dictionary of environment variables from the .env file.
+    """
+    env_vars = {}
+
+    try:
+        with open(env_file_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+
+                key, value = line.split('=', 1)
+                env_vars[key] = value
+
+        return env_vars
+    except Exception as e:
+        print(f"Error reading .env file: {e}", file=sys.stderr)
+        return {}
+
+
+def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
+    """Format a Docker command list as a string for logging.
+
+    Args:
+        docker_cmd: The Docker command as a list of strings.
+
+    Returns:
+        A formatted string representation of the Docker command.
+    """
+    # Create a copy of the command to avoid modifying the original
+    cmd_copy = list(docker_cmd)
+
+    # Replace environment variables with a placeholder to make the output more readable
+    i = 0
+    while i < len(cmd_copy) - 1:
+        if cmd_copy[i] == "-e" and "=" in cmd_copy[i+1]:
+            # Keep only the first few and last few environment variables
+            if i > 120:  # If we have a lot of env vars, truncate them
+                cmd_copy[i+1] = "...[env vars truncated]..."
+                # Skip ahead to the next non-env var argument
+                while i+2 < len(cmd_copy) and cmd_copy[i+2] == "-e":
+                    cmd_copy.pop(i+2)  # Remove the next -e
+                    if i+2 < len(cmd_copy):
+                        cmd_copy.pop(i+2)  # Remove the corresponding value
+        i += 1
+
+    # Join the command with spaces
+    return " ".join(cmd_copy)
 
 
 def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, cmd: str = "explain_code") -> int:
@@ -142,6 +199,7 @@ ENTRYPOINT ["/bin/bash"]
 
             # Run the Docker command
             print(f"Running {cmd} in Docker container")
+            print(f"Docker command: {format_docker_cmd(docker_cmd)}")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
         else:
@@ -186,6 +244,7 @@ ENTRYPOINT ["/bin/bash"]
 
             # Run the Docker command
             print(f"Running {cmd} in Docker container")
+            print(f"Docker command: {format_docker_cmd(docker_cmd)}")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
 

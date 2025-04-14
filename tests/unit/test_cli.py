@@ -90,7 +90,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=False, messages="Hello", src=None, cmd="explain_code")
+        mock_main.assert_called_once_with(build_only=False, run=False, src=None, cmd="explain_code")
 
     @patch('src.tfc_code_pipeline.cli.parse_args')
     @patch('src.tfc_code_pipeline.cli.main')
@@ -106,7 +106,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=True, run=False, messages="Hello", src=None, cmd="explain_code")
+        mock_main.assert_called_once_with(build_only=True, run=False, src=None, cmd="explain_code")
 
     @patch('src.tfc_code_pipeline.cli.parse_args')
     @patch('src.tfc_code_pipeline.cli.main')
@@ -122,7 +122,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, messages="Hello", src=None, cmd="explain_code")
+        mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code")
 
     @patch('src.tfc_code_pipeline.cli.parse_args')
     @patch('src.tfc_code_pipeline.cli.main')
@@ -138,7 +138,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, messages="Custom message", src=None, cmd="explain_code")
+        mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code")
 
     @patch('src.tfc_code_pipeline.cli.parse_args')
     @patch('src.tfc_code_pipeline.cli.main')
@@ -154,7 +154,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, messages="Hello", src="/path/to/src", cmd="explain_code")
+        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="explain_code")
 
     @patch('src.tfc_code_pipeline.cli.parse_args')
     @patch('src.tfc_code_pipeline.cli.main')
@@ -170,4 +170,4 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, messages="Hello", src="/path/to/src", cmd="write_tests")
+        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="write_tests")
