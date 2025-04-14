@@ -75,7 +75,7 @@ This project uses Poetry for dependency management. To install and use the comma
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd tfc-test-writer-aider
+   cd tfc-code-pipeline
    ```
 
 2. Install the package using Poetry:
