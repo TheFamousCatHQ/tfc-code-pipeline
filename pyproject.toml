@@ -9,7 +9,6 @@ packages = [
     {include = "find_source_files", from = "src"},
     {include = "explain_code", from = "src"},
     {include = "write_tests", from = "src"},
-    {include = "write_token_utils_tests", from = "src"},
     {include = "code_processor", from = "src"}
 ]
 

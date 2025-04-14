@@ -25,7 +25,7 @@ class CodeProcessor(ABC):
         Returns:
             Default message for aider.
         """
-        pass
+        return "/ask what does this code do?"
 
     @abstractmethod
     def get_description(self) -> str:
@@ -67,7 +67,8 @@ class CodeProcessor(ABC):
         )
         return parser.parse_args(args)
 
-    def process_files(self, directory: str, specific_file: Optional[str] = None, message: Optional[str] = None) -> List[str]:
+    def process_files(self, directory: str, specific_file: Optional[str] = None, message: Optional[str] = None) -> List[
+        str]:
         """Find source files and process them using aider.
 
         Args:

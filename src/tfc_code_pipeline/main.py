@@ -28,7 +28,7 @@ except ImportError:
         return False
 
 
-def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, messages: str = "Hello", cmd: str = "explain_code") -> int:
+def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, cmd: str = "explain_code") -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
@@ -137,12 +137,11 @@ ENTRYPOINT ["/bin/bash"]
             docker_cmd.extend([
                 "--entrypoint", cmd.replace("_", "-"),
                 IMAGE_NAME,
-                "--directory", "/src",
-                "--message", messages
+                "--directory", "/src"
             ])
 
             # Run the Docker command
-            print(f"Running {cmd} in Docker container with message: '{messages}'")
+            print(f"Running {cmd} in Docker container")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
         else:
@@ -182,12 +181,11 @@ ENTRYPOINT ["/bin/bash"]
             docker_cmd.extend([
                 "--entrypoint", cmd.replace("_", "-"),
                 IMAGE_NAME,
-                "--directory", "/src",
-                "--message", messages
+                "--directory", "/src"
             ])
 
             # Run the Docker command
-            print(f"Running {cmd} in Docker container with message: '{messages}'")
+            print(f"Running {cmd} in Docker container")
             result = subprocess.run(docker_cmd, check=True)
             return result.returncode
 

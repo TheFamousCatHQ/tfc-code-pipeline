@@ -7,7 +7,6 @@ import os
 import subprocess
 import unittest
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, cast
 from unittest.mock import patch, MagicMock
 
 # Local application imports
@@ -286,12 +285,14 @@ class TestMain(unittest.TestCase):
     @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
     def test_main_run_with_src_not_exists(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option when src doesn't exist."""
+
         # Setup the mocks
         # Set up mock to return False for src_dir
         def exists_side_effect(path):
             if hasattr(path, 'name') and path.name == "src_dir":
                 return False
             return True
+
         mock_exists.side_effect = exists_side_effect
         mock_is_dir.return_value = False  # Not relevant as we'll fail on exists check
         mock_resolve.return_value = Path("/resolved/path/to/src_dir")  # Resolved path
@@ -343,47 +344,3 @@ class TestMain(unittest.TestCase):
 
                 # Verify the result - should be 1 because src is not a directory
                 self.assertEqual(result, 1)
-
-    @patch('subprocess.run')
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.unlink')
-    @patch('builtins.open', new_callable=unittest.mock.mock_open)
-    @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
-    def test_main_run_with_custom_message(self, mock_load_dotenv, mock_open, mock_unlink, mock_exists, mock_run):
-        """Test the main function with run=True and custom message."""
-        # Setup the mocks
-        # Set up mock to return True for .env and False for any other path
-        mock_exists.side_effect = None
-        mock_exists.return_value = False
-        # Set up mock to simulate Docker not being available
-        mock_run.side_effect = FileNotFoundError("[Errno 2] No such file or directory: 'docker'")
-
-        # Set some test environment variables
-        test_env = {
-            'TEST_VAR1': 'value1',
-            'TEST_VAR2': 'value2',
-            'PATH': '/usr/bin:/bin'  # Common environment variable
-        }
-
-        with patch.dict(os.environ, test_env, clear=True):
-            # Call the main function with run=True and custom message
-            custom_message = "Write a test for the login function"
-            result = main(run=True, messages=custom_message)
-
-            # Verify the result - should be 1 because Docker is not available
-            self.assertEqual(result, 1)
-
-            # We don't expect load_dotenv to be called since we're simulating Docker not being available
-            # and the error happens before we get to that point
-            mock_load_dotenv.assert_not_called()
-
-            # Verify that a Dockerfile was created
-            mock_open.assert_called_once()
-            file_handle = mock_open()
-            file_content = file_handle.write.call_args[0][0]
-            self.assertIn("FROM python:3.12-slim", file_content)
-            self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
-            self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
-
-            # Since we're simulating Docker not being available, we don't need to check
-            # the Docker command arguments
