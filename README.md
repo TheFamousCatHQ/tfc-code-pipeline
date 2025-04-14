@@ -27,14 +27,6 @@ Each processor only needs to define its specific message and description, while 
 - **Purpose**: Writes unit tests for source files without using mocks
 - **Default Message**: "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality."
 
-### TokenUtilsTestProcessor (Planned)
-
-- **Script**: `write-token-utils-tests` (not yet implemented)
-- **Purpose**: Specialized processor for writing tests for tokenUtils.js
-- **Default Message**: "write unit tests without using mocks for all functions found in tokenUtils.js. If tests already exists, check if their are up to date, if not update them to cover the current functionality."
-
-Note: This processor is planned but not yet implemented as a Poetry script.
-
 ## Creating a New Processor
 
 To create a new processor:
