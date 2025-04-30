@@ -40,7 +40,7 @@ class TestFindBugsProcessor(unittest.TestCase):
         self.assertIn("JSON", description)
 
     @patch('subprocess.run')
-    @patch('src.find_bugs.find_files') # Patch the imported name within find_bugs
+    @patch('find_bugs.find_files') # Patch the imported name within find_bugs (no src prefix)
     def test_process_files(self, mock_find_files, mock_run):
         """Test that process_files processes files and generates JSON output."""
         # Set up mocks
@@ -69,7 +69,7 @@ class TestFindBugsProcessor(unittest.TestCase):
                 # We should have at least one bug per file
                 self.assertGreaterEqual(len(bugs_data), 2)
 
-    @patch('src.find_bugs.FindBugsProcessor.run') # Patch using src prefix
+    @patch('find_bugs.FindBugsProcessor.run') # Patch without src prefix
     def test_main(self, mock_run):
         """Test that main calls the processor's run method."""
         mock_run.return_value = 0
