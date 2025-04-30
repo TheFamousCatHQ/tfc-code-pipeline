@@ -4,9 +4,21 @@ Processor to analyze code complexity using aider/LLM.
 """
 
 import glob
+import json
+import logging
 import os
 import sys
-from typing import List, Optional
+from typing import Dict, List, Optional, Any, Tuple
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+try:
+    # Try importing directly
+    from validate_complexity_report import validate_and_fix_complexity_report
+except ImportError:
+    # Fall back to src-prefixed import
+    from src.validate_complexity_report import validate_and_fix_complexity_report
 
 try:
     # Try importing directly (for Docker/installed package)
@@ -86,7 +98,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             Path to the master report file, or None if no reports were found.
         """
         if not report_files:
-            print("No complexity reports found to combine.")
+            logger.info("No complexity reports found to combine.")
             return None
 
         # Create a message for aider to combine the reports
@@ -111,20 +123,51 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                           "--message", combine_message
                       ] + report_files
 
-            print(f"Running aider to generate master complexity report with {len(report_files)} report files")
-            print(f"Command: {' '.join(command)}")
+            logger.info(f"Running aider to generate master complexity report with {len(report_files)} report files")
+            logger.debug(f"Command: {' '.join(command)}")
 
             # Run aider with all report files
             subprocess.run(command, check=True, text=True)
 
             # Check if the master report was created
             if os.path.exists(master_report_path):
-                return master_report_path
+                # Validate the master report against the schema
+                schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                          "master_complexity_report_schema.json")
+
+                # Check if schema exists, if not, look in doc directory
+                if not os.path.exists(schema_path):
+                    schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                             "doc", "master_complexity_report_schema.json")
+
+                if os.path.exists(schema_path):
+                    logger.info(f"Schema validation: Found schema at {schema_path}")
+                    logger.info(f"Schema validation: Validating master report against schema")
+
+                    # Check if OPENROUTER_API_KEY is set
+                    if not os.environ.get("OPENROUTER_API_KEY"):
+                        logger.warning("Schema validation: OPENROUTER_API_KEY environment variable not set. "
+                                      "If validation fails, automatic fixing will not be possible.")
+
+                    success, result = validate_and_fix_complexity_report(master_report_path, schema_path)
+
+                    if success:
+                        logger.info(f"Schema validation: Master report validation successful")
+                        logger.info(f"Schema validation: Final report saved at {result}")
+                        return master_report_path
+                    else:
+                        logger.error(f"Schema validation: Error validating master report: {result}")
+                        return None
+                else:
+                    logger.warning("Schema validation: Schema file not found. Skipping validation.")
+                    logger.debug(f"Schema validation: Looked for schema at {schema_path}")
+                    return master_report_path
             else:
-                print("Master report file was not created.")
+                logger.error("Master report file was not created.")
                 return None
         except Exception as e:
-            print(f"Error combining complexity reports: {e}")
+            logger.error(f"Error combining complexity reports: {e}")
+            logger.debug(f"Exception details: {str(e)}", exc_info=True)
             return None
 
     def process_files(
@@ -149,27 +192,58 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         if not processed_files:
             return []
 
-        print("\nFirst round of complexity analysis complete.")
-        print("Starting second round: Combining complexity reports into a master report...")
+        logger.info("First round of complexity analysis complete.")
+        logger.info("Starting second round: Combining complexity reports into a master report...")
 
         # Second round: Find and combine all complexity reports
         report_files = self._find_complexity_reports(directory)
 
         # Check if any complexity reports were found
         if not report_files and processed_files:
-            print("No complexity reports found after processing files.")
+            logger.warning("No complexity reports found after processing files.")
 
         if report_files:
-            print(f"Found {len(report_files)} complexity reports to combine.")
+            logger.info(f"Found {len(report_files)} complexity reports to combine.")
             master_report_path = self._combine_complexity_reports(report_files, directory)
             if master_report_path and os.path.exists(master_report_path):
-                print(f"\nMaster complexity report created: {master_report_path}")
+                logger.info(f"Master complexity report created: {master_report_path}")
             else:
-                print("Failed to create master complexity report.")
+                logger.error("Failed to create master complexity report.")
         else:
-            print("No complexity reports found to combine.")
+            logger.warning("No complexity reports found to combine.")
 
         return processed_files
+
+
+def configure_logging(verbose: bool = False):
+    """Configure logging for the complexity analyzer.
+
+    Args:
+        verbose: Whether to enable verbose (DEBUG) logging.
+    """
+    # Set up root logger
+    root_logger = logging.getLogger()
+
+    # Remove existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Create console handler
+    console = logging.StreamHandler()
+
+    # Set format
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+    console.setFormatter(formatter)
+
+    # Add handler to root logger
+    root_logger.addHandler(console)
+
+    # Set level based on verbose flag
+    if verbose:
+        root_logger.setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
+    else:
+        root_logger.setLevel(logging.INFO)
 
 
 def main() -> int:
@@ -178,6 +252,25 @@ def main() -> int:
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via aider")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--schema-validation", action="store_true",
+                        help="Enable detailed schema validation logging")
+
+    # Parse only the known args to avoid conflicts with the parent parser
+    args, _ = parser.parse_known_args()
+
+    # Configure logging
+    configure_logging(args.verbose)
+
+    # Set validation module logging level if schema-validation is enabled
+    if args.schema_validation:
+        validation_logger = logging.getLogger('validate_complexity_report')
+        validation_logger.setLevel(logging.DEBUG)
+        logger.info("Detailed schema validation logging enabled")
+
     processor = ComplexityAnalyzerProcessor()
     return processor.run()
 

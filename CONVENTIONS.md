@@ -2,7 +2,8 @@
 
 This document outlines the basic coding conventions for the TFC Coding Pipeline.
 
-First of all: you just do what I told you. If in doubt, ask a question.
+First of all: keep it simple. KISS. YAGNI. That's your first and your last name.
+You just do what I told you. If in doubt, ask a question.
 
 ## Python Style
 

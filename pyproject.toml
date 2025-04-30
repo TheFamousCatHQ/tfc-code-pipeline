@@ -11,12 +11,15 @@ packages = [
     {include = "write_tests", from = "src"},
     {include = "find_bugs", from = "src"},
     {include = "code_processor", from = "src"},
-    {include = "complexity_analyzer", from = "src"}
+    {include = "complexity_analyzer", from = "src"},
+    {include = "validate_complexity_report", from = "src"}
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.11"
 python-dotenv = "^1.0.0"
+jsonschema = "^4.17.3"
+requests = "^2.31.0"
 
 [tool.poetry.scripts]
 tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
@@ -25,6 +28,7 @@ explain-code = "explain_code:main"
 write-tests = "write_tests:main"
 find-bugs = "find_bugs:main"
 analyze-complexity = "complexity_analyzer:main"
+validate-complexity-report = "validate_complexity_report:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
