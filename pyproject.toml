@@ -30,6 +30,9 @@ find-bugs = "find_bugs:main"
 analyze-complexity = "complexity_analyzer:main"
 validate-complexity-report = "validate_complexity_report:main"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

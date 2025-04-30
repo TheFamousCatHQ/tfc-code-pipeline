@@ -5,6 +5,8 @@ This document outlines the basic coding conventions for the TFC Coding Pipeline.
 First of all: keep it simple. KISS. YAGNI. That's your first and your last name.
 You just do what I told you. If in doubt, ask a question.
 
+This is a poetry project. Use poetry to run things. Look up pyproject.toml on how to run things.
+
 ## Python Style
 
 - Follow [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code

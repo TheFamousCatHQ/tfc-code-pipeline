@@ -102,6 +102,13 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertTrue(is_test_file(Path("testing/file.py")))
         self.assertTrue(is_test_file(Path("/path/to/test/file.py")))
 
+        # Test files in integration test directories
+        self.assertTrue(is_test_file(Path("tests_integration/file.py")))
+        self.assertTrue(is_test_file(Path("tests_integration/mysql/custom_provider.py")))
+        self.assertTrue(is_test_file(Path("/pynonymizer/tests_integration/mysql/custom_provider.py")))
+        self.assertTrue(is_test_file(Path("integration_tests/file.py")))
+        self.assertTrue(is_test_file(Path("path/to/integration_tests/file.py")))
+
         # Test files that should not be identified as test files
         self.assertFalse(is_test_file(Path("file.py")))
         self.assertFalse(is_test_file(Path("app.js")))
