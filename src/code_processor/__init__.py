@@ -87,7 +87,7 @@ class CodeProcessor(ABC):
         Returns:
             True if aider ran successfully, False otherwise.
         """
-        command = ["aider", "--message", message] + files
+        command = ["aider", "--no-auto-commits", "--message", message] + files
         print(f"Running command: {' '.join(command)}")  # For debugging
         try:
             subprocess.run(

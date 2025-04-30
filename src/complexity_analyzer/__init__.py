@@ -26,7 +26,9 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "1. Why it is considered complex (e.g., high cognitive load, complex logic, deep nesting, unclear naming, potential for bugs).\n"
             "2. The specific line numbers or range of lines for the complex code.\n"
             "3. Suggestions for simplifying or improving the readability of this section.\n"
-            "Focus on areas that would be challenging for a new developer to grasp quickly."
+            "Focus on areas that would be challenging for a new developer to grasp quickly.\n"
+            "Only analyze source code, no documentation, etc.\n"
+            "Create a COMPLEXITY_REPORT.json with your findings.\n"
         )
 
     def get_description(self) -> str:
