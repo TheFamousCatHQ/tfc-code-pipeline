@@ -103,6 +103,29 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             logger.info("No complexity reports found to combine.")
             return None
 
+        # Find the schema file
+        schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                  "master_complexity_report_schema.json")
+
+        # Check if schema exists, if not, look in doc directory
+        if not os.path.exists(schema_path):
+            schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                                     "doc", "master_complexity_report_schema.json")
+
+        # Read the schema file if it exists
+        schema_content = ""
+        if os.path.exists(schema_path):
+            try:
+                with open(schema_path, 'r') as schema_file:
+                    schema_content = schema_file.read()
+                logger.info(f"Successfully read schema from {schema_path}")
+            except Exception as e:
+                logger.warning(f"Failed to read schema file: {e}")
+                schema_content = "Schema file could not be read."
+        else:
+            logger.warning("Schema file not found.")
+            schema_content = "Schema file not found."
+
         # Create a message for aider to combine the reports
         combine_message = (
             "I have multiple COMPLEXITY_REPORT.json files that need to be combined into a master report.\n"
@@ -113,6 +136,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "Sort the components by changeability_score (ascending) so the most difficult components are listed first.\n"
             "Include statistics like total components analyzed, total files analyzed, and average changeability score.\n"
             "Make sure to preserve all fields from the original reports, including the 'llm_improvement_prompt' field.\n"
+            "\nHere is the schema for the MASTER_COMPLEXITY_REPORT.json file:\n"
+            f"{schema_content}\n"
         )
 
         # Call aider directly with all report files as arguments
