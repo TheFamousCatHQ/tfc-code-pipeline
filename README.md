@@ -27,6 +27,13 @@ Each processor only needs to define its specific message and description, while 
 - **Purpose**: Writes unit tests for source files without using mocks
 - **Default Message**: "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality."
 
+### FindBugsProcessor
+
+- **Script**: `find-bugs`
+- **Purpose**: Finds potential bugs in source files and outputs results as JSON
+- **Default Message**: "analyze this code and identify potential bugs, issues, or vulnerabilities. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), and 5) a suggested fix."
+- **Output**: Generates a `bugs_report.json` file in the specified directory
+
 ## Creating a New Processor
 
 To create a new processor:

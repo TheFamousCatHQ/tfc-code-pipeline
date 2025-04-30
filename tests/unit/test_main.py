@@ -168,10 +168,12 @@ class TestMain(unittest.TestCase):
             # Check that we're using the custom image
             self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
 
-            # Check that environment variables are still passed to Docker
-            # even without a .env file
-            self.assertIn("-e", docker_cmd)
-            self.assertIn("TEST_VAR=test_value", docker_cmd)
+            # Check that no environment variables are passed to Docker when .env file doesn't exist
+            # Convert docker_cmd to string for easier checking
+            docker_cmd_str = str(docker_cmd)
+            self.assertNotIn("-e TEST_VAR=test_value", docker_cmd_str)
+            # Check that there are no -e flags at all
+            self.assertNotIn(" -e ", docker_cmd_str)
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
@@ -259,7 +261,8 @@ class TestMain(unittest.TestCase):
     @patch('pathlib.Path.is_dir')
     @patch('pathlib.Path.resolve')
     @patch('src.tfc_code_pipeline.main.load_dotenv', autospec=True)
-    def test_main_run_with_src(self, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
+    @patch('src.tfc_code_pipeline.main.read_env_file', autospec=True)
+    def test_main_run_with_src(self, mock_read_env_file, mock_load_dotenv, mock_resolve, mock_is_dir, mock_exists, mock_run):
         """Test the main function with run=True and src option."""
         # Setup the mocks
         mock_exists.return_value = True  # Pretend both .env and src directory exist
@@ -269,11 +272,19 @@ class TestMain(unittest.TestCase):
         mock_result.returncode = 0
         mock_run.return_value = mock_result
 
-        # Set some test environment variables
+        # Set up environment variables that would be in the .env file
+        env_from_file = {
+            'TEST_VAR1': 'value1',
+            'TEST_VAR2': 'value2',
+        }
+        mock_read_env_file.return_value = env_from_file
+
+        # Set some test environment variables (these should not be passed to Docker)
         test_env = {
             'TEST_VAR1': 'value1',
             'TEST_VAR2': 'value2',
-            'PATH': '/usr/bin:/bin'  # Common environment variable
+            'PATH': '/usr/bin:/bin',  # Common environment variable
+            'SYSTEM_VAR': 'should_not_be_passed'  # This should not be passed to Docker
         }
 
         with patch.dict(os.environ, test_env, clear=True):
@@ -291,6 +302,14 @@ class TestMain(unittest.TestCase):
                 # Check that we're mounting the source directory
                 self.assertIn("-v", docker_cmd)
                 self.assertIn("/resolved/path/to/src:/src", docker_cmd)
+
+                # Check that only environment variables from the .env file are passed to Docker
+                docker_cmd_str = str(docker_cmd)
+                for key, value in env_from_file.items():
+                    self.assertIn(f"-e {key}={value}", docker_cmd_str)
+
+                # Check that system environment variables not in the .env file are not passed to Docker
+                self.assertNotIn("SYSTEM_VAR=should_not_be_passed", docker_cmd_str)
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')

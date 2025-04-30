@@ -9,6 +9,7 @@ packages = [
     {include = "find_source_files", from = "src"},
     {include = "explain_code", from = "src"},
     {include = "write_tests", from = "src"},
+    {include = "find_bugs", from = "src"},
     {include = "code_processor", from = "src"}
 ]
 
@@ -21,6 +22,7 @@ tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
 find-source-files = "find_source_files:main"
 explain-code = "explain_code:main"
 write-tests = "write_tests:main"
+find-bugs = "find_bugs:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

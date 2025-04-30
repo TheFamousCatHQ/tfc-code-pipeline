@@ -39,9 +39,9 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--cmd",
         type=str,
-        choices=["explain_code", "write_tests"],
+        choices=["explain_code", "write_tests", "find_bugs"],
         default="explain_code",
-        help="Command to run in the Docker container (explain_code or write_tests)"
+        help="Command to run in the Docker container (explain_code, write_tests, or find_bugs)"
     )
     return parser.parse_args(args)
 
