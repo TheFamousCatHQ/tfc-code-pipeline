@@ -76,8 +76,8 @@ class TestCli(unittest.TestCase):
             self.assertEqual(args.src, "/path/to/src")
             self.assertEqual(args.cmd, "write_tests")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli(self, mock_main, mock_parse_args):
         """Test the cli function."""
         # Setup mocks
