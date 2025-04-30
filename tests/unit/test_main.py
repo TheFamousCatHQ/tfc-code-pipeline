@@ -304,12 +304,26 @@ class TestMain(unittest.TestCase):
                 self.assertIn("/resolved/path/to/src:/src", docker_cmd)
 
                 # Check that only environment variables from the .env file are passed to Docker
-                docker_cmd_str = str(docker_cmd)
                 for key, value in env_from_file.items():
-                    self.assertIn(f"-e {key}={value}", docker_cmd_str)
+                    self.assertIn("-e", docker_cmd)
+                    self.assertIn(f"{key}={value}", docker_cmd)
 
                 # Check that system environment variables not in the .env file are not passed to Docker
-                self.assertNotIn("SYSTEM_VAR=should_not_be_passed", docker_cmd_str)
+                # Find the index of '-e' for SYSTEM_VAR if it exists
+                try:
+                    idx = docker_cmd.index('-e')
+                    # Check if the next element is the SYSTEM_VAR assignment
+                    # This check needs refinement as '-e' appears multiple times.
+                    # Instead, let's just check if the specific assignment string is present.
+                    self.assertNotIn("SYSTEM_VAR=should_not_be_passed", docker_cmd)
+                except ValueError:
+                     # This means '-e' wasn't found, which is unexpected if env vars were passed,
+                     # but okay if SYSTEM_VAR wasn't supposed to be passed anyway.
+                     # A more robust check is simply ensuring the unwanted variable isn't present.
+                     self.assertNotIn("SYSTEM_VAR=should_not_be_passed", docker_cmd)
+
+                # Also ensure the variable assignment string isn't present on its own
+                self.assertNotIn("SYSTEM_VAR=should_not_be_passed", docker_cmd)
 
     @patch('subprocess.run')
     @patch('pathlib.Path.exists')
