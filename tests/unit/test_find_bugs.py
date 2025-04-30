@@ -13,7 +13,9 @@ from unittest.mock import patch, MagicMock
 from tempfile import TemporaryDirectory
 
 # Add the src directory to the Python path
-# No need for sys.path manipulation if tests are run correctly (e.g., with pytest from root)
+# Ensure the project root is in sys.path for discovering the 'src' package
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
 
 # Import the module to test using src prefix
 from src.find_bugs import FindBugsProcessor, main
