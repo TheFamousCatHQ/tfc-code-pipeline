@@ -12,6 +12,10 @@ import sys
 from abc import ABC, abstractmethod
 from typing import List, Optional, Sequence
 
+# Local application/library specific imports
+# Use a specific alias to avoid potential name clashes if 'find_source_files' is used elsewhere
+from src.find_source_files import find_source_files as find_files
+
 
 class CodeProcessor(ABC):
     """Base class for processing code files using aider."""
@@ -136,14 +140,7 @@ class CodeProcessor(ABC):
             # Force file-by-file if a specific file is given, regardless of flag?
             # For now, let the flag decide even for a single specific file.
         else:
-            # Find source files in the directory
-            # Ensure find_source_files is imported correctly
-            try:
-                from find_source_files import find_source_files as find_files
-            except ImportError:
-                # Handle potential import issues if running from different contexts
-                # This might need adjustment based on project structure/testing
-                from src.find_source_files import find_source_files as find_files
+            # Find source files in the directory using the imported function
             source_files = find_files(directory)
 
         if not source_files:
