@@ -26,7 +26,7 @@ class TestFindBugsProcessor(unittest.TestCase):
         """Test that get_default_message returns the expected message."""
         processor = FindBugsProcessor()
         message = processor.get_default_message()
-        self.assertIn("analyze this code and identify potential bugs", message)
+        self.assertIn("Analyze this code and identify potential bugs", message)
         self.assertIn("severity", message)
         self.assertIn("confidence", message)
 
