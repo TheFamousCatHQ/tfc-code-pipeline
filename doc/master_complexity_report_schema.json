@@ -3,7 +3,7 @@
   "title": "Master Complexity Report",
   "description": "A comprehensive report combining complexity analyses from multiple source code files",
   "type": "object",
-  "required": ["summary", "files"],
+  "required": ["summary", "detailed_reports"],
   "properties": {
     "summary": {
       "type": "object",
@@ -52,7 +52,7 @@
         }
       }
     },
-    "files": {
+    "detailed_reports": {
       "type": "array",
       "description": "List of complexity reports for individual files",
       "items": {
