@@ -23,9 +23,11 @@ except ImportError:
 try:
     # Try importing directly (for Docker/installed package)
     from code_processor import CodeProcessor
+    from find_source_files import find_source_files as find_files
 except ImportError:
     # Fall back to src-prefixed import (for local development)
     from src.code_processor import CodeProcessor
+    from src.find_source_files import find_source_files as find_files
 
 
 class ComplexityAnalyzerProcessor(CodeProcessor):
@@ -33,6 +35,68 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
     operates_on_whole_codebase: bool = True
     """This processor analyzes the context of the whole codebase."""
+
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        """Add processor-specific command-line arguments to the parser.
+
+        Args:
+            parser: The argument parser to add arguments to.
+        """
+        parser.add_argument(
+            "-o", "--output",
+            type=str,
+            help="Path where the master complexity report will be saved"
+        )
+
+    def run(self) -> int:
+        """Run the code processor.
+
+        Overrides the base class method to pass the output path to process_files.
+
+        Returns:
+            Exit code (0 for success, non-zero for failure).
+        """
+        try:
+            args = self.parse_args()
+
+            # If --show-only-repo-files-chunks is specified, just show the chunks and exit
+            if args.show_only_repo_files_chunks:
+                # Find source files
+                if args.file:
+                    source_files = [args.file]
+                    print(f"Warning: Using specific file: {args.file}")
+                else:
+                    source_files = find_files(args.directory)
+
+                if not source_files:
+                    print(f"No source files found in directory: {args.directory}", file=sys.stderr)
+                    return 1
+
+                # Display the file chunks without processing
+                self._display_file_chunks(source_files)
+                return 0
+
+            # Normal processing mode
+            processed_files = self.process_files(
+                args.directory, args.file, args.message, args.output if hasattr(args, 'output') else None
+            )
+
+            if processed_files is not None:  # Check if FileNotFoundError occurred in process_files
+                print(f"\nProcessed {len(processed_files)} files:")
+                for file in processed_files:
+                    print(f"  - {file}")
+            else:
+                # Error message already printed if aider not found
+                return 1  # Indicate failure
+
+            return 0
+        except FileNotFoundError:
+            # This catches the re-raised FileNotFoundError from _run_aider
+            # Error message already printed
+            return 1
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}", file=sys.stderr)
+            return 1
 
     def get_default_message(self) -> str:
         """Get the default message to pass to aider.
@@ -89,12 +153,13 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         report_pattern = os.path.join(directory, "**", "COMPLEXITY_REPORT.json")
         return glob.glob(report_pattern, recursive=True)
 
-    def _combine_complexity_reports(self, report_files: List[str], output_dir: str) -> Optional[str]:
+    def _combine_complexity_reports(self, report_files: List[str], output_dir: str, output_path: Optional[str] = None) -> Optional[str]:
         """Combine multiple complexity reports into a master report using aider.
 
         Args:
             report_files: List of paths to complexity report files.
-            output_dir: Directory where the master report will be saved.
+            output_dir: Directory where the master report will be saved if output_path is not specified.
+            output_path: Optional specific path where the master report will be saved.
 
         Returns:
             Path to the master report file, or None if no reports were found.
@@ -143,7 +208,16 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         # Call aider directly with all report files as arguments
         try:
             import subprocess
-            master_report_path = os.path.join(output_dir, "MASTER_COMPLEXITY_REPORT.json")
+
+            # Determine the master report path
+            if output_path:
+                master_report_path = output_path
+                # Ensure the directory exists
+                os.makedirs(os.path.dirname(os.path.abspath(master_report_path)), exist_ok=True)
+                logger.info(f"Using custom output path for master report: {master_report_path}")
+            else:
+                master_report_path = os.path.join(output_dir, "MASTER_COMPLEXITY_REPORT.json")
+                logger.info(f"Using default output path for master report: {master_report_path}")
 
             # Build the command with all report files as arguments
             command = [
@@ -203,6 +277,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             directory: str,
             specific_file: Optional[str] = None,
             message: Optional[str] = None,
+            output_path: Optional[str] = None,
     ) -> List[str]:
         """Find source files and process them using aider, then combine the reports.
 
@@ -210,6 +285,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             directory: Directory to search for source files.
             specific_file: Optional specific file to process.
             message: Message to pass to aider. If None, uses the default message.
+            output_path: Optional path where the master report will be saved.
 
         Returns:
             List of files that were successfully processed.
@@ -232,7 +308,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
         if report_files:
             logger.info(f"Found {len(report_files)} complexity reports to combine.")
-            master_report_path = self._combine_complexity_reports(report_files, directory)
+            master_report_path = self._combine_complexity_reports(report_files, directory, output_path)
             if master_report_path and os.path.exists(master_report_path):
                 logger.info(f"Master complexity report created: {master_report_path}")
             else:

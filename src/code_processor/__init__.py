@@ -51,6 +51,16 @@ class CodeProcessor(ABC):
         """
         pass
 
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
+        """Add processor-specific command-line arguments to the parser.
+
+        Subclasses can override this method to add their own command-line arguments.
+
+        Args:
+            parser: The argument parser to add arguments to.
+        """
+        pass
+
     def parse_args(self, args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         """Parse command-line arguments.
 
@@ -85,6 +95,10 @@ class CodeProcessor(ABC):
             action="store_true",
             help="Only show the file chunks that would be processed, then exit without processing"
         )
+
+        # Allow subclasses to add their own arguments
+        self.add_arguments(parser)
+
         return parser.parse_args(args)
 
     # --- Core Processing Logic ---

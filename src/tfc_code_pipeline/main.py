@@ -85,7 +85,7 @@ def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
     return " ".join(cmd_copy)
 
 
-def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, cmd: str = "explain_code") -> int:
+def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, cmd: str = "explain_code", processor_args: Optional[Dict[str, str]] = None) -> int:
     """Run the main application.
 
     Creates a one-shot Docker container based on Python 3.12,
@@ -100,10 +100,14 @@ def main(build_only: bool = False, run: bool = False, src: Optional[str] = None,
         src: Directory to mount in the Docker container under /src. Defaults to None.
         messages: Custom message to pass to aider. Defaults to "Hello".
         cmd: Command to run in the Docker container. Choices are "explain_code" or "write_tests". Defaults to "explain_code".
+        processor_args: Dictionary of processor-specific arguments to pass to the Docker container. Defaults to None.
 
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
+    # Initialize processor_args if None
+    if processor_args is None:
+        processor_args = {}
     # Define constants
     IMAGE_NAME = "tfc-code-pipeline:python3.12"
     DOCKERFILE_CONTENT = """\
@@ -197,6 +201,11 @@ ENTRYPOINT ["/bin/bash"]
                 "--directory", "/src"
             ])
 
+            # Add processor-specific arguments
+            for arg_name, arg_value in processor_args.items():
+                if arg_name == "output":
+                    docker_cmd.extend(["-o", arg_value])
+
             # Run the Docker command
             print(f"Running {cmd} in Docker container")
             print(f"Docker command: {format_docker_cmd(docker_cmd)}")
@@ -241,6 +250,11 @@ ENTRYPOINT ["/bin/bash"]
                 IMAGE_NAME,
                 "--directory", "/src"
             ])
+
+            # Add processor-specific arguments
+            for arg_name, arg_value in processor_args.items():
+                if arg_name == "output":
+                    docker_cmd.extend(["-o", arg_value])
 
             # Run the Docker command
             print(f"Running {cmd} in Docker container")

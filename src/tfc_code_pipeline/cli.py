@@ -5,7 +5,8 @@ including argument parsing and execution of the main functionality.
 """
 
 import argparse
-from typing import Optional, Sequence
+import sys
+from typing import Optional, Sequence, List
 
 # Local application imports
 from .main import main
@@ -43,6 +44,35 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default="explain_code",
         help="Command to run in the Docker container (explain_code, write_tests, find_bugs, or analyze_complexity)"
     )
+
+    # Add processor-specific arguments based on the command
+    if args is None:
+        args = sys.argv[1:]
+
+    # Convert args to list if it's not already
+    args_list = list(args)
+
+    # Find the index of --cmd if it exists
+    cmd_index = -1
+    cmd_value = "explain_code"  # Default value
+    for i, arg in enumerate(args_list):
+        if arg == "--cmd" and i + 1 < len(args_list):
+            cmd_index = i
+            cmd_value = args_list[i + 1]
+            break
+        elif arg.startswith("--cmd="):
+            cmd_index = i
+            cmd_value = arg.split("=", 1)[1]
+            break
+
+    # Add processor-specific arguments
+    if cmd_value == "analyze_complexity":
+        parser.add_argument(
+            "-o", "--output",
+            type=str,
+            help="Path where the master complexity report will be saved"
+        )
+
     return parser.parse_args(args)
 
 
@@ -56,7 +86,13 @@ def cli() -> int:
     """
     args = parse_args()
     # Note: messages parameter is parsed but not used in the main function
-    return main(build_only=args.build_only, run=args.run, src=args.src, cmd=args.cmd)
+
+    # Collect processor-specific arguments
+    processor_args = {}
+    if args.cmd == "analyze_complexity" and hasattr(args, "output") and args.output:
+        processor_args["output"] = args.output
+
+    return main(build_only=args.build_only, run=args.run, src=args.src, cmd=args.cmd, processor_args=processor_args)
 
 
 if __name__ == "__main__":
