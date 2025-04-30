@@ -3,6 +3,7 @@
 Processor to analyze code complexity using aider/LLM.
 """
 
+import argparse
 import glob
 import json
 import logging
