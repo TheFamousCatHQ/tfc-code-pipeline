@@ -14,11 +14,11 @@ from tempfile import TemporaryDirectory
 
 # Add the src directory to the Python path
 # Ensure the project root is in sys.path for discovering the 'src' package
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+# sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent)) # Removed: Let poetry/pytest handle paths via pytest.ini
 
 
-# Import the module to test using src prefix
-from src.find_bugs import FindBugsProcessor, main
+# Import the module to test (pytest.ini adds 'src' to pythonpath)
+from find_bugs import FindBugsProcessor, main
 
 
 class TestFindBugsProcessor(unittest.TestCase):
