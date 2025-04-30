@@ -77,71 +77,37 @@ class CodeProcessor(ABC):
 
     # --- Core Processing Logic ---
 
-    def _process_single_file(self, file_path: str, message: str) -> bool:
-        """Process a single file using aider.
+    def _run_aider(self, files: List[str], message: str) -> bool:
+        """Run aider with the specified files and message.
 
         Args:
-            file_path: Path to the file.
+            files: List of file paths to pass to aider.
             message: Message to pass to aider.
 
         Returns:
-            True if processing was successful, False otherwise.
+            True if aider ran successfully, False otherwise.
         """
-        print(f"Processing file: {file_path}")
+        command = ["aider", "--message", message] + files
+        print(f"Running command: {' '.join(command)}") # For debugging
         try:
-            # Call aider with the single file and message
             subprocess.run(
-                ["aider", "--message", message, file_path],
+                command,
                 check=True,
                 text=True,
                 # Consider adding capture_output=True if subclasses need output
             )
             return True
         except subprocess.CalledProcessError as e:
-            print(f"Error processing file {file_path}: {e}", file=sys.stderr)
+            file_list = ', '.join(files)
+            print(f"Error processing file(s) {file_list}: {e}", file=sys.stderr)
             return False
         except FileNotFoundError:
+            # This error is critical, stop the process.
             print(
-                "Error: 'aider' command not found. Please ensure it is installed.",
+                "Error: 'aider' command not found. Please ensure it is installed and in your PATH.",
                 file=sys.stderr,
             )
-            # Re-raise or handle differently if needed for whole codebase mode?
-            # For now, let it stop the whole process if aider isn't found.
-            raise
-
-    def _process_whole_codebase(
-        self, file_paths: List[str], message: str
-    ) -> List[str]:
-        """Process multiple files together using aider.
-
-        Args:
-            file_paths: List of paths to the files.
-            message: Message to pass to aider.
-
-        Returns:
-            List of files processed (assuming aider processes all or fails).
-        """
-        print(f"Processing {len(file_paths)} files together...")
-        try:
-            # Call aider with the message and all files
-            command = ["aider", "--message", message]
-            print(f"Running command: {' '.join(command)}") # For debugging
-            subprocess.run(
-                command,
-                check=True,
-                text=True,
-            )
-            # If successful, assume all input files were processed in the session
-            return file_paths
-        except subprocess.CalledProcessError as e:
-            print(f"Error processing codebase: {e}", file=sys.stderr)
-            return [] # Return empty list on failure
-        except FileNotFoundError:
-            print(
-                "Error: 'aider' command not found. Please ensure it is installed.",
-                file=sys.stderr,
-            )
-            raise
+            raise # Re-raise to stop execution in run()
 
     def process_files(
         self,
@@ -191,19 +157,21 @@ class CodeProcessor(ABC):
             if self.operates_on_whole_codebase:
                 # Process all files together
                 if specific_file:
-                    print(f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase.", file=sys.stderr)
-                processed_files = self._process_whole_codebase(source_files, message)
+                    print(f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.", file=sys.stderr)
+                if self._run_aider(source_files, message):
+                    processed_files = source_files # Assume all were processed if aider succeeds
+                # On failure, _run_aider prints error, processed_files remains empty
             else:
                 # Process files one by one
                 for file_path in source_files:
-                    if self._process_single_file(file_path, message):
+                    if self._run_aider([file_path], message):
                         processed_files.append(file_path)
-                    # If _process_single_file returns False, an error was already printed.
-                    # Should we stop processing remaining files on first error?
-                    # Current behavior: continue processing other files.
+                    # If _run_aider returns False, an error was already printed.
+                    # Continue processing other files unless aider itself is not found.
 
         except FileNotFoundError:
-             # Error already printed by helper methods, just return empty list
+             # Error already printed by _run_aider, just return empty list
+             # The exception is caught here to prevent crashing the caller if aider isn't found
              return []
 
         return processed_files
@@ -217,21 +185,29 @@ class CodeProcessor(ABC):
         try:
             args = self.parse_args()
 
-            # Handle --file specifically if processor operates on whole codebase
-            effective_specific_file = args.file
-            if self.operates_on_whole_codebase and args.file:
-                 print(f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Analyzing full directory.", file=sys.stderr)
-                 effective_specific_file = None # Effectively ignore --file
-
+            # process_files now handles the --file vs operates_on_whole_codebase logic internally
             processed_files = self.process_files(
-                args.directory, effective_specific_file, args.message
+                args.directory, args.file, args.message
             )
 
-            print(f"\nProcessed {len(processed_files)} files:")
+            if processed_files is not None: # Check if FileNotFoundError occurred in process_files
+                print(f"\nProcessed {len(processed_files)} files:")
+                for file in processed_files:
+                    print(f"  - {file}")
+            else:
+                 # Error message already printed if aider not found
+                 return 1 # Indicate failure
+
+            return 0
+        except FileNotFoundError:
+             # This catches the re-raised FileNotFoundError from _run_aider
+             # Error message already printed
+             return 1
+        except Exception as e:
             for file in processed_files:
                 print(f"  - {file}")
 
             return 0
         except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
+            print(f"An unexpected error occurred: {e}", file=sys.stderr)
             return 1
