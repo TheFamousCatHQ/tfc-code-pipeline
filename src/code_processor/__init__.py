@@ -14,7 +14,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
-from find_source_files import find_source_files as find_files
+try:
+    # Try importing directly (for Docker/installed package)
+    from find_source_files import find_source_files as find_files
+except ImportError:
+    # Fall back to src-prefixed import (for local development)
+    from src.find_source_files import find_source_files as find_files
 
 
 class CodeProcessor(ABC):
