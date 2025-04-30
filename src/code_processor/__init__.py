@@ -155,7 +155,7 @@ class CodeProcessor(ABC):
                     print(
                         f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.",
                         file=sys.stderr)
-                if self._run_aider(source_files, message):
+                if self._run_aider([], message):
                     processed_files = source_files  # Assume all were processed if aider succeeds
                 # On failure, _run_aider prints error, processed_files remains empty
             else:
