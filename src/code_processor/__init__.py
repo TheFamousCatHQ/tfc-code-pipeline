@@ -84,16 +84,17 @@ class CodeProcessor(ABC):
 
     # --- Core Processing Logic ---
 
-    def _group_files_by_parent_directory(self, files: List[str], max_files_per_chunk: int = 20) -> List[List[str]]:
-        """Group files by parent directory and ensure no group has more than max_files_per_chunk files.
+    def _group_files_by_parent_directory(self, files: List[str], min_files_per_chunk: int = 10, max_files_per_chunk: int = 20) -> List[List[str]]:
+        """Group files by parent directory and ensure each chunk has between min_files_per_chunk and max_files_per_chunk files.
 
         Args:
             files: List of file paths to group.
+            min_files_per_chunk: Minimum number of files per chunk (when possible).
             max_files_per_chunk: Maximum number of files per chunk.
 
         Returns:
             List of lists, where each inner list contains files from the same parent directory,
-            with no more than max_files_per_chunk files per list.
+            with between min_files_per_chunk and max_files_per_chunk files per list (when possible).
         """
         # Group files by parent directory
         dir_to_files: Dict[str, List[str]] = defaultdict(list)
@@ -101,13 +102,81 @@ class CodeProcessor(ABC):
             parent_dir = str(Path(file_path).parent)
             dir_to_files[parent_dir].append(file_path)
 
-        # Create chunks, ensuring no chunk has more than max_files_per_chunk files
+        # Create chunks with min-max constraints
         chunks: List[List[str]] = []
-        for parent_dir, dir_files in dir_to_files.items():
-            # If a directory has more than max_files_per_chunk files, split it into smaller chunks
-            for i in range(0, len(dir_files), max_files_per_chunk):
-                chunk = dir_files[i:i + max_files_per_chunk]
-                chunks.append(chunk)
+
+        # Process directories with enough files for at least one full chunk first
+        large_dirs = {d: f for d, f in dir_to_files.items() if len(f) >= min_files_per_chunk}
+        small_dirs = {d: f for d, f in dir_to_files.items() if len(f) < min_files_per_chunk}
+
+        # Process large directories
+        for parent_dir, dir_files in large_dirs.items():
+            # If a directory has more than max_files_per_chunk files, split it optimally
+            if len(dir_files) <= max_files_per_chunk:
+                # If files fit in a single chunk, keep them together
+                chunks.append(dir_files)
+            else:
+                # Calculate optimal chunk size to minimize the number of small chunks
+                total_files = len(dir_files)
+                num_full_chunks = total_files // max_files_per_chunk
+                remainder = total_files % max_files_per_chunk
+
+                # If the remainder is less than min_files_per_chunk, distribute the files more evenly
+                if 0 < remainder < min_files_per_chunk:
+                    # Calculate a new chunk size that's between min and max
+                    new_chunk_size = total_files // (num_full_chunks + 1)
+                    if new_chunk_size < min_files_per_chunk:
+                        # If we can't meet the minimum, use max size for all but the last chunk
+                        for i in range(0, total_files - remainder, max_files_per_chunk):
+                            chunk = dir_files[i:i + max_files_per_chunk]
+                            chunks.append(chunk)
+                        # Add the remainder as the last chunk
+                        if remainder > 0:
+                            chunks.append(dir_files[-remainder:])
+                    else:
+                        # Create evenly sized chunks
+                        for i in range(0, total_files, new_chunk_size):
+                            end_idx = min(i + new_chunk_size, total_files)
+                            chunk = dir_files[i:end_idx]
+                            chunks.append(chunk)
+                else:
+                    # Create full-sized chunks
+                    for i in range(0, total_files - remainder, max_files_per_chunk):
+                        chunk = dir_files[i:i + max_files_per_chunk]
+                        chunks.append(chunk)
+                    # Add the remainder as the last chunk if it's large enough
+                    if remainder >= min_files_per_chunk or remainder == 0:
+                        if remainder > 0:
+                            chunks.append(dir_files[-remainder:])
+                    else:
+                        # Redistribute the last chunk + remainder to meet the minimum size
+                        last_full_chunk = chunks.pop() if chunks else []
+                        combined = last_full_chunk + dir_files[-remainder:]
+                        # Split the combined chunk more evenly
+                        mid = len(combined) // 2
+                        chunks.append(combined[:mid])
+                        chunks.append(combined[mid:])
+
+        # Process small directories by combining them when possible
+        if small_dirs:
+            combined_small_files = []
+            for dir_files in small_dirs.values():
+                combined_small_files.extend(dir_files)
+
+            # If we have enough small files to meet the minimum, create chunks
+            if combined_small_files:
+                if len(combined_small_files) >= min_files_per_chunk:
+                    # Create chunks of size between min and max
+                    for i in range(0, len(combined_small_files), max_files_per_chunk):
+                        end_idx = min(i + max_files_per_chunk, len(combined_small_files))
+                        chunk = combined_small_files[i:end_idx]
+                        # Only add chunks that meet the minimum size
+                        if len(chunk) >= min_files_per_chunk or i + max_files_per_chunk >= len(combined_small_files):
+                            chunks.append(chunk)
+                else:
+                    # If we don't have enough small files to meet the minimum,
+                    # add them as a single chunk anyway
+                    chunks.append(combined_small_files)
 
         return chunks
 
@@ -123,29 +192,71 @@ class CodeProcessor(ABC):
         # Display summary information
         total_files = sum(len(chunk) for chunk in file_chunks)
         print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
+        print(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
+
+        # Count chunks by size
+        size_distribution = {}
+        for chunk in file_chunks:
+            chunk_size = len(chunk)
+            if chunk_size not in size_distribution:
+                size_distribution[chunk_size] = 0
+            size_distribution[chunk_size] += 1
+
+        # Display size distribution
+        print("\nChunk size distribution:")
+        for size in sorted(size_distribution.keys()):
+            count = size_distribution[size]
+            print(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
 
         # Display detailed information about each chunk
         chunk_info = {}
         for chunk in file_chunks:
+            if not chunk:  # Skip empty chunks (shouldn't happen)
+                continue
             parent_dir = str(Path(chunk[0]).parent)
             if parent_dir not in chunk_info:
                 chunk_info[parent_dir] = []
             chunk_info[parent_dir].append(len(chunk))
 
+        print("\nDirectory breakdown:")
         for parent_dir, file_counts in chunk_info.items():
             chunk_count = len(file_counts)
             total_files_in_dir = sum(file_counts)
             if chunk_count == 1:
                 print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
             else:
-                chunks_desc = ', '.join([str(count) for count in file_counts])
+                chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
                 print(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+
+        # Check for combined directories
+        combined_dirs = set()
+        for chunk in file_chunks:
+            if not chunk:  # Skip empty chunks (shouldn't happen)
+                continue
+            dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
+            if len(dirs_in_chunk) > 1:
+                combined_dirs.update(dirs_in_chunk)
+
+        if combined_dirs:
+            print("\nSmall directories combined into chunks:")
+            for dir_name in sorted(combined_dirs):
+                print(f"  - {dir_name}")
 
         # Display files in each chunk
         print("\nDetailed file listing by chunk:")
         for i, chunk in enumerate(file_chunks, 1):
-            parent_dir = str(Path(chunk[0]).parent)
-            print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+            if not chunk:  # Skip empty chunks (shouldn't happen)
+                continue
+
+            # Get all unique parent directories in this chunk
+            dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
+            if len(dirs_in_chunk) == 1:
+                parent_dir = next(iter(dirs_in_chunk))
+                print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+            else:
+                dir_list = ', '.join(sorted(dirs_in_chunk))
+                print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
+
             for j, file_path in enumerate(chunk, 1):
                 print(f"  {j}. {file_path}")
 
@@ -230,32 +341,59 @@ class CodeProcessor(ABC):
                 # Group files by parent directory with a maximum of 20 files per chunk
                 file_chunks = self._group_files_by_parent_directory(source_files)
 
-                # Log information about the chunks
+                # Display detailed information about the chunks
+                print(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
                 total_files = sum(len(chunk) for chunk in file_chunks)
                 print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
 
-                # Log details about each chunk
+                # Count chunks by size
+                size_distribution = {}
+                for chunk in file_chunks:
+                    chunk_size = len(chunk)
+                    if chunk_size not in size_distribution:
+                        size_distribution[chunk_size] = 0
+                    size_distribution[chunk_size] += 1
+
+                # Display size distribution
+                print("\nChunk size distribution:")
+                for size in sorted(size_distribution.keys()):
+                    count = size_distribution[size]
+                    print(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
+
+                # Display detailed information about each chunk
                 chunk_info = {}
                 for chunk in file_chunks:
+                    if not chunk:  # Skip empty chunks (shouldn't happen)
+                        continue
                     parent_dir = str(Path(chunk[0]).parent)
                     if parent_dir not in chunk_info:
                         chunk_info[parent_dir] = []
                     chunk_info[parent_dir].append(len(chunk))
 
+                print("\nDirectory breakdown:")
                 for parent_dir, file_counts in chunk_info.items():
                     chunk_count = len(file_counts)
                     total_files_in_dir = sum(file_counts)
                     if chunk_count == 1:
                         print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
                     else:
-                        chunks_desc = ', '.join([str(count) for count in file_counts])
-                        print(
-                            f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+                        chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
+                        print(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
 
                 # Process each chunk separately
                 for i, chunk in enumerate(file_chunks, 1):
-                    print(
-                        f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {Path(chunk[0]).parent}")
+                    if not chunk:  # Skip empty chunks (shouldn't happen)
+                        continue
+
+                    # Get all unique parent directories in this chunk
+                    dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
+                    if len(dirs_in_chunk) == 1:
+                        parent_dir = next(iter(dirs_in_chunk))
+                        print(f"\nProcessing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+                    else:
+                        dir_list = ', '.join(sorted(dirs_in_chunk))
+                        print(f"\nProcessing chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
+
                     if self._run_aider(chunk, message):
                         processed_files.extend(chunk)  # Add all files in the chunk to processed_files
                     # On failure, _run_aider prints error, we continue with the next chunk

@@ -73,8 +73,12 @@ class MyProcessor(CodeProcessor):
 
 When `operates_on_whole_codebase` is `True`:
 - Files are grouped by parent directory
-- Each group is limited to a maximum of 20 files
-- If a directory contains more than 20 files, they are split into smaller chunks
+- Each chunk contains between 10 and 20 files (when possible)
+- The algorithm optimizes for:
+  - Keeping files from the same directory together when possible
+  - Ensuring chunks have at least 10 files (minimum size)
+  - Ensuring no chunk exceeds 20 files (maximum size)
+  - Combining small directories that have fewer than 10 files
 - Each chunk is processed separately with Aider
 - Detailed logging shows how many chunks were created and how files are distributed
 
