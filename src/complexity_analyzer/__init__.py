@@ -21,12 +21,12 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             Default message for aider.
         """
         return (
-            "Analyze this code to identify the most complex and difficult-to-understand parts. "
-            "For each complex section you identify, please explain:\n"
+            "Analyze this code to identify the most complex and difficult-to-understand parts.\n"
+            "For each complex component you identify, please explain:\n"
             "1. Why it is considered complex (e.g., high cognitive load, complex logic, deep nesting, unclear naming, potential for bugs).\n"
-            "2. The specific line numbers or range of lines for the complex code.\n"
+            "2. Rate the ability to make changes to this component from 0 (impossible) to 100 (super eays).\n"
             "3. Suggestions for simplifying or improving the readability of this section.\n"
-            "Focus on areas that would be challenging for a new developer to grasp quickly.\n"
+            "Focus on areas that would be challenging for a LLM to make changes to.\n"
             "Only analyze source code, no documentation, etc.\n"
             "Create a COMPLEXITY_REPORT.json with your findings.\n"
         )
