@@ -29,6 +29,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "Focus on areas that would be challenging for a LLM to make changes to.\n"
             "Only analyze source code, no documentation, etc.\n"
             "Create a COMPLEXITY_REPORT.json with your findings.\n"
+            "Add all files you need yourself to the context without asking or waiting for user actions.\n"
         )
 
     def get_description(self) -> str:

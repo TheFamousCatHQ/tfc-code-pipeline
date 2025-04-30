@@ -19,13 +19,17 @@ Each processor only needs to define its specific message and description, while 
 
 1. **Source File Discovery**: The processor finds source files in the specified directory using the `find-source-files` tool, which excludes dependencies, tests, and other non-core files.
 
-2. **Aider Integration**: For each source file, the processor calls Aider with a specific prompt (the default message or a custom one provided by the user).
+2. **File Processing Strategy**:
+   - If `operates_on_whole_codebase` is `False` (default): Each file is processed individually
+   - If `operates_on_whole_codebase` is `True`: Files are grouped by parent directory and processed in chunks of up to 20 files
 
-3. **Processing Output**:
+3. **Aider Integration**: The processor calls Aider with a specific prompt (the default message or a custom one provided by the user) and the file(s) to process.
+
+4. **Processing Output**:
    - Basic processors (like `ExplainCodeProcessor`) simply display Aider's output
    - Advanced processors (like `FindBugsProcessor`) parse Aider's output to generate structured data or reports
 
-4. **Reporting**: All processors report which files were processed and any errors encountered.
+5. **Reporting**: All processors report which files were processed and any errors encountered.
 
 ## Available Processors
 
@@ -55,6 +59,27 @@ Each processor only needs to define its specific message and description, while 
 - **Default Message**: "Analyze this code to identify the most complex and difficult-to-understand parts. For each complex section you identify, please explain: 1. Why it is considered complex (e.g., high cognitive load, complex logic, deep nesting, unclear naming, potential for bugs). 2. The specific line numbers or range of lines for the complex code. 3. Suggestions for simplifying or improving the readability of this section. Focus on areas that would be challenging for a new developer to grasp quickly."
 - **Output**: LLM analysis printed to standard output (via `aider`).
 
+## Processor Configuration
+
+### operates_on_whole_codebase
+
+Each processor can be configured to operate on the whole codebase at once or on a file-by-file basis using the `operates_on_whole_codebase` property:
+
+```python
+class MyProcessor(CodeProcessor):
+    operates_on_whole_codebase = True  # Process multiple files at once
+    # ...
+```
+
+When `operates_on_whole_codebase` is `True`:
+- Files are grouped by parent directory
+- Each group is limited to a maximum of 20 files
+- If a directory contains more than 20 files, they are split into smaller chunks
+- Each chunk is processed separately with Aider
+- Detailed logging shows how many chunks were created and how files are distributed
+
+This is useful for processors that need to analyze relationships between files or make changes that span multiple files.
+
 ## Creating a New Processor
 
 To create a new processor:
@@ -64,8 +89,9 @@ To create a new processor:
 3. Implement the required methods:
    - `get_default_message()`
    - `get_description()`
-4. Optionally override other methods for specialized behavior
-5. Add the module to `pyproject.toml`
+4. Optionally set configuration properties like `operates_on_whole_codebase`
+5. Optionally override other methods for specialized behavior
+6. Add the module to `pyproject.toml`
 
 Example:
 
@@ -73,6 +99,9 @@ Example:
 from code_processor import CodeProcessor
 
 class MyCustomProcessor(CodeProcessor):
+    # Set to True if this processor should operate on multiple files at once
+    operates_on_whole_codebase = True
+
     def get_default_message(self) -> str:
         return "my custom message for aider"
 
@@ -141,10 +170,7 @@ Explains code in source files using aider. This script finds source files in a s
 explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
 
-**Options:**
-- `--directory`: Directory to search for source files (required)
-- `--file`: Specific file to process (optional, overrides directory search)
-- `--message`: Custom message to pass to aider (optional, defaults to "explain this code")
+**Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
 ```bash
@@ -153,6 +179,9 @@ explain-code --directory /path/to/source
 
 # Explain a specific file with a custom message
 explain-code --file /path/to/file.js --message "explain this code in detail"
+
+# Show how files would be chunked without processing them
+explain-code --directory /path/to/source --show-only-repo-files-chunks
 ```
 
 ### write-tests
@@ -164,10 +193,7 @@ Writes unit tests for source files using aider. This script finds source files i
 write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
 
-**Options:**
-- `--directory`: Directory to search for source files (required)
-- `--file`: Specific file to process (optional, overrides directory search)
-- `--message`: Custom message to pass to aider (optional, defaults to "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality.")
+**Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
 ```bash
@@ -176,6 +202,9 @@ write-tests --directory /path/to/source
 
 # Write tests for a specific file with a custom message
 write-tests --file /path/to/file.js --message "write comprehensive unit tests for this file"
+
+# Show how files would be chunked without processing them
+write-tests --directory /path/to/source --show-only-repo-files-chunks
 ```
 
 ### analyze-complexity
@@ -187,10 +216,7 @@ Analyzes code complexity in source files using an LLM via the `aider` tool. This
 analyze-complexity --directory /path/to/source [--file /path/to/specific/file.py] [--message "custom analysis prompt"]
 ```
 
-**Options:**
-- `--directory`: Directory to search for source files (required)
-- `--file`: Specific file to process (optional, overrides directory search)
-- `--message`: Custom message/prompt to pass to aider (optional, overrides the default complexity analysis prompt)
+**Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
 ```bash
@@ -199,6 +225,9 @@ analyze-complexity --directory /path/to/source
 
 # Analyze complexity for a specific file
 analyze-complexity --file /path/to/file.py
+
+# Show how files would be chunked without processing them
+analyze-complexity --directory /path/to/source --show-only-repo-files-chunks
 ```
 
 ### tfc-code-pipeline
@@ -233,6 +262,23 @@ tfc-code-pipeline --run --src /path/to/source --cmd find_bugs
 
 # Run analyze-complexity in a Docker container
 tfc-code-pipeline --run --src /path/to/source --cmd analyze_complexity
+```
+
+## Common Options for All Processors
+
+All code processors support the following common options:
+
+- `--directory`: Directory to search for source files (required)
+- `--file`: Specific file to process (optional, overrides directory search)
+- `--message`: Custom message to pass to aider (optional, defaults to processor-specific message)
+- `--show-only-repo-files-chunks`: Only show the file chunks that would be processed, then exit without processing
+
+The `--show-only-repo-files-chunks` option is particularly useful for processors with `operates_on_whole_codebase=True` to preview how files will be grouped before running the actual processing.
+
+**Example:**
+```bash
+# Show how files would be chunked without processing them
+explain-code --directory /path/to/source --show-only-repo-files-chunks
 ```
 
 ## Environment Variables

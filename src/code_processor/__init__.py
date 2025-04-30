@@ -10,7 +10,9 @@ import argparse
 import subprocess
 import sys
 from abc import ABC, abstractmethod
-from typing import List, Optional, Sequence
+from collections import defaultdict
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence
 
 from find_source_files import find_source_files as find_files
 
@@ -73,9 +75,79 @@ class CodeProcessor(ABC):
             default=self.get_default_message(),
             help=f"Message to pass to aider (default: '{self.get_default_message()}')"
         )
+        parser.add_argument(
+            "--show-only-repo-files-chunks",
+            action="store_true",
+            help="Only show the file chunks that would be processed, then exit without processing"
+        )
         return parser.parse_args(args)
 
     # --- Core Processing Logic ---
+
+    def _group_files_by_parent_directory(self, files: List[str], max_files_per_chunk: int = 20) -> List[List[str]]:
+        """Group files by parent directory and ensure no group has more than max_files_per_chunk files.
+
+        Args:
+            files: List of file paths to group.
+            max_files_per_chunk: Maximum number of files per chunk.
+
+        Returns:
+            List of lists, where each inner list contains files from the same parent directory,
+            with no more than max_files_per_chunk files per list.
+        """
+        # Group files by parent directory
+        dir_to_files: Dict[str, List[str]] = defaultdict(list)
+        for file_path in files:
+            parent_dir = str(Path(file_path).parent)
+            dir_to_files[parent_dir].append(file_path)
+
+        # Create chunks, ensuring no chunk has more than max_files_per_chunk files
+        chunks: List[List[str]] = []
+        for parent_dir, dir_files in dir_to_files.items():
+            # If a directory has more than max_files_per_chunk files, split it into smaller chunks
+            for i in range(0, len(dir_files), max_files_per_chunk):
+                chunk = dir_files[i:i + max_files_per_chunk]
+                chunks.append(chunk)
+
+        return chunks
+
+    def _display_file_chunks(self, source_files: List[str]) -> None:
+        """Display information about the file chunks without processing them.
+
+        Args:
+            source_files: List of source files to group into chunks.
+        """
+        # Group files by parent directory
+        file_chunks = self._group_files_by_parent_directory(source_files)
+
+        # Display summary information
+        total_files = sum(len(chunk) for chunk in file_chunks)
+        print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
+
+        # Display detailed information about each chunk
+        chunk_info = {}
+        for chunk in file_chunks:
+            parent_dir = str(Path(chunk[0]).parent)
+            if parent_dir not in chunk_info:
+                chunk_info[parent_dir] = []
+            chunk_info[parent_dir].append(len(chunk))
+
+        for parent_dir, file_counts in chunk_info.items():
+            chunk_count = len(file_counts)
+            total_files_in_dir = sum(file_counts)
+            if chunk_count == 1:
+                print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
+            else:
+                chunks_desc = ', '.join([str(count) for count in file_counts])
+                print(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+
+        # Display files in each chunk
+        print("\nDetailed file listing by chunk:")
+        for i, chunk in enumerate(file_chunks, 1):
+            parent_dir = str(Path(chunk[0]).parent)
+            print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+            for j, file_path in enumerate(chunk, 1):
+                print(f"  {j}. {file_path}")
 
     def _run_aider(self, files: List[str], message: str) -> bool:
         """Run aider with the specified files and message.
@@ -87,7 +159,8 @@ class CodeProcessor(ABC):
         Returns:
             True if aider ran successfully, False otherwise.
         """
-        command = ["aider", "--no-auto-commits", "--message", message] + files
+        command = ["aider", "--no-pretty", "--no-stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
+                   message] + files
         print(f"Running command: {' '.join(command)}")  # For debugging
         try:
             subprocess.run(
@@ -148,14 +221,44 @@ class CodeProcessor(ABC):
         processed_files: List[str] = []
         try:
             if self.operates_on_whole_codebase:
-                # Process all files together
+                # Process files in chunks grouped by parent directory
                 if specific_file:
                     print(
                         f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.",
                         file=sys.stderr)
-                if self._run_aider([], message):
-                    processed_files = source_files  # Assume all were processed if aider succeeds
-                # On failure, _run_aider prints error, processed_files remains empty
+
+                # Group files by parent directory with a maximum of 20 files per chunk
+                file_chunks = self._group_files_by_parent_directory(source_files)
+
+                # Log information about the chunks
+                total_files = sum(len(chunk) for chunk in file_chunks)
+                print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
+
+                # Log details about each chunk
+                chunk_info = {}
+                for chunk in file_chunks:
+                    parent_dir = str(Path(chunk[0]).parent)
+                    if parent_dir not in chunk_info:
+                        chunk_info[parent_dir] = []
+                    chunk_info[parent_dir].append(len(chunk))
+
+                for parent_dir, file_counts in chunk_info.items():
+                    chunk_count = len(file_counts)
+                    total_files_in_dir = sum(file_counts)
+                    if chunk_count == 1:
+                        print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
+                    else:
+                        chunks_desc = ', '.join([str(count) for count in file_counts])
+                        print(
+                            f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+
+                # Process each chunk separately
+                for i, chunk in enumerate(file_chunks, 1):
+                    print(
+                        f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {Path(chunk[0]).parent}")
+                    if self._run_aider(chunk, message):
+                        processed_files.extend(chunk)  # Add all files in the chunk to processed_files
+                    # On failure, _run_aider prints error, we continue with the next chunk
             else:
                 # Process files one by one
                 for file_path in source_files:
@@ -180,7 +283,24 @@ class CodeProcessor(ABC):
         try:
             args = self.parse_args()
 
-            # process_files now handles the --file vs operates_on_whole_codebase logic internally
+            # If --show-only-repo-files-chunks is specified, just show the chunks and exit
+            if args.show_only_repo_files_chunks:
+                # Find source files
+                if args.file:
+                    source_files = [args.file]
+                    print(f"Warning: Using specific file: {args.file}")
+                else:
+                    source_files = find_files(args.directory)
+
+                if not source_files:
+                    print(f"No source files found in directory: {args.directory}", file=sys.stderr)
+                    return 1
+
+                # Display the file chunks without processing
+                self._display_file_chunks(source_files)
+                return 0
+
+            # Normal processing mode
             processed_files = self.process_files(
                 args.directory, args.file, args.message
             )
@@ -198,11 +318,6 @@ class CodeProcessor(ABC):
             # This catches the re-raised FileNotFoundError from _run_aider
             # Error message already printed
             return 1
-        except Exception as e:
-            for file in processed_files:
-                print(f"  - {file}")
-
-            return 0
         except Exception as e:
             print(f"An unexpected error occurred: {e}", file=sys.stderr)
             return 1
