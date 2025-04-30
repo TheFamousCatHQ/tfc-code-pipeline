@@ -14,11 +14,10 @@ import subprocess
 import sys
 from typing import Dict, List, Optional, Any
 
-try:
-    from code_processor import CodeProcessor
-except ImportError:
-    # When running tests, the import path is different
-    from src.code_processor import CodeProcessor
+# Import relative to the 'src' package
+from code_processor import CodeProcessor
+# Import relative to the 'src' package
+from find_source_files import find_source_files as find_files
 
 
 class FindBugsProcessor(CodeProcessor):
@@ -63,8 +62,7 @@ class FindBugsProcessor(CodeProcessor):
         if specific_file:
             source_files = [specific_file]
         else:
-            # Find source files in the directory
-            from find_source_files import find_source_files as find_files
+            # Find source files in the directory (find_files is imported at module level now)
             source_files = find_files(directory)
 
         if not source_files:

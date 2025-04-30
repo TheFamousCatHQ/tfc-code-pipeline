@@ -13,10 +13,10 @@ from unittest.mock import patch, MagicMock
 from tempfile import TemporaryDirectory
 
 # Add the src directory to the Python path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / 'src'))
+# No need for sys.path manipulation if tests are run correctly (e.g., with pytest from root)
 
-# Import the module to test
-from find_bugs import FindBugsProcessor, main
+# Import the module to test using src prefix
+from src.find_bugs import FindBugsProcessor, main
 
 
 class TestFindBugsProcessor(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestFindBugsProcessor(unittest.TestCase):
         self.assertIn("JSON", description)
 
     @patch('subprocess.run')
-    @patch('find_source_files.find_source_files')
+    @patch('src.find_bugs.find_files') # Patch the imported name within find_bugs
     def test_process_files(self, mock_find_files, mock_run):
         """Test that process_files processes files and generates JSON output."""
         # Set up mocks
@@ -67,7 +67,7 @@ class TestFindBugsProcessor(unittest.TestCase):
                 # We should have at least one bug per file
                 self.assertGreaterEqual(len(bugs_data), 2)
 
-    @patch('find_bugs.FindBugsProcessor.run')
+    @patch('src.find_bugs.FindBugsProcessor.run') # Patch using src prefix
     def test_main(self, mock_run):
         """Test that main calls the processor's run method."""
         mock_run.return_value = 0

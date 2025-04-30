@@ -14,7 +14,8 @@ from typing import List, Optional, Sequence
 
 # Local application/library specific imports
 # Use a specific alias to avoid potential name clashes if 'find_source_files' is used elsewhere
-from src.find_source_files import find_source_files as find_files
+# Import relative to the 'src' package
+from find_source_files import find_source_files as find_files
 
 
 class CodeProcessor(ABC):
