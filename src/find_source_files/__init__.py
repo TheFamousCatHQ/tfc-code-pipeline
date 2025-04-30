@@ -87,6 +87,53 @@ def is_config_file(file_path: Path) -> bool:
     return False
 
 
+def is_dot_file(file_path: Path) -> bool:
+    """Check if a file is a dot file (hidden file).
+
+    Args:
+        file_path: Path to the file.
+
+    Returns:
+        True if the file is a dot file, False otherwise.
+    """
+    # Check if the file name starts with a dot
+    return file_path.name.startswith('.')
+
+
+def is_test_file(file_path: Path) -> bool:
+    """Check if a file is a test file.
+
+    Args:
+        file_path: Path to the file.
+
+    Returns:
+        True if the file is a test file, False otherwise.
+    """
+    # Common test file patterns
+    test_patterns = [
+        'test_', 'tests_', '_test', '_tests',
+        'spec_', 'specs_', '_spec', '_specs',
+        '.test.', '.spec.', '-test.', '-spec.'
+    ]
+
+    # Check if the file name starts with or contains test patterns
+    file_name = file_path.stem.lower()
+    full_name = file_path.name.lower()
+    for pattern in test_patterns:
+        if pattern in file_name or pattern in full_name:
+            return True
+
+    # Check if the file is in a test directory
+    for part in file_path.parts:
+        if part.lower() in {'test', 'tests', 'spec', 'specs', 'testing'}:
+            return True
+        # Check for integration test directories
+        if 'tests_integration' in part.lower() or 'integration_tests' in part.lower():
+            return True
+
+    return False
+
+
 def is_source_file(file_path: Path) -> bool:
     """Check if a file is a source file.
 
@@ -134,6 +181,19 @@ def is_source_file(file_path: Path) -> bool:
     if is_config_file(file_path):
         return False
 
+    # Check if it's a test file - if so, it's not a source file
+    if is_test_file(file_path):
+        return False
+
+    # Check if it's a dot file - if so, it's not a source file
+    if is_dot_file(file_path):
+        return False
+
+    # Check if it's in a dot directory - if so, it's not a source file
+    for part in file_path.parts:
+        if part.startswith('.'):
+            return False
+
     # Otherwise, check if it has a source file extension
     return file_path.suffix.lower() in source_extensions
 
@@ -173,9 +233,16 @@ def should_skip_directory(dir_path: Path) -> bool:
     if dir_path.name.lower() in skip_dirs:
         return True
 
+    # Check if the directory name starts with a dot (hidden directory)
+    if dir_path.name.startswith('.'):
+        return True
+
     # Check if any parent directory in the path should be skipped
     for part in dir_path.parts:
         if part.lower() in skip_dirs:
+            return True
+        # Check if any parent directory starts with a dot
+        if part.startswith('.'):
             return True
 
     return False

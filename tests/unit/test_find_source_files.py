@@ -20,6 +20,8 @@ from find_source_files import (
     parse_args,
     is_source_file,
     is_config_file,
+    is_test_file,
+    is_dot_file,
     should_skip_directory,
     find_source_files,
     main
@@ -62,6 +64,52 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertFalse(is_config_file(Path("styles.css")))
         self.assertFalse(is_config_file(Path("data.json")))
 
+    def test_is_dot_file(self):
+        """Test is_dot_file with various file names."""
+        # Test files that should be identified as dot files
+        self.assertTrue(is_dot_file(Path(".gitignore")))
+        self.assertTrue(is_dot_file(Path(".env")))
+        self.assertTrue(is_dot_file(Path(".eslintrc.js")))
+        self.assertTrue(is_dot_file(Path(".prettierrc")))
+        self.assertTrue(is_dot_file(Path(".hidden_file")))
+        self.assertTrue(is_dot_file(Path(".config")))
+
+        # Test files that should not be identified as dot files
+        self.assertFalse(is_dot_file(Path("file.py")))
+        self.assertFalse(is_dot_file(Path("app.js")))
+        self.assertFalse(is_dot_file(Path("index.ts")))
+        self.assertFalse(is_dot_file(Path("component.tsx")))
+        self.assertFalse(is_dot_file(Path("file.with.dots.py")))
+        self.assertFalse(is_dot_file(Path("file_with_no_extension")))
+
+    def test_is_test_file(self):
+        """Test is_test_file with various file names."""
+        # Test files that should be identified as test files
+        self.assertTrue(is_test_file(Path("test_file.py")))
+        self.assertTrue(is_test_file(Path("tests_file.py")))
+        self.assertTrue(is_test_file(Path("file_test.py")))
+        self.assertTrue(is_test_file(Path("file_tests.py")))
+        self.assertTrue(is_test_file(Path("file.test.js")))
+        self.assertTrue(is_test_file(Path("file.spec.js")))
+        self.assertTrue(is_test_file(Path("file-test.js")))
+        self.assertTrue(is_test_file(Path("file-spec.js")))
+
+        # Test files in test directories
+        self.assertTrue(is_test_file(Path("test/file.py")))
+        self.assertTrue(is_test_file(Path("tests/file.py")))
+        self.assertTrue(is_test_file(Path("spec/file.js")))
+        self.assertTrue(is_test_file(Path("specs/file.js")))
+        self.assertTrue(is_test_file(Path("testing/file.py")))
+        self.assertTrue(is_test_file(Path("/path/to/test/file.py")))
+
+        # Test files that should not be identified as test files
+        self.assertFalse(is_test_file(Path("file.py")))
+        self.assertFalse(is_test_file(Path("app.js")))
+        self.assertFalse(is_test_file(Path("index.ts")))
+        self.assertFalse(is_test_file(Path("component.tsx")))
+        self.assertFalse(is_test_file(Path("testing.py")))  # "testing" in filename but not matching pattern
+        self.assertFalse(is_test_file(Path("testfile.py")))  # "test" in filename but not matching pattern
+
     def test_is_source_file(self):
         """Test is_source_file with various file extensions."""
         # Test Python files
@@ -98,6 +146,27 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertFalse(is_source_file(Path("pyproject.toml")))
         self.assertFalse(is_source_file(Path(".eslintrc.js")))
 
+        # Test test files (should not be considered source files)
+        self.assertFalse(is_source_file(Path("test_file.py")))
+        self.assertFalse(is_source_file(Path("file_test.py")))
+        self.assertFalse(is_source_file(Path("file.test.js")))
+        self.assertFalse(is_source_file(Path("file.spec.js")))
+        self.assertFalse(is_source_file(Path("test/file.py")))
+        self.assertFalse(is_source_file(Path("tests/file.py")))
+
+        # Test dot files (should not be considered source files)
+        self.assertFalse(is_source_file(Path(".gitignore")))
+        self.assertFalse(is_source_file(Path(".env")))
+        self.assertFalse(is_source_file(Path(".eslintrc.js")))
+        self.assertFalse(is_source_file(Path(".prettierrc")))
+        self.assertFalse(is_source_file(Path(".hidden_file.py")))
+
+        # Test files in dot directories (should not be considered source files)
+        self.assertFalse(is_source_file(Path(".hidden_dir/file.py")))
+        self.assertFalse(is_source_file(Path("path/to/.hidden_dir/file.py")))
+        self.assertFalse(is_source_file(Path(".git/file.py")))
+        self.assertFalse(is_source_file(Path(".vscode/settings.json")))
+
     def test_should_skip_directory(self):
         """Test should_skip_directory with various directory names."""
         # Test directories that should be skipped
@@ -108,6 +177,12 @@ class TestFindSourceFiles(unittest.TestCase):
         self.assertTrue(should_skip_directory(Path(".git")))
         self.assertTrue(should_skip_directory(Path(".idea")))
 
+        # Test dot directories (should be skipped)
+        self.assertTrue(should_skip_directory(Path(".hidden_dir")))
+        self.assertTrue(should_skip_directory(Path(".config")))
+        self.assertTrue(should_skip_directory(Path(".cache")))
+        self.assertTrue(should_skip_directory(Path(".local")))
+
         # Test directories that should not be skipped
         self.assertFalse(should_skip_directory(Path("src")))
         self.assertFalse(should_skip_directory(Path("app")))
@@ -117,6 +192,8 @@ class TestFindSourceFiles(unittest.TestCase):
         # Test nested directories
         self.assertTrue(should_skip_directory(Path("/path/to/node_modules/subdir")))
         self.assertTrue(should_skip_directory(Path("/path/to/tests/subdir")))
+        self.assertTrue(should_skip_directory(Path("/path/to/.hidden_dir/subdir")))
+        self.assertTrue(should_skip_directory(Path("/path/to/.git/subdir")))
         self.assertFalse(should_skip_directory(Path("/path/to/src/subdir")))
 
     def test_find_source_files_empty_directory(self):
@@ -155,8 +232,28 @@ class TestFindSourceFiles(unittest.TestCase):
                 ".eslintrc.js"
             ]
 
+            # Create some test files (should be skipped even though they have source extensions)
+            test_files = [
+                "test_file.py",
+                "file_test.py",
+                "file.test.js",
+                "file.spec.js",
+                "subdir/test_subfile.py"
+            ]
+
+            # Create some dot files (should be skipped even though they have source extensions)
+            dot_files = [
+                ".gitignore",
+                ".env",
+                ".eslintrc.js",
+                ".prettierrc",
+                ".hidden_file.py",
+                ".config/settings.py",
+                ".vscode/launch.json"
+            ]
+
             # Create the files
-            for file_path in source_files_to_create + non_source_files + config_files:
+            for file_path in source_files_to_create + non_source_files + config_files + test_files + dot_files:
                 full_path = Path(temp_dir) / file_path
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.touch()
@@ -188,6 +285,16 @@ class TestFindSourceFiles(unittest.TestCase):
                 full_path = str(Path(temp_dir) / file_path)
                 self.assertNotIn(full_path, found_files)
 
+            # Check that test files are not in the result (even though they have source extensions)
+            for file_path in test_files:
+                full_path = str(Path(temp_dir) / file_path)
+                self.assertNotIn(full_path, found_files)
+
+            # Check that dot files are not in the result (even though some have source extensions)
+            for file_path in dot_files:
+                full_path = str(Path(temp_dir) / file_path)
+                self.assertNotIn(full_path, found_files)
+
     def test_find_source_files_with_skip_directories(self):
         """Test find_source_files with directories that should be skipped."""
         with TemporaryDirectory() as temp_dir:
@@ -202,7 +309,12 @@ class TestFindSourceFiles(unittest.TestCase):
                 "node_modules/file3.py",
                 "tests/file4.js",
                 ".git/file5.py",
-                "venv/file6.js"
+                "venv/file6.js",
+                # Add dot directories
+                ".hidden_dir/file7.py",
+                ".config/file8.js",
+                ".vscode/file9.py",
+                "path/to/.hidden_subdir/file10.js"
             ]
 
             # Create the files
