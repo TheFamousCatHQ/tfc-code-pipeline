@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Complexity Report",
+  "description": "A report containing complexity analysis for a source code file",
+  "type": "object",
+  "required": ["file_path", "components"],
+  "properties": {
+    "file_path": {
+      "type": "string",
+      "description": "Path to the analyzed source code file"
+    },
+    "components": {
+      "type": "array",
+      "description": "List of complex components identified in the file",
+      "items": {
+        "type": "object",
+        "required": ["name", "line_range", "complexity_reason", "changeability_score", "improvement_suggestions"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the component (function, class, method, etc.)"
+          },
+          "line_range": {
+            "type": "array",
+            "description": "Start and end line numbers of the component",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "complexity_reason": {
+            "type": "string",
+            "description": "Explanation of why the component is considered complex"
+          },
+          "changeability_score": {
+            "type": "integer",
+            "description": "Score indicating how easy it is to make changes to this component (0-100, where 0 is impossible and 100 is super easy)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "improvement_suggestions": {
+            "type": "string",
+            "description": "Suggestions for simplifying or improving the readability of this component"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 # Coding Conventions
 
-This document outlines the basic coding conventions for the TFC Test Writer Aider project.
+This document outlines the basic coding conventions for the TFC Coding Pipeline.
+
+First of all: you just do what I told you. If in doubt, ask a question.
 
 ## Python Style
 
@@ -30,10 +32,11 @@ This document outlines the basic coding conventions for the TFC Test Writer Aide
 
 - Imports should be at the top of the file
 - Group imports in the following order:
-  1. Standard library imports
-  2. Related third-party imports
-  3. Local application/library specific imports
+    1. Standard library imports
+    2. Related third-party imports
+    3. Local application/library specific imports
 - Use blank lines to separate import groups
+- Don't use try-except for imports. Ensure that they are working from any enviroment.
 
 ## Code Structure
 

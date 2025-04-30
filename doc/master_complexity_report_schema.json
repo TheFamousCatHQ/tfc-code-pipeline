@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Master Complexity Report",
+  "description": "A comprehensive report combining complexity analyses from multiple source code files",
+  "type": "object",
+  "required": ["summary", "files"],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "description": "Summary statistics and highlights of the most complex components",
+      "required": ["total_files_analyzed", "total_components_analyzed", "average_changeability_score", "most_complex_components"],
+      "properties": {
+        "total_files_analyzed": {
+          "type": "integer",
+          "description": "Total number of files analyzed",
+          "minimum": 0
+        },
+        "total_components_analyzed": {
+          "type": "integer",
+          "description": "Total number of components analyzed across all files",
+          "minimum": 0
+        },
+        "average_changeability_score": {
+          "type": "number",
+          "description": "Average changeability score across all components",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "most_complex_components": {
+          "type": "array",
+          "description": "List of the most complex components across the entire codebase",
+          "items": {
+            "type": "object",
+            "required": ["name", "file_path", "changeability_score"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Name of the component"
+              },
+              "file_path": {
+                "type": "string",
+                "description": "Path to the file containing the component"
+              },
+              "changeability_score": {
+                "type": "integer",
+                "description": "Changeability score of the component",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "List of complexity reports for individual files",
+      "items": {
+        "type": "object",
+        "required": ["file_path", "components"],
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to the analyzed source code file"
+          },
+          "components": {
+            "type": "array",
+            "description": "List of complex components identified in the file",
+            "items": {
+              "type": "object",
+              "required": ["name", "line_range", "complexity_reason", "changeability_score", "improvement_suggestions"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the component (function, class, method, etc.)"
+                },
+                "line_range": {
+                  "type": "array",
+                  "description": "Start and end line numbers of the component",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "complexity_reason": {
+                  "type": "string",
+                  "description": "Explanation of why the component is considered complex"
+                },
+                "changeability_score": {
+                  "type": "integer",
+                  "description": "Score indicating how easy it is to make changes to this component (0-100, where 0 is impossible and 100 is super easy)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "improvement_suggestions": {
+                  "type": "string",
+                  "description": "Suggestions for simplifying or improving the readability of this component"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
