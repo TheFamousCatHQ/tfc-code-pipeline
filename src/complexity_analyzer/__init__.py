@@ -46,6 +46,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "1. Why it is considered complex (e.g., high cognitive load, complex logic, deep nesting, unclear naming, potential for bugs).\n"
             "2. Rate the ability to make changes to this component from 0 (impossible) to 100 (super easy).\n"
             "3. Suggestions for simplifying or improving the readability of this section.\n"
+            "4. Create a specific prompt for an LLM that would help it improve or resolve this exact complexity issue.\n"
             "Focus on areas that would be challenging for a LLM to make changes to.\n"
             "Only analyze source code, no documentation, etc.\n"
             "Create a COMPLEXITY_REPORT.json with your findings in the following format:\n"
@@ -58,7 +59,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "      \"line_range\": [start_line, end_line],\n"
             "      \"complexity_reason\": \"explanation of why it's complex\",\n"
             "      \"changeability_score\": 0-100,\n"
-            "      \"improvement_suggestions\": \"suggestions for improvement\"\n"
+            "      \"improvement_suggestions\": \"suggestions for improvement\",\n"
+            "      \"llm_improvement_prompt\": \"specific prompt for an LLM to improve or resolve this complexity issue\"\n"
             "    }\n"
             "  ]\n"
             "}\n"
@@ -110,6 +112,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "Also add a summary section that highlights the most complex components across the entire codebase.\n"
             "Sort the components by changeability_score (ascending) so the most difficult components are listed first.\n"
             "Include statistics like total components analyzed, total files analyzed, and average changeability score.\n"
+            "Make sure to preserve all fields from the original reports, including the 'llm_improvement_prompt' field.\n"
         )
 
         # Call aider directly with all report files as arguments

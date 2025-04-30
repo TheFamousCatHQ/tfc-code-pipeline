@@ -14,7 +14,7 @@
       "description": "List of complex components identified in the file",
       "items": {
         "type": "object",
-        "required": ["name", "line_range", "complexity_reason", "changeability_score", "improvement_suggestions"],
+        "required": ["name", "line_range", "complexity_reason", "changeability_score", "improvement_suggestions", "llm_improvement_prompt"],
         "properties": {
           "name": {
             "type": "string",
@@ -43,6 +43,10 @@
           "improvement_suggestions": {
             "type": "string",
             "description": "Suggestions for simplifying or improving the readability of this component"
+          },
+          "llm_improvement_prompt": {
+            "type": "string",
+            "description": "A specific prompt for an LLM to improve or resolve this complexity issue"
           }
         }
       }
