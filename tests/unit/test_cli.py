@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 
 # Local application imports
-from src.tfc_code_pipeline.cli import parse_args, cli
+from tfc_code_pipeline.cli import parse_args, cli
 
 
 class TestCli(unittest.TestCase):
@@ -92,8 +92,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=False, src=None, cmd="explain_code")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli_build_only(self, mock_main, mock_parse_args):
         """Test the cli function with build_only=True."""
         # Setup mocks
@@ -108,8 +108,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=True, run=False, src=None, cmd="explain_code")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli_run(self, mock_main, mock_parse_args):
         """Test the cli function with run=True."""
         # Setup mocks
@@ -124,8 +124,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli_run_with_messages(self, mock_main, mock_parse_args):
         """Test the cli function with run=True and custom messages."""
         # Setup mocks
@@ -140,8 +140,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli_run_with_src(self, mock_main, mock_parse_args):
         """Test the cli function with run=True and src option."""
         # Setup mocks
@@ -156,8 +156,8 @@ class TestCli(unittest.TestCase):
         mock_parse_args.assert_called_once()
         mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="explain_code")
 
-    @patch('src.tfc_code_pipeline.cli.parse_args')
-    @patch('src.tfc_code_pipeline.cli.main')
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
     def test_cli_run_with_cmd(self, mock_main, mock_parse_args):
         """Test the cli function with run=True and cmd option."""
         # Setup mocks
