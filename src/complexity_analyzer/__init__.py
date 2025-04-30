@@ -5,15 +5,14 @@ Processor to analyze code complexity using aider/LLM.
 
 import sys
 
-try:
-    from code_processor import CodeProcessor
-except ImportError:
-    # When running tests, the import path is different
-    from src.code_processor import CodeProcessor
+from code_processor import CodeProcessor
 
 
 class ComplexityAnalyzerProcessor(CodeProcessor):
     """Processor for analyzing code complexity using aider/LLM."""
+
+    operates_on_whole_codebase: bool = True
+    """This processor analyzes the context of the whole codebase."""
 
     def get_default_message(self) -> str:
         """Get the default message to pass to aider.
@@ -53,4 +52,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

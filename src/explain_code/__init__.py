@@ -18,6 +18,9 @@ except ImportError:
 class ExplainCodeProcessor(CodeProcessor):
     """Processor for explaining code using aider."""
 
+    operates_on_whole_codebase: bool = False
+    """Explain code operates on a file-by-file basis."""
+
     def get_default_message(self) -> str:
         """Get the default message to pass to aider.
 

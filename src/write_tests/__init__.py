@@ -18,6 +18,9 @@ except ImportError:
 class WriteTestsProcessor(CodeProcessor):
     """Processor for writing unit tests using aider."""
 
+    operates_on_whole_codebase: bool = False
+    """Writing tests operates on a file-by-file basis."""
+
     def get_default_message(self) -> str:
         """Get the default message to pass to aider.
 
