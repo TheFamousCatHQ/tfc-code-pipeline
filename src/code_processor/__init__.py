@@ -9,7 +9,6 @@ such as explaining code or writing tests.
 import argparse
 import logging
 import subprocess
-import sys
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -50,12 +49,12 @@ class CodeProcessor(ABC):
         if isinstance(args, argparse.Namespace):
             # Args already parsed
             self.args = args
-        elif isinstance(args, Sequence) and args: # Check if it's a non-empty sequence
+        elif isinstance(args, Sequence) and args:  # Check if it's a non-empty sequence
             # Parse the provided sequence of strings immediately
             self.args = self.parse_args(list(args))
         else:
             # Defer parsing (args is None or an empty sequence)
-            self.args = None # type: ignore
+            self.args = None  # type: ignore
 
     # --- Abstract Methods (Subclasses must implement) ---
 
@@ -137,7 +136,8 @@ class CodeProcessor(ABC):
 
     # --- Core Processing Logic ---
 
-    def _group_files_by_parent_directory(self, files: List[str], min_files_per_chunk: int = 10, max_files_per_chunk: int = 20) -> List[List[str]]:
+    def _group_files_by_parent_directory(self, files: List[str], min_files_per_chunk: int = 10,
+                                         max_files_per_chunk: int = 20) -> List[List[str]]:
         """Group files by parent directory and ensure each chunk has between min_files_per_chunk and max_files_per_chunk files.
 
         Args:
@@ -240,12 +240,15 @@ class CodeProcessor(ABC):
             source_files: List of source files to group into chunks.
         """
         # Group files by parent directory
+        min_files_per_chunk = 5
+        max_files_per_chunk = 12
         file_chunks = self._group_files_by_parent_directory(source_files)
 
         # Display summary information
         total_files = sum(len(chunk) for chunk in file_chunks)
         logger.info(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
-        logger.info(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
+        logger.info(
+            f"Chunking algorithm: min {min_files_per_chunk} files, max {max_files_per_chunk} files per chunk (when possible)")
 
         # Count chunks by size
         size_distribution = {}
@@ -273,7 +276,8 @@ class CodeProcessor(ABC):
 
         logger.info("Directory breakdown:")
         for parent_dir, chunk_sizes in sorted(chunk_info.items()):
-            logger.info(f"  - {parent_dir}: {len(chunk_sizes)} chunk{'s' if len(chunk_sizes) > 1 else ''} ({sum(chunk_sizes)} files)")
+            logger.info(
+                f"  - {parent_dir}: {len(chunk_sizes)} chunk{'s' if len(chunk_sizes) > 1 else ''} ({sum(chunk_sizes)} files)")
             # Optionally print individual chunk sizes per directory
             # logger.info(f"    Sizes: {sorted(chunk_sizes)}")
 
@@ -290,8 +294,7 @@ class CodeProcessor(ABC):
         """
         aider_cmd = [
             "aider",
-            "--yes",
-            "--model=openrouter/gpt-4.1-nano"
+            "--yes"
         ]
         if debug:
             aider_cmd.extend(["--pretty", "--stream"])
@@ -300,7 +303,7 @@ class CodeProcessor(ABC):
         valid_files = [f for f in files if f]
         if not valid_files:
             logger.warning("No valid files provided to aider. Skipping aider run.")
-            return True # No files, technically not a failure of aider itself
+            return True  # No files, technically not a failure of aider itself
 
         aider_cmd.extend(valid_files)
         aider_cmd.extend(["--message", message])
@@ -363,42 +366,33 @@ class CodeProcessor(ABC):
         start_time = time.time()
 
         try:
-            if self.operates_on_whole_codebase:
-                logger.info("Processor operates on whole codebase. Running aider once.")
-                if self._run_aider(source_files, message, args.debug):
-                    processed_files_list = source_files
-                else:
-                    logger.error("Aider failed while processing the whole codebase.")
-                    # Returning None might be too drastic if only one chunk failed
-                    # Consider returning the list of files attempted
-                    return source_files # Indicate which files were attempted
-            else:
-                logger.info("Processor operates file-by-file (chunked).")
-                # Group files by parent directory
-                file_chunks = self._group_files_by_parent_directory(source_files)
-                total_chunks = len(file_chunks)
-                logger.info(f"Processing {len(source_files)} files in {total_chunks} chunks...")
+            logger.info("Processor operates file-by-file (chunked).")
+            # Group files by parent directory
+            file_chunks = self._group_files_by_parent_directory(source_files)
+            total_chunks = len(file_chunks)
+            logger.info(f"Processing {len(source_files)} files in {total_chunks} chunks...")
 
-                for i, chunk in enumerate(file_chunks):
-                    chunk_start_time = time.time()
-                    logger.info(f"--- Processing Chunk {i + 1}/{total_chunks} ({len(chunk)} files) ---")
-                    if self._run_aider(chunk, message, args.debug):
-                        processed_files_list.extend(chunk)
-                        chunk_duration = time.time() - chunk_start_time
-                        logger.info(f"--- Chunk {i + 1}/{total_chunks} completed successfully in {chunk_duration:.2f}s ---")
-                    else:
-                        logger.error(f"--- Chunk {i + 1}/{total_chunks} failed ---: {chunk}")
-                        # Continue processing other chunks even if one fails
-                        continue
+            for i, chunk in enumerate(file_chunks):
+                chunk_start_time = time.time()
+                logger.info(f"--- Processing Chunk {i + 1}/{total_chunks} ({len(chunk)} files) ---")
+                if self._run_aider(chunk, message, args.debug):
+                    processed_files_list.extend(chunk)
+                    chunk_duration = time.time() - chunk_start_time
+                    logger.info(
+                        f"--- Chunk {i + 1}/{total_chunks} completed successfully in {chunk_duration:.2f}s ---")
+                else:
+                    logger.error(f"--- Chunk {i + 1}/{total_chunks} failed ---: {chunk}")
+                    # Continue processing other chunks even if one fails
+                    continue
 
         except FileNotFoundError:
             # Aider not found, handled by _run_aider logging, re-raise to stop execution
             logger.critical("Aider not found. Cannot continue processing.")
-            return None # Indicate critical failure
+            return None  # Indicate critical failure
         except Exception as e:
             logger.error(f"An unexpected error occurred during file processing: {e}", exc_info=True)
             # Depending on severity, you might return processed_files_list or None
-            return processed_files_list # Return files processed so far
+            return processed_files_list  # Return files processed so far
 
         end_time = time.time()
         total_duration = end_time - start_time
@@ -441,7 +435,7 @@ class CodeProcessor(ABC):
                 return 0
 
             # Normal processing mode
-            processed_files = self.process_files(args) # Pass the full args namespace
+            processed_files = self.process_files(args)  # Pass the full args namespace
 
             if processed_files is not None:  # Check if None was returned due to critical error
                 logger.info(f"\nSuccessfully processed {len(processed_files)} files.")

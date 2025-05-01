@@ -70,17 +70,17 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             # Ensure args are parsed (usually done by base class run)
             if self.args is None:
                 self.parse_args()
-            args = self.args # Use the stored args
+            args = self.args  # Use the stored args
 
             # If --show-only-repo-files-chunks is specified, let base class handle it
             if args.show_only_repo_files_chunks:
-                return super().run() # Delegate to base class run for this flag
+                return super().run()  # Delegate to base class run for this flag
 
             # Normal processing mode: generate individual reports
             # The base class process_files will handle calling aider
-            processed_files = self.process_files(args) # Pass the full args namespace
+            processed_files = self.process_files(args)  # Pass the full args namespace
 
-            if processed_files is None: # Indicates critical error like aider not found
+            if processed_files is None:  # Indicates critical error like aider not found
                 logger.error("Complexity analysis failed due to a critical error during file processing.")
                 return 1
 
@@ -99,12 +99,12 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                     logger.info(f"Master complexity report created successfully: {master_report_path}")
                 else:
                     logger.error("Failed to create or validate the master complexity report.")
-                    return 1 # Indicate failure if combining fails
+                    return 1  # Indicate failure if combining fails
             else:
                 logger.warning("No individual complexity reports found to combine.")
                 # Decide if this is an error or just a state. If reports were expected, maybe return 1.
                 # If it's possible no complex files were found, return 0.
-                if not args.skip: # If we weren't skipping, not finding reports might be unexpected
+                if not args.skip:  # If we weren't skipping, not finding reports might be unexpected
                     logger.warning("No complex components identified in the analyzed files.")
                 # Assuming success if processing ran but no reports generated
 
@@ -171,7 +171,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         report_pattern = os.path.join(directory, "**", "COMPLEXITY_REPORT.json")
         return glob.glob(report_pattern, recursive=True)
 
-    def _combine_complexity_reports(self, report_files: List[str], output_dir: str, output_path: Optional[str] = None) -> Optional[str]:
+    def _combine_complexity_reports(self, report_files: List[str], output_dir: str,
+                                    output_path: Optional[str] = None) -> Optional[str]:
         """Combine multiple complexity reports into a master report using agno to call an LLM.
 
         Args:
@@ -188,12 +189,12 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
         # Find the schema file
         schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                  "master_complexity_report_schema.json")
+                                   "master_complexity_report_schema.json")
 
         # Check if schema exists, if not, look in doc directory
         if not os.path.exists(schema_path):
             schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                     "doc", "master_complexity_report_schema.json")
+                                       "doc", "master_complexity_report_schema.json")
 
         # Read the schema file if it exists
         schema_content = ""
@@ -266,12 +267,12 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
             # Add the content of all reports to the prompt
             for i, report in enumerate(all_reports):
-                prompt += f"\nReport {i+1}:\n```json\n{json.dumps(report, indent=2)}\n```\n"
+                prompt += f"\nReport {i + 1}:\n```json\n{json.dumps(report, indent=2)}\n```\n"
 
             # Use agno library directly
             try:
                 # Create an OpenRouter model instance
-                model = OpenRouter(model=model_name)
+                model = OpenRouter()
 
                 # Create an Agent instance with the model
                 agent = Agent(model=model)
@@ -291,7 +292,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                         json_end = response.rfind('}')
 
                         if json_start >= 0 and json_end > json_start:
-                            json_str = response[json_start:json_end+1]
+                            json_str = response[json_start:json_end + 1]
                             master_report = json.loads(json_str)
                         else:
                             # If no JSON found, try to use the entire response
@@ -324,12 +325,12 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             if os.path.exists(master_report_path):
                 # Validate the master report against the schema
                 schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                          "master_complexity_report_schema.json")
+                                           "master_complexity_report_schema.json")
 
                 # Check if schema exists, if not, look in doc directory
                 if not os.path.exists(schema_path):
                     schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                             "doc", "master_complexity_report_schema.json")
+                                               "doc", "master_complexity_report_schema.json")
 
                 if os.path.exists(schema_path):
                     logger.info(f"Schema validation: Found schema at {schema_path}")
@@ -338,7 +339,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                     # Check if OPENROUTER_API_KEY is set
                     if not os.environ.get("OPENROUTER_API_KEY"):
                         logger.warning("Schema validation: OPENROUTER_API_KEY environment variable not set. "
-                                      "If validation fails, automatic fixing will not be possible.")
+                                       "If validation fails, automatic fixing will not be possible.")
 
                     success, result = validate_and_fix_complexity_report(master_report_path, schema_path)
 
@@ -381,7 +382,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         if skip:
             existing_reports = self._find_complexity_reports(directory)
             if existing_reports:
-                logger.info(f"Found {len(existing_reports)} existing complexity reports. Skipping analysis for these components.")
+                logger.info(
+                    f"Found {len(existing_reports)} existing complexity reports. Skipping analysis for these components.")
                 # for report in existing_reports: # Debug logging if needed
                 #     logger.debug(f"Existing report: {report}")
 
@@ -390,8 +392,9 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             file_dir = os.path.dirname(os.path.abspath(specific_file))
             report_path = os.path.join(file_dir, "COMPLEXITY_REPORT.json")
             if os.path.exists(report_path):
-                logger.info(f"Skipping analysis for {specific_file} as it already has a complexity report at {report_path}.")
-                return [specific_file] # Return as processed (skipped)
+                logger.info(
+                    f"Skipping analysis for {specific_file} as it already has a complexity report at {report_path}.")
+                return [specific_file]  # Return as processed (skipped)
 
         files_to_process = []
         skipped_files_due_to_report = []
@@ -412,11 +415,13 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                     files_to_process.append(file_path)
 
             if skipped_files_due_to_report:
-                logger.info(f"Skipping analysis for {len(skipped_files_due_to_report)} files in directories with existing reports.")
+                logger.info(
+                    f"Skipping analysis for {len(skipped_files_due_to_report)} files in directories with existing reports.")
                 # logger.debug(f"Skipped files: {skipped_files_due_to_report}")
 
             if not files_to_process:
-                logger.info("All found source files already have complexity reports or are in directories with reports. No new analysis needed.")
+                logger.info(
+                    "All found source files already have complexity reports or are in directories with reports. No new analysis needed.")
                 # Return all original source files as they were all accounted for (processed or skipped)
                 return source_files
 
@@ -449,7 +454,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                 # The result includes files processed by aider. We need to return the union
                 # of files processed by aider and files skipped due to existing reports.
                 if processed_by_aider is None:
-                    return None # Critical error from base class
+                    return None  # Critical error from base class
 
                 # Combine skipped files and files actually processed by aider
                 final_processed_list = list(set(processed_by_aider + skipped_files_due_to_report))
