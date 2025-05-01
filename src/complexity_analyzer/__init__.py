@@ -13,6 +13,7 @@ from typing import List, Optional
 # Import agno for direct LLM calls
 from agno.agent import Agent
 from agno.models.openrouter import OpenRouter
+from agno.run.response import RunResponse
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -282,39 +283,81 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
                 # Process the response from agno
                 try:
-                    # Check if response is already a dict (parsed JSON)
-                    if isinstance(response, dict):
-                        master_report = response
-                    # Check if response is a string
-                    elif isinstance(response, str):
-                        # Try to find and parse JSON in the response string
-                        json_start = response.find('{')
-                        json_end = response.rfind('}')
+                    # Initialize master_report
+                    master_report = None
+                    response_data = None
 
-                        if json_start >= 0 and json_end > json_start:
-                            json_str = response[json_start:json_end + 1]
-                            master_report = json.loads(json_str)
-                        else:
-                            # If no JSON found, try to use the entire response
-                            master_report = json.loads(response)
+                    # Extract data based on response type
+                    if isinstance(response, RunResponse):
+                        # Access the content attribute of the RunResponse object
+                        response_data = response.content
+                        logger.debug("Processing RunResponse content.")
                     else:
-                        # If response is neither dict nor string, try to convert to string and parse
-                        response_str = str(response)
-                        logger.warning(f"Unexpected response type: {type(response)}. Attempting to convert to string.")
-                        master_report = json.loads(response_str)
+                        # Handle direct dict or str responses (or other unexpected types)
+                        response_data = response
+                        logger.debug(f"Processing response of type: {type(response)}")
+
+
+                    # Check if response_data is already a dict (parsed JSON)
+                    if isinstance(response_data, dict):
+                        master_report = response_data
+                        logger.debug("Response data is already a dictionary.")
+                    # Check if response_data is a string
+                    elif isinstance(response_data, str):
+                        logger.debug("Response data is a string, attempting JSON parsing.")
+                        # Try to find and parse JSON in the response string
+                        try:
+                            # Attempt direct parsing first
+                            master_report = json.loads(response_data)
+                        except json.JSONDecodeError:
+                            logger.warning("Direct JSON parsing failed. Searching for JSON block.")
+                            # Fallback to finding JSON block within the string
+                            json_start = response_data.find('{')
+                            json_end = response_data.rfind('}')
+                            if json_start != -1 and json_end != -1 and json_end > json_start:
+                                json_str = response_data[json_start:json_end + 1]
+                                try:
+                                    master_report = json.loads(json_str)
+                                    logger.debug("Successfully parsed JSON block from string.")
+                                except json.JSONDecodeError as e:
+                                    logger.error(f"Failed to parse extracted JSON block: {e}")
+                                    logger.debug(f"Extracted string: {json_str}")
+                            else:
+                                logger.error("Could not find a valid JSON block in the string response.")
+                    else:
+                        # If response_data is neither dict nor string, log an error
+                        logger.error(f"Unexpected response data type after extraction: {type(response_data)}. Cannot process.")
+                        logger.debug(f"Original agno response: {response}")
+                        logger.debug(f"Extracted response data: {response_data}")
+
+
+                    # Ensure master_report was successfully parsed/assigned
+                    if master_report is None:
+                         logger.error("Failed to obtain valid JSON data from the agno response.")
+                         return None
+
 
                     # Write the master report to the output file
                     with open(master_report_path, 'w') as f:
                         json.dump(master_report, f, indent=2)
 
                     logger.info(f"Master report created at {master_report_path}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"Error decoding JSON from agno response: {e}")
+                    logger.debug(f"Raw response data causing error: {response_data}")
+                    return None
                 except Exception as e:
-                    logger.error(f"Error processing agno response: {e}")
-                    logger.debug(f"agno response: {response}")
+                    logger.error(f"Error processing agno response content: {e}")
+                    logger.debug(f"Original agno response: {response}")
+                    logger.debug(f"Response data being processed: {response_data}")
                     return None
 
+            except ImportError:
+                 logger.error("Failed to import agno library. Please ensure it is installed.")
+                 return None
             except Exception as e:
-                logger.error(f"Error running agno library: {e}")
+                logger.error(f"Error running agno library or processing its response: {e}")
+                logger.debug(f"Exception details:", exc_info=True)
                 return None
 
             # Clean up temporary file
