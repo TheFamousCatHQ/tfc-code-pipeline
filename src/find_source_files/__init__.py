@@ -7,10 +7,14 @@ excluding dependencies, tests, and other non-core files.
 """
 
 import argparse
+import logging
 import os
 import sys
 from pathlib import Path
 from typing import List, Set
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -261,11 +265,11 @@ def find_source_files(directory: str) -> List[str]:
     dir_path = Path(directory).resolve()
 
     if not dir_path.exists():
-        print(f"Error: Directory '{directory}' does not exist.", file=sys.stderr)
+        logger.error(f"Error: Directory '{directory}' does not exist.")
         return []
 
     if not dir_path.is_dir():
-        print(f"Error: '{directory}' is not a directory.", file=sys.stderr)
+        logger.error(f"Error: '{directory}' is not a directory.")
         return []
 
     for root, dirs, files in os.walk(dir_path):
@@ -280,6 +284,37 @@ def find_source_files(directory: str) -> List[str]:
     return source_files
 
 
+def configure_logging(verbose: bool = False):
+    """Configure logging for the find_source_files module.
+
+    Args:
+        verbose: Whether to enable verbose (DEBUG) logging.
+    """
+    # Set up root logger
+    root_logger = logging.getLogger()
+
+    # Remove existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Create console handler
+    console = logging.StreamHandler()
+
+    # Set format
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+    console.setFormatter(formatter)
+
+    # Add handler to root logger
+    root_logger.addHandler(console)
+
+    # Set level based on verbose flag
+    if verbose:
+        root_logger.setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
+    else:
+        root_logger.setLevel(logging.INFO)
+
+
 def main() -> int:
     """Run the main script.
 
@@ -288,14 +323,18 @@ def main() -> int:
     """
     try:
         args = parse_args()
+
+        # Configure logging
+        configure_logging(getattr(args, 'verbose', False))
+
         source_files = find_source_files(args.directory)
 
         for file in source_files:
-            print(file)
+            logger.info(file)
 
         return 0
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logger.error(f"Error: {e}")
         return 1
 
 

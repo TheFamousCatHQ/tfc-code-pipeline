@@ -8,11 +8,15 @@ bug details including location, line number, filename, explanation, confidence, 
 """
 
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 from typing import Dict, List, Optional, Any
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Import relative to the 'src' package
 from code_processor import CodeProcessor
@@ -102,9 +106,9 @@ class FindBugsProcessor(CodeProcessor):
 
                 processed_files.append(file_path)
             except subprocess.CalledProcessError as e:
-                print(f"Error processing file {file_path}: {e}", file=sys.stderr)
+                logger.error(f"Error processing file {file_path}: {e}")
             except FileNotFoundError:
-                print("Error: 'aider' command not found. Please ensure it is installed.", file=sys.stderr)
+                logger.error("Error: 'aider' command not found. Please ensure it is installed.")
                 break
 
         # Write the bugs list to a JSON file
@@ -112,8 +116,8 @@ class FindBugsProcessor(CodeProcessor):
         with open(output_file, "w") as f:
             json.dump(bugs_list, f, indent=2)
 
-        print(f"\nBug report saved to: {output_file}")
-        print(f"Found {len(bugs_list)} potential issues across {len(processed_files)} files.")
+        logger.info(f"Bug report saved to: {output_file}")
+        logger.info(f"Found {len(bugs_list)} potential issues across {len(processed_files)} files.")
 
         return processed_files
 
@@ -205,12 +209,46 @@ class FindBugsProcessor(CodeProcessor):
         return bugs
 
 
+def configure_logging(verbose: bool = False):
+    """Configure logging for the find_bugs module.
+
+    Args:
+        verbose: Whether to enable verbose (DEBUG) logging.
+    """
+    # Set up root logger
+    root_logger = logging.getLogger()
+
+    # Remove existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Create console handler
+    console = logging.StreamHandler()
+
+    # Set format
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+    console.setFormatter(formatter)
+
+    # Add handler to root logger
+    root_logger.addHandler(console)
+
+    # Set level based on verbose flag
+    if verbose:
+        root_logger.setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
+    else:
+        root_logger.setLevel(logging.INFO)
+
+
 def main() -> int:
     """Run the main script.
 
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
+    # Configure logging
+    configure_logging()
+
     processor = FindBugsProcessor()
     return processor.run()
 

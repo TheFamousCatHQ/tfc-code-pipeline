@@ -7,12 +7,17 @@ such as explaining code or writing tests.
 """
 
 import argparse
+import logging
 import subprocess
 import sys
+import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 try:
     # Try importing directly (for Docker/installed package)
@@ -94,6 +99,11 @@ class CodeProcessor(ABC):
             "--show-only-repo-files-chunks",
             action="store_true",
             help="Only show the file chunks that would be processed, then exit without processing"
+        )
+        parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Run aider with --pretty and --stream flags for debugging"
         )
 
         # Allow subclasses to add their own arguments
@@ -210,8 +220,8 @@ class CodeProcessor(ABC):
 
         # Display summary information
         total_files = sum(len(chunk) for chunk in file_chunks)
-        print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
-        print(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
+        logger.info(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
+        logger.info(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
 
         # Count chunks by size
         size_distribution = {}
@@ -222,10 +232,10 @@ class CodeProcessor(ABC):
             size_distribution[chunk_size] += 1
 
         # Display size distribution
-        print("\nChunk size distribution:")
+        logger.info("Chunk size distribution:")
         for size in sorted(size_distribution.keys()):
             count = size_distribution[size]
-            print(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
+            logger.info(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
 
         # Display detailed information about each chunk
         chunk_info = {}
@@ -237,15 +247,15 @@ class CodeProcessor(ABC):
                 chunk_info[parent_dir] = []
             chunk_info[parent_dir].append(len(chunk))
 
-        print("\nDirectory breakdown:")
+        logger.info("Directory breakdown:")
         for parent_dir, file_counts in chunk_info.items():
             chunk_count = len(file_counts)
             total_files_in_dir = sum(file_counts)
             if chunk_count == 1:
-                print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
+                logger.info(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
             else:
                 chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
-                print(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+                logger.info(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
 
         # Check for combined directories
         combined_dirs = set()
@@ -257,12 +267,12 @@ class CodeProcessor(ABC):
                 combined_dirs.update(dirs_in_chunk)
 
         if combined_dirs:
-            print("\nSmall directories combined into chunks:")
+            logger.info("Small directories combined into chunks:")
             for dir_name in sorted(combined_dirs):
-                print(f"  - {dir_name}")
+                logger.info(f"  - {dir_name}")
 
         # Display files in each chunk
-        print("\nDetailed file listing by chunk:")
+        logger.info("Detailed file listing by chunk:")
         for i, chunk in enumerate(file_chunks, 1):
             if not chunk:  # Skip empty chunks (shouldn't happen)
                 continue
@@ -271,45 +281,83 @@ class CodeProcessor(ABC):
             dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
             if len(dirs_in_chunk) == 1:
                 parent_dir = next(iter(dirs_in_chunk))
-                print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+                logger.info(f"Chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
             else:
                 dir_list = ', '.join(sorted(dirs_in_chunk))
-                print(f"\nChunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
+                logger.info(f"Chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
 
             for j, file_path in enumerate(chunk, 1):
-                print(f"  {j}. {file_path}")
+                logger.debug(f"  {j}. {file_path}")
 
-    def _run_aider(self, files: List[str], message: str) -> bool:
+    def _run_aider(self, files: List[str], message: str, debug: bool = False) -> bool:
         """Run aider with the specified files and message.
 
         Args:
             files: List of file paths to pass to aider.
             message: Message to pass to aider.
+            debug: Whether to run aider with debug flags (--pretty and --stream).
 
         Returns:
             True if aider ran successfully, False otherwise.
         """
-        command = ["aider", "--no-pretty", "--no-stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
-                   message] + files
-        print(f"Running command: {' '.join(command)}")  # For debugging
+        if debug:
+            command = ["aider", "--pretty", "--stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
+                      message] + files
+        else:
+            command = ["aider", "--no-pretty", "--no-stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
+                      message] + files
+        logger.debug(f"Running command: {' '.join(command)}")
+
+        start_time = time.time()
         try:
-            subprocess.run(
+            # Capture the output from aider
+            result = subprocess.run(
                 command,
                 check=True,
                 text=True,
-                # Consider adding capture_output=True if subclasses need output
+                capture_output=True
             )
+
+            # Calculate execution time
+            execution_time = time.time() - start_time
+            logger.info(f"Aider execution completed in {execution_time:.2f} seconds")
+
+            # Log aider output
+            if result.stdout:
+                logger.debug("--- Aider Output Start ---")
+                logger.debug(f"{result.stdout}")
+                logger.debug("--- Aider Output End ---")
+
+            # Log any error output
+            if result.stderr:
+                logger.warning("--- Aider Warnings/Errors ---")
+                logger.warning(f"{result.stderr}")
+                logger.warning("--- End of Warnings/Errors ---")
+
             return True
         except subprocess.CalledProcessError as e:
+            # Calculate execution time even for failures
+            execution_time = time.time() - start_time
+            logger.error(f"Aider execution failed after {execution_time:.2f} seconds")
+
             file_list = ', '.join(files)
-            print(f"Error processing file(s) {file_list}: {e}", file=sys.stderr)
+            logger.error(f"Error processing file(s) {file_list}: {e}")
+
+            # Log any captured output from the failed run
+            if e.stdout:
+                logger.debug("--- Aider Output Before Failure ---")
+                logger.debug(f"{e.stdout}")
+                logger.debug("--- End of Output ---")
+
+            if e.stderr:
+                logger.error("--- Aider Error Output ---")
+                logger.error(f"{e.stderr}")
+                logger.error("--- End of Error Output ---")
+
             return False
         except FileNotFoundError:
             # This error is critical, stop the process.
-            print(
-                "Error: 'aider' command not found. Please ensure it is installed and in your PATH.",
-                file=sys.stderr,
-            )
+            logger.critical("Error: 'aider' command not found. Please ensure it is installed and in your PATH.")
             raise  # Re-raise to stop execution in run()
 
     def process_files(
@@ -317,6 +365,7 @@ class CodeProcessor(ABC):
             directory: str,
             specific_file: Optional[str] = None,
             message: Optional[str] = None,
+            debug: bool = False,
     ) -> List[str]:
         """Find source files and process them using aider.
 
@@ -327,15 +376,22 @@ class CodeProcessor(ABC):
             directory: Directory to search for source files.
             specific_file: Optional specific file to process.
             message: Message to pass to aider. If None, uses the default message.
+            debug: Whether to run aider with debug flags (--pretty and --stream).
 
         Returns:
             List of files that were successfully processed.
         """
+        # Start timing the entire process
+        process_start_time = time.time()
+
         # Use default message if none provided
         if message is None:
             message = self.get_default_message()
 
         # Determine the list of files to process
+        logger.info("Step 1: Finding source files...")
+        file_discovery_start = time.time()
+
         if specific_file:
             source_files = [specific_file]
             # Force file-by-file if a specific file is given, regardless of flag?
@@ -344,8 +400,11 @@ class CodeProcessor(ABC):
             # Find source files in the directory using the imported function
             source_files = find_files(directory)
 
+        file_discovery_time = time.time() - file_discovery_start
+        logger.info(f"File discovery completed in {file_discovery_time:.2f} seconds")
+
         if not source_files:
-            print(f"No source files found in directory: {directory}", file=sys.stderr)
+            logger.error(f"No source files found in directory: {directory}")
             return []
 
         processed_files: List[str] = []
@@ -353,17 +412,20 @@ class CodeProcessor(ABC):
             if self.operates_on_whole_codebase:
                 # Process files in chunks grouped by parent directory
                 if specific_file:
-                    print(
-                        f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.",
-                        file=sys.stderr)
+                    logger.warning(
+                        f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.")
 
                 # Group files by parent directory with a maximum of 20 files per chunk
+                logger.info("Step 2: Grouping files by parent directory...")
+                chunking_start = time.time()
                 file_chunks = self._group_files_by_parent_directory(source_files)
+                chunking_time = time.time() - chunking_start
+                logger.info(f"File chunking completed in {chunking_time:.2f} seconds")
 
                 # Display detailed information about the chunks
-                print(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
+                logger.info(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
                 total_files = sum(len(chunk) for chunk in file_chunks)
-                print(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
+                logger.info(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
 
                 # Count chunks by size
                 size_distribution = {}
@@ -374,10 +436,10 @@ class CodeProcessor(ABC):
                     size_distribution[chunk_size] += 1
 
                 # Display size distribution
-                print("\nChunk size distribution:")
+                logger.info("Chunk size distribution:")
                 for size in sorted(size_distribution.keys()):
                     count = size_distribution[size]
-                    print(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
+                    logger.info(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
 
                 # Display detailed information about each chunk
                 chunk_info = {}
@@ -389,17 +451,18 @@ class CodeProcessor(ABC):
                         chunk_info[parent_dir] = []
                     chunk_info[parent_dir].append(len(chunk))
 
-                print("\nDirectory breakdown:")
+                logger.info("Directory breakdown:")
                 for parent_dir, file_counts in chunk_info.items():
                     chunk_count = len(file_counts)
                     total_files_in_dir = sum(file_counts)
                     if chunk_count == 1:
-                        print(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
+                        logger.info(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
                     else:
                         chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
-                        print(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
+                        logger.info(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
 
                 # Process each chunk separately
+                logger.info("Step 3: Processing files with aider...")
                 for i, chunk in enumerate(file_chunks, 1):
                     if not chunk:  # Skip empty chunks (shouldn't happen)
                         continue
@@ -408,26 +471,32 @@ class CodeProcessor(ABC):
                     dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
                     if len(dirs_in_chunk) == 1:
                         parent_dir = next(iter(dirs_in_chunk))
-                        print(f"\nProcessing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
+                        logger.info(f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
                     else:
                         dir_list = ', '.join(sorted(dirs_in_chunk))
-                        print(f"\nProcessing chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
+                        logger.info(f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
 
-                    if self._run_aider(chunk, message):
+                    if self._run_aider(chunk, message, debug):
                         processed_files.extend(chunk)  # Add all files in the chunk to processed_files
-                    # On failure, _run_aider prints error, we continue with the next chunk
+                    # On failure, _run_aider logs error, we continue with the next chunk
             else:
                 # Process files one by one
+                logger.info("Step 2: Processing files with aider one by one...")
                 for file_path in source_files:
-                    if self._run_aider([file_path], message):
+                    logger.info(f"Processing file: {file_path}")
+                    if self._run_aider([file_path], message, debug):
                         processed_files.append(file_path)
-                    # If _run_aider returns False, an error was already printed.
+                    # If _run_aider returns False, an error was already logged.
                     # Continue processing other files unless aider itself is not found.
 
         except FileNotFoundError:
-            # Error already printed by _run_aider, just return empty list
+            # Error already logged by _run_aider, just return empty list
             # The exception is caught here to prevent crashing the caller if aider isn't found
             return []
+
+        # Calculate and display total processing time
+        total_processing_time = time.time() - process_start_time
+        logger.info(f"Total processing time: {total_processing_time:.2f} seconds")
 
         return processed_files
 
@@ -440,17 +509,21 @@ class CodeProcessor(ABC):
         try:
             args = self.parse_args()
 
+            # Configure logging if debug flag is set
+            if hasattr(args, 'debug') and args.debug:
+                configure_logging(verbose=True)
+
             # If --show-only-repo-files-chunks is specified, just show the chunks and exit
             if args.show_only_repo_files_chunks:
                 # Find source files
                 if args.file:
                     source_files = [args.file]
-                    print(f"Warning: Using specific file: {args.file}")
+                    logger.warning(f"Using specific file: {args.file}")
                 else:
                     source_files = find_files(args.directory)
 
                 if not source_files:
-                    print(f"No source files found in directory: {args.directory}", file=sys.stderr)
+                    logger.error(f"No source files found in directory: {args.directory}")
                     return 1
 
                 # Display the file chunks without processing
@@ -459,22 +532,53 @@ class CodeProcessor(ABC):
 
             # Normal processing mode
             processed_files = self.process_files(
-                args.directory, args.file, args.message
+                args.directory, args.file, args.message, args.debug
             )
 
             if processed_files is not None:  # Check if FileNotFoundError occurred in process_files
-                print(f"\nProcessed {len(processed_files)} files:")
+                logger.info(f"Processed {len(processed_files)} files:")
                 for file in processed_files:
-                    print(f"  - {file}")
+                    logger.info(f"  - {file}")
             else:
-                # Error message already printed if aider not found
+                # Error message already logged if aider not found
                 return 1  # Indicate failure
 
             return 0
         except FileNotFoundError:
             # This catches the re-raised FileNotFoundError from _run_aider
-            # Error message already printed
+            # Error message already logged
             return 1
         except Exception as e:
-            print(f"An unexpected error occurred: {e}", file=sys.stderr)
+            logger.error(f"An unexpected error occurred: {e}")
             return 1
+
+
+def configure_logging(verbose: bool = False):
+    """Configure logging for the code processor.
+
+    Args:
+        verbose: Whether to enable verbose (DEBUG) logging.
+    """
+    # Set up root logger
+    root_logger = logging.getLogger()
+
+    # Remove existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Create console handler
+    console = logging.StreamHandler()
+
+    # Set format
+    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+    console.setFormatter(formatter)
+
+    # Add handler to root logger
+    root_logger.addHandler(console)
+
+    # Set level based on verbose flag
+    if verbose:
+        root_logger.setLevel(logging.DEBUG)
+        logger.debug("Verbose logging enabled")
+    else:
+        root_logger.setLevel(logging.INFO)

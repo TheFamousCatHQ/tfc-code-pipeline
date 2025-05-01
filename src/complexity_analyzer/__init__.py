@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Processor to analyze code complexity using aider/LLM.
+Processor to analyze code complexity using agno/LLM.
 """
 
 import argparse
@@ -10,6 +10,10 @@ import logging
 import os
 import sys
 from typing import Dict, List, Optional, Any, Tuple
+
+# Import agno for direct LLM calls
+from agno.agent import Agent
+from agno.models.openrouter import OpenRouter
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -32,7 +36,7 @@ except ImportError:
 
 
 class ComplexityAnalyzerProcessor(CodeProcessor):
-    """Processor for analyzing code complexity using aider/LLM."""
+    """Processor for analyzing code complexity using agno/LLM."""
 
     operates_on_whole_codebase: bool = True
     """This processor analyzes the context of the whole codebase."""
@@ -47,6 +51,11 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "-o", "--output",
             type=str,
             help="Path where the master complexity report will be saved"
+        )
+        parser.add_argument(
+            "--skip",
+            action="store_true",
+            help="Skip analysis for components where a COMPLEXITY_REPORT.json already exists"
         )
 
     def run(self) -> int:
@@ -79,7 +88,9 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
             # Normal processing mode
             processed_files = self.process_files(
-                args.directory, args.file, args.message, args.output if hasattr(args, 'output') else None
+                args.directory, args.file, args.message, args.output if hasattr(args, 'output') else None,
+                args.skip if hasattr(args, 'skip') else False,
+                args.debug if hasattr(args, 'debug') else False
             )
 
             if processed_files is not None:  # Check if FileNotFoundError occurred in process_files
@@ -139,7 +150,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         Returns:
             Description string.
         """
-        return "Analyze code complexity using an LLM via aider"
+        return "Analyze code complexity using an LLM via agno"
 
     def _find_complexity_reports(self, directory: str) -> List[str]:
         """Find all COMPLEXITY_REPORT.json files in the directory.
@@ -155,7 +166,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         return glob.glob(report_pattern, recursive=True)
 
     def _combine_complexity_reports(self, report_files: List[str], output_dir: str, output_path: Optional[str] = None) -> Optional[str]:
-        """Combine multiple complexity reports into a master report using aider.
+        """Combine multiple complexity reports into a master report using agno to call an LLM.
 
         Args:
             report_files: List of paths to complexity report files.
@@ -202,13 +213,15 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             "Sort the components by changeability_score (ascending) so the most difficult components are listed first.\n"
             "Include statistics like total components analyzed, total files analyzed, and average changeability score.\n"
             "Make sure to preserve all fields from the original reports, including the 'llm_improvement_prompt' field.\n"
-            "\nHere is the schema for the MASTER_COMPLEXITY_REPORT.json file:\n"
-            f"{schema_content}\n"
+            "\nHere is the master schema for the MASTER_COMPLEXITY_REPORT.json file:\n"
+            f"```json\n{schema_content}\n```\n"
         )
 
-        # Call aider directly with all report files as arguments
+        # Use agno to call an LLM to combine the reports
         try:
-            import subprocess
+            import json
+            import shutil
+            import requests
 
             # Determine the master report path
             if output_path:
@@ -220,17 +233,86 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                 master_report_path = os.path.join(output_dir, "MASTER_COMPLEXITY_REPORT.json")
                 logger.info(f"Using default output path for master report: {master_report_path}")
 
-            # Build the command with all report files as arguments
-            command = [
-                          "aider", "--no-pretty", "--no-stream", "--yes-always", "--no-git", "--no-auto-commits",
-                          "--message", combine_message
-                      ] + report_files
+            # agno library is used directly
 
-            logger.info(f"Running aider to generate master complexity report with {len(report_files)} report files")
-            logger.debug(f"Command: {' '.join(command)}")
+            # Load all report files into a single dictionary
+            all_reports = []
+            for report_file in report_files:
+                try:
+                    with open(report_file, 'r') as f:
+                        report_data = json.load(f)
+                        all_reports.append(report_data)
+                    logger.debug(f"Loaded report from {report_file}")
+                except Exception as e:
+                    logger.warning(f"Error loading report {report_file}: {e}")
 
-            # Run aider with all report files
-            subprocess.run(command, check=True, text=True)
+            # Create a temporary file with all reports
+            temp_input_file = os.path.join(output_dir, "_temp_all_reports.json")
+            with open(temp_input_file, 'w') as f:
+                json.dump(all_reports, f)
+
+            logger.info(f"Running agno to generate master complexity report with {len(report_files)} report files")
+
+            # Set up agno to call the LLM
+            model_name = "openrouter/gpt-4.1-nano"
+            # Prepare the prompt for agno
+            prompt = f"{combine_message}\n\nHere are all the reports to combine:\n"
+
+            # Add the content of all reports to the prompt
+            for i, report in enumerate(all_reports):
+                prompt += f"\nReport {i+1}:\n```json\n{json.dumps(report, indent=2)}\n```\n"
+
+            # Use agno library directly
+            try:
+                # Create an OpenRouter model instance
+                model = OpenRouter(model=model_name)
+
+                # Create an Agent instance with the model
+                agent = Agent(model=model)
+
+                # Run the agent with the prompt
+                response = agent.run(prompt, stream=False, format="json")
+
+                # Process the response from agno
+                try:
+                    # Check if response is already a dict (parsed JSON)
+                    if isinstance(response, dict):
+                        master_report = response
+                    # Check if response is a string
+                    elif isinstance(response, str):
+                        # Try to find and parse JSON in the response string
+                        json_start = response.find('{')
+                        json_end = response.rfind('}')
+
+                        if json_start >= 0 and json_end > json_start:
+                            json_str = response[json_start:json_end+1]
+                            master_report = json.loads(json_str)
+                        else:
+                            # If no JSON found, try to use the entire response
+                            master_report = json.loads(response)
+                    else:
+                        # If response is neither dict nor string, try to convert to string and parse
+                        response_str = str(response)
+                        logger.warning(f"Unexpected response type: {type(response)}. Attempting to convert to string.")
+                        master_report = json.loads(response_str)
+
+                    # Write the master report to the output file
+                    with open(master_report_path, 'w') as f:
+                        json.dump(master_report, f, indent=2)
+
+                    logger.info(f"Master report created at {master_report_path}")
+                except Exception as e:
+                    logger.error(f"Error processing agno response: {e}")
+                    logger.debug(f"agno response: {response}")
+                    return None
+
+            except Exception as e:
+                logger.error(f"Error running agno library: {e}")
+                return None
+
+            # Clean up temporary file
+            if os.path.exists(temp_input_file):
+                os.remove(temp_input_file)
 
             # Check if the master report was created
             if os.path.exists(master_report_path):
@@ -279,6 +361,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             specific_file: Optional[str] = None,
             message: Optional[str] = None,
             output_path: Optional[str] = None,
+            skip: bool = False,
+            debug: bool = False,
     ) -> List[str]:
         """Find source files and process them using aider, then combine the reports.
 
@@ -287,12 +371,72 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             specific_file: Optional specific file to process.
             message: Message to pass to aider. If None, uses the default message.
             output_path: Optional path where the master report will be saved.
+            skip: Whether to skip analysis for components where a COMPLEXITY_REPORT.json already exists.
+            debug: Whether to run aider with debug flags (--pretty and --stream).
 
         Returns:
             List of files that were successfully processed.
         """
-        # First round: Process files to generate individual complexity reports
-        processed_files = super().process_files(directory, specific_file, message)
+        # If skip is enabled, find existing COMPLEXITY_REPORT.json files
+        existing_reports = []
+        if skip:
+            existing_reports = self._find_complexity_reports(directory)
+            if existing_reports:
+                logger.info(f"Found {len(existing_reports)} existing complexity reports. Skipping analysis for these components.")
+                for report in existing_reports:
+                    logger.debug(f"Existing report: {report}")
+
+        # If a specific file is provided and skip is enabled, check if it already has a report
+        if specific_file and skip:
+            # Get the directory of the specific file
+            file_dir = os.path.dirname(os.path.abspath(specific_file))
+            report_path = os.path.join(file_dir, "COMPLEXITY_REPORT.json")
+
+            if os.path.exists(report_path):
+                logger.info(f"Skipping analysis for {specific_file} as it already has a complexity report.")
+                # Return the specific file as processed without actually processing it
+                return [specific_file]
+
+        # If skip is enabled and we're processing the whole directory, filter out files in directories with reports
+        if skip and not specific_file:
+            # Get all source files
+            source_files = find_files(directory)
+
+            # Filter out files that already have a complexity report in their directory
+            files_to_process = []
+            skipped_files = []
+
+            for file_path in source_files:
+                file_dir = os.path.dirname(os.path.abspath(file_path))
+                report_path = os.path.join(file_dir, "COMPLEXITY_REPORT.json")
+
+                if os.path.exists(report_path):
+                    skipped_files.append(file_path)
+                else:
+                    files_to_process.append(file_path)
+
+            if skipped_files:
+                logger.info(f"Skipping analysis for {len(skipped_files)} files that already have complexity reports.")
+                logger.debug(f"Skipped files: {skipped_files}")
+
+            if not files_to_process:
+                logger.info("All files already have complexity reports. Nothing to process.")
+                # Return all source files as processed without actually processing them
+                return source_files
+
+            # Process only the files that don't have reports
+            processed_files = []
+            for file_path in files_to_process:
+                logger.info(f"Processing file: {file_path}")
+                result = super().process_files(directory, file_path, message, debug=debug)
+                if result:
+                    processed_files.extend(result)
+
+            # Add the skipped files to the processed files list
+            processed_files.extend(skipped_files)
+        else:
+            # First round: Process files to generate individual complexity reports
+            processed_files = super().process_files(directory, specific_file, message, debug=debug)
 
         if not processed_files:
             return []
@@ -359,7 +503,7 @@ def main() -> int:
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via aider")
+    parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via agno")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--schema-validation", action="store_true",
                         help="Enable detailed schema validation logging")

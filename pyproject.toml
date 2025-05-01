@@ -16,10 +16,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.11"
+python = ">=3.11,<4"
 python-dotenv = "^1.0.0"
 jsonschema = "^4.17.3"
 requests = "^2.31.0"
+agno = "^1.4.3"
 
 [tool.poetry.scripts]
 tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
