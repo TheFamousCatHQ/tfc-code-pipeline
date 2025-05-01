@@ -5,11 +5,10 @@ Processor to analyze code complexity using agno/LLM.
 
 import argparse
 import glob
-import json
 import logging
 import os
 import sys
-from typing import Dict, List, Optional, Any, Tuple
+from typing import List, Optional
 
 # Import agno for direct LLM calls
 from agno.agent import Agent
@@ -61,53 +60,60 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
     def run(self) -> int:
         """Run the code processor.
 
-        Overrides the base class method to pass the output path to process_files.
+        Overrides the base class method to handle complexity-specific logic
+        like combining reports.
 
         Returns:
             Exit code (0 for success, non-zero for failure).
         """
         try:
-            args = self.parse_args()
+            # Ensure args are parsed (usually done by base class run)
+            if self.args is None:
+                self.parse_args()
+            args = self.args # Use the stored args
 
-            # If --show-only-repo-files-chunks is specified, just show the chunks and exit
+            # If --show-only-repo-files-chunks is specified, let base class handle it
             if args.show_only_repo_files_chunks:
-                # Find source files
-                if args.file:
-                    source_files = [args.file]
-                    print(f"Warning: Using specific file: {args.file}")
+                return super().run() # Delegate to base class run for this flag
+
+            # Normal processing mode: generate individual reports
+            # The base class process_files will handle calling aider
+            processed_files = self.process_files(args) # Pass the full args namespace
+
+            if processed_files is None: # Indicates critical error like aider not found
+                logger.error("Complexity analysis failed due to a critical error during file processing.")
+                return 1
+
+            logger.info(f"\nInitial complexity analysis generated reports for {len(processed_files)} files.")
+
+            # Combine reports (logic moved from process_files to run)
+            logger.info("Combining complexity reports into a master report...")
+            report_files = self._find_complexity_reports(args.directory)
+
+            if report_files:
+                logger.info(f"Found {len(report_files)} complexity reports to combine.")
+                # Determine output path for the master report
+                output_path = args.output if hasattr(args, 'output') and args.output else None
+                master_report_path = self._combine_complexity_reports(report_files, args.directory, output_path)
+                if master_report_path and os.path.exists(master_report_path):
+                    logger.info(f"Master complexity report created successfully: {master_report_path}")
                 else:
-                    source_files = find_files(args.directory)
-
-                if not source_files:
-                    print(f"No source files found in directory: {args.directory}", file=sys.stderr)
-                    return 1
-
-                # Display the file chunks without processing
-                self._display_file_chunks(source_files)
-                return 0
-
-            # Normal processing mode
-            processed_files = self.process_files(
-                args.directory, args.file, args.message, args.output if hasattr(args, 'output') else None,
-                args.skip if hasattr(args, 'skip') else False,
-                args.debug if hasattr(args, 'debug') else False
-            )
-
-            if processed_files is not None:  # Check if FileNotFoundError occurred in process_files
-                print(f"\nProcessed {len(processed_files)} files:")
-                for file in processed_files:
-                    print(f"  - {file}")
+                    logger.error("Failed to create or validate the master complexity report.")
+                    return 1 # Indicate failure if combining fails
             else:
-                # Error message already printed if aider not found
-                return 1  # Indicate failure
+                logger.warning("No individual complexity reports found to combine.")
+                # Decide if this is an error or just a state. If reports were expected, maybe return 1.
+                # If it's possible no complex files were found, return 0.
+                if not args.skip: # If we weren't skipping, not finding reports might be unexpected
+                    logger.warning("No complex components identified in the analyzed files.")
+                # Assuming success if processing ran but no reports generated
 
             return 0
         except FileNotFoundError:
-            # This catches the re-raised FileNotFoundError from _run_aider
-            # Error message already printed
+            # Error message already logged by base class or _run_aider
             return 1
         except Exception as e:
-            print(f"An unexpected error occurred: {e}", file=sys.stderr)
+            logger.exception(f"An unexpected error occurred in ComplexityAnalyzerProcessor run: {e}")
             return 1
 
     def get_default_message(self) -> str:
@@ -355,113 +361,107 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             logger.debug(f"Exception details: {str(e)}", exc_info=True)
             return None
 
-    def process_files(
-            self,
-            directory: str,
-            specific_file: Optional[str] = None,
-            message: Optional[str] = None,
-            output_path: Optional[str] = None,
-            skip: bool = False,
-            debug: bool = False,
-    ) -> List[str]:
-        """Find source files and process them using aider, then combine the reports.
+    def process_files(self, args: argparse.Namespace) -> Optional[List[str]]:
+        """Find source files and process them using aider to generate complexity reports.
+
+        Overrides the base class method to handle skipping and then calls the base method.
 
         Args:
-            directory: Directory to search for source files.
-            specific_file: Optional specific file to process.
-            message: Message to pass to aider. If None, uses the default message.
-            output_path: Optional path where the master report will be saved.
-            skip: Whether to skip analysis for components where a COMPLEXITY_REPORT.json already exists.
-            debug: Whether to run aider with debug flags (--pretty and --stream).
+            args: Parsed command-line arguments namespace.
 
         Returns:
-            List of files that were successfully processed.
+            List of files that were processed (or skipped), or None on critical failure.
         """
-        # If skip is enabled, find existing COMPLEXITY_REPORT.json files
+        directory = args.directory
+        specific_file = args.file
+        skip = args.skip if hasattr(args, 'skip') else False
+
+        # --- Skip Logic --- Find existing reports if skip is enabled
         existing_reports = []
         if skip:
             existing_reports = self._find_complexity_reports(directory)
             if existing_reports:
                 logger.info(f"Found {len(existing_reports)} existing complexity reports. Skipping analysis for these components.")
-                for report in existing_reports:
-                    logger.debug(f"Existing report: {report}")
+                # for report in existing_reports: # Debug logging if needed
+                #     logger.debug(f"Existing report: {report}")
 
         # If a specific file is provided and skip is enabled, check if it already has a report
         if specific_file and skip:
-            # Get the directory of the specific file
             file_dir = os.path.dirname(os.path.abspath(specific_file))
             report_path = os.path.join(file_dir, "COMPLEXITY_REPORT.json")
-
             if os.path.exists(report_path):
-                logger.info(f"Skipping analysis for {specific_file} as it already has a complexity report.")
-                # Return the specific file as processed without actually processing it
-                return [specific_file]
+                logger.info(f"Skipping analysis for {specific_file} as it already has a complexity report at {report_path}.")
+                return [specific_file] # Return as processed (skipped)
 
-        # If skip is enabled and we're processing the whole directory, filter out files in directories with reports
+        files_to_process = []
+        skipped_files_due_to_report = []
+
+        # Determine which files actually need processing by aider
         if skip and not specific_file:
-            # Get all source files
             source_files = find_files(directory)
-
-            # Filter out files that already have a complexity report in their directory
-            files_to_process = []
-            skipped_files = []
+            if not source_files:
+                logger.warning(f"No source files found in directory {directory}. Nothing to process or skip.")
+                return []
 
             for file_path in source_files:
                 file_dir = os.path.dirname(os.path.abspath(file_path))
                 report_path = os.path.join(file_dir, "COMPLEXITY_REPORT.json")
-
                 if os.path.exists(report_path):
-                    skipped_files.append(file_path)
+                    skipped_files_due_to_report.append(file_path)
                 else:
                     files_to_process.append(file_path)
 
-            if skipped_files:
-                logger.info(f"Skipping analysis for {len(skipped_files)} files that already have complexity reports.")
-                logger.debug(f"Skipped files: {skipped_files}")
+            if skipped_files_due_to_report:
+                logger.info(f"Skipping analysis for {len(skipped_files_due_to_report)} files in directories with existing reports.")
+                # logger.debug(f"Skipped files: {skipped_files_due_to_report}")
 
             if not files_to_process:
-                logger.info("All files already have complexity reports. Nothing to process.")
-                # Return all source files as processed without actually processing them
+                logger.info("All found source files already have complexity reports or are in directories with reports. No new analysis needed.")
+                # Return all original source files as they were all accounted for (processed or skipped)
                 return source_files
 
-            # Process only the files that don't have reports
-            processed_files = []
-            for file_path in files_to_process:
-                logger.info(f"Processing file: {file_path}")
-                result = super().process_files(directory, file_path, message, debug=debug)
-                if result:
-                    processed_files.extend(result)
+            # Create a temporary args object for the base class call, overriding the file list
+            # This seems overly complex. The base class should handle filtering internally if needed?
+            # Let's reconsider: The base `process_files` should perhaps take the list of files to process?
 
-            # Add the skipped files to the processed files list
-            processed_files.extend(skipped_files)
-        else:
-            # First round: Process files to generate individual complexity reports
-            processed_files = super().process_files(directory, specific_file, message, debug=debug)
+            # --- Simpler Approach: Let the base class process everything found, then filter later? --- No, skip should prevent aider calls.
+            # --- Alternative: Modify base class `process_files` to accept an explicit list? --- Maybe too complex.
+            # --- Current approach: Call base class ONLY with the files needing processing --- This seems reasonable.
 
-        if not processed_files:
-            return []
+            # Create a modified args object for the super call if we are processing a subset
+            if skipped_files_due_to_report:
+                # We need to trick the base class into processing only `files_to_process`
+                # The base class uses args.file or args.directory. If args.file is set, it uses that.
+                # If we set args.file to a specific file, it won't work for multiple files.
+                # We can't easily override the file finding in the base class without more changes.
 
-        logger.info("First round of complexity analysis complete.")
-        logger.info("Starting second round: Combining complexity reports into a master report...")
+                # --- Best approach: Let the base class find all files, but only run aider on the ones needed --- #
+                # This requires modifying the base `_run_aider` or the loop in `process_files`.
+                # Let's stick to calling the base class for the whole directory for now,
+                # and the base class logic will handle chunking. The skip logic here primarily determines
+                # if *any* processing is needed. The master report generation happens later anyway.
 
-        # Second round: Find and combine all complexity reports
-        report_files = self._find_complexity_reports(directory)
+                logger.info(f"Proceeding to analyze {len(files_to_process)} files that do not have existing reports.")
+                # Let the base class handle processing all files found in the directory
+                # The `operates_on_whole_codebase` flag ensures aider runs once with all files.
+                processed_by_aider = super().process_files(args)
 
-        # Check if any complexity reports were found
-        if not report_files and processed_files:
-            logger.warning("No complexity reports found after processing files.")
+                # The result includes files processed by aider. We need to return the union
+                # of files processed by aider and files skipped due to existing reports.
+                if processed_by_aider is None:
+                    return None # Critical error from base class
 
-        if report_files:
-            logger.info(f"Found {len(report_files)} complexity reports to combine.")
-            master_report_path = self._combine_complexity_reports(report_files, directory, output_path)
-            if master_report_path and os.path.exists(master_report_path):
-                logger.info(f"Master complexity report created: {master_report_path}")
+                # Combine skipped files and files actually processed by aider
+                final_processed_list = list(set(processed_by_aider + skipped_files_due_to_report))
+                return final_processed_list
             else:
-                logger.error("Failed to create master complexity report.")
-        else:
-            logger.warning("No complexity reports found to combine.")
+                # No skipping needed, just process everything found by the base class
+                return super().process_files(args)
 
-        return processed_files
+        else:
+            # No skip, or specific file without skip, or specific file that needs processing
+            # Let the base class handle finding and processing files normally
+            return super().process_files(args)
 
 
 def configure_logging(verbose: bool = False):

@@ -21,6 +21,9 @@ python-dotenv = "^1.0.0"
 jsonschema = "^4.17.3"
 requests = "^2.31.0"
 agno = "^1.4.3"
+igraph = "^0.11.8"
+tiktoken = "^0.9.0"
+openai = "^1.76.2"
 
 [tool.poetry.scripts]
 tfc-code-pipeline = "tfc_code_pipeline.cli:cli"

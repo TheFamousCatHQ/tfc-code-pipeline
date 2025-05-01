@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 import sys
+import argparse # Import argparse
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Sequence
 
@@ -89,29 +90,50 @@ def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
     return " ".join(cmd_copy)
 
 
-def main(build_only: bool = False, run: bool = False, src: Optional[str] = None, cmd: str = "explain_code", processor_args: Optional[Dict[str, str]] = None) -> int:
+def reconstruct_processor_args(args: argparse.Namespace) -> List[str]:
+    """Reconstruct the list of processor-specific arguments from the parsed namespace."""
+    processor_args_list = []
+    known_main_args = {'build_only', 'run', 'src', 'cmd'} # Args handled by main.py/cli.py
+    args_dict = vars(args)
+
+    for key, value in args_dict.items():
+        if key in known_main_args:
+            continue # Skip args consumed by the main script
+
+        arg_name = f"--{key.replace('_', '-')}"
+
+        if isinstance(value, bool):
+            if value:
+                processor_args_list.append(arg_name)
+        elif isinstance(value, list):
+            # Handle list arguments (e.g., nargs='+')
+            processor_args_list.append(arg_name)
+            processor_args_list.extend(map(str, value))
+        elif value is not None:
+            # Handle regular arguments with values
+            processor_args_list.append(arg_name)
+            processor_args_list.append(str(value))
+        # Ignore args with None value (not specified or default is None)
+
+    return processor_args_list
+
+def main(args: argparse.Namespace) -> int:
     """Run the main application.
 
-    Creates a one-shot Docker container based on Python 3.12,
-    installs Aider and the explain-code script, and runs the specified command
-    (either explain_code or write_tests) with the provided messages.
-    Exposes all environment variables from .env file to the Docker container.
-    Optionally mounts a source directory in the container under /src.
+    Builds a Docker image and runs a specified code processor command inside it,
+    passing necessary arguments and environment variables.
 
     Args:
-        build_only: If True, only build the Docker image without running the container.
-        run: If True, run the Docker container with the provided messages.
-        src: Directory to mount in the Docker container under /src. Defaults to None.
-        messages: Custom message to pass to aider. Defaults to "Hello".
-        cmd: Command to run in the Docker container. Choices are "explain_code" or "write_tests". Defaults to "explain_code".
-        processor_args: Dictionary of processor-specific arguments to pass to the Docker container. Defaults to None.
+        args: Fully parsed command-line arguments from cli.py.
 
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
-    # Initialize processor_args if None
-    if processor_args is None:
-        processor_args = {}
+    build_only = args.build_only
+    run = args.run
+    src = args.src
+    cmd = args.cmd
+
     # Define constants
     IMAGE_NAME = "tfc-code-pipeline:python3.12"
     DOCKERFILE_CONTENT = """\
@@ -128,220 +150,179 @@ ENTRYPOINT ["/bin/bash"]
 """
 
     # Configure logging
+    # Assuming verbose might be a processor arg, configure simply for now
     configure_logging()
+
+    # Basic validation (redundant with cli.py but safe)
+    if run and not cmd:
+        logger.error("Error: --cmd is required when using --run")
+        return 1
+    if run and not src:
+        logger.error("Error: --src is required when using --run")
+        return 1
 
     if build_only:
         logger.info(f"TFC Code Pipeline - Building Docker image: {IMAGE_NAME}...")
     elif run:
         logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
-        logger.info(f"TFC Code Pipeline - Starting {cmd} in Docker container...")
+        # Default action if neither --build-only nor --run is specified
+        if src and cmd:
+            logger.info(f"TFC Code Pipeline - Defaulting to build and run {cmd}...")
+            run = True # Set run to true for the logic below
+        else:
+             logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run.")
+             return 1
 
     try:
-        # Load environment variables from .env file
-        env_file = Path(".env")
-        if env_file.exists():
-            logger.info("Loading environment variables from .env file...")
-            load_dotenv(env_file)
-            # Get only environment variables from .env file
-            env_vars: Dict[str, str] = read_env_file(env_file)
-        else:
-            logger.info("No .env file found. No environment variables will be passed to Docker.")
-            env_vars = {}
-
-        if build_only:
-            # Create a Dockerfile
-            dockerfile_path = Path("Dockerfile")
+        # --- Dockerfile Creation --- (Common for build and run)
+        dockerfile_path = Path("Dockerfile")
+        needs_build = not dockerfile_path.exists() or build_only
+        if needs_build:
+            logger.info("Creating temporary Dockerfile...")
             with open(dockerfile_path, "w") as f:
                 f.write(DOCKERFILE_CONTENT)
 
-            # Build the Docker image
+        # --- Build Logic --- (If build_only or first run)
+        if needs_build:
             logger.info(f"Building Docker image: {IMAGE_NAME}")
             build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
             result = subprocess.run(build_cmd, check=True)
-
-            # Remove the temporary Dockerfile
-            dockerfile_path.unlink()
-
+            if dockerfile_path.exists(): # Clean up temporary Dockerfile
+                 dockerfile_path.unlink()
+            if result.returncode != 0:
+                logger.error("Docker build failed.")
+                return result.returncode
             logger.info(f"Docker image built successfully: {IMAGE_NAME}")
-            logger.info(
-                f"You can now run it with: docker run --rm -it -v /path/to/source:/src --entrypoint explain-code {IMAGE_NAME} --directory \"/src\" --message \"Your message\"")
-            logger.info(
-                f"Or use write-tests: docker run --rm -it -v /path/to/source:/src --entrypoint write-tests {IMAGE_NAME} --directory \"/src\"")
 
-            return result.returncode
-        elif run:
-            # Create a Dockerfile if it doesn't exist
-            dockerfile_path = Path("Dockerfile")
-            if not dockerfile_path.exists():
-                with open(dockerfile_path, "w") as f:
-                    f.write(DOCKERFILE_CONTENT)
+        if build_only:
+             logger.info("Build only complete.")
+             return 0 # Success for build-only
 
-                # Build the Docker image
-                logger.info(f"Building Docker image: {IMAGE_NAME}")
-                build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
-                subprocess.run(build_cmd, check=True)
+        # --- Run Logic --- (Only if run is True)
+        if run:
+            # Load environment variables from .env file
+            env_file = Path(".env")
+            if env_file.exists():
+                logger.info("Loading environment variables from .env file...")
+                load_dotenv(env_file)
+                env_vars: Dict[str, str] = read_env_file(env_file)
+            else:
+                logger.info("No .env file found. No environment variables will be passed to Docker.")
+                env_vars = {}
 
-            # Create Docker command with environment variables
+            # Prepare Docker run command
             docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
 
-            # Add each environment variable to the Docker command
+            # Add environment variables
             for key, value in env_vars.items():
                 docker_cmd.extend(["-e", f"{key}={value}"])
 
-            # Mount source directory if provided
-            if src:
-                src_path = Path(src).resolve()
-                if not src_path.exists():
-                    logger.error(f"Error: Source directory '{src}' does not exist.")
-                    return 1
-                if not src_path.is_dir():
-                    logger.error(f"Error: '{src}' is not a directory.")
-                    return 1
-                logger.info(f"Mounting source directory: {src_path} -> /src")
-                docker_cmd.extend(["-v", f"{src_path}:/src"])
+            # Add source directory mount
+            src_path = Path(src).resolve()
+            logger.info(f"Mounting source directory: {src_path} -> /src")
+            docker_cmd.extend(["-v", f"{src_path}:/src"])
 
-            # Process output argument before adding the image name
-            script_args = ["--directory", "/src"]
-            for arg_name, arg_value in processor_args.items():
-                if arg_name == "output":
-                    # Mount the output file's directory as a volume in the Docker container
-                    output_path = Path(arg_value)
-                    output_dir = output_path.parent
-                    output_filename = output_path.name
-                    docker_output_path = f"/output/{output_filename}"
+            # --- Reconstruct processor args --- #
+            processor_args_list = reconstruct_processor_args(args)
 
-                    # Create the output directory if it doesn't exist
-                    output_dir.mkdir(parents=True, exist_ok=True)
+            # Handle output directory mounting based on reconstructed processor args
+            output_mount_needed = False
+            docker_output_dir = "/output"
+            host_output_dir = None
+            output_arg_index = -1
+            docker_output_path = ""
 
-                    # Add the volume mount for the output directory (Docker argument)
-                    docker_cmd.extend(["-v", f"{output_dir}:/output"])
+            # Find if -o or --output exists in processor_args_list
+            try:
+                output_arg_index = processor_args_list.index("-o")
+            except ValueError:
+                try:
+                    output_arg_index = processor_args_list.index("--output")
+                except ValueError:
+                    output_arg_index = -1 # Not found
 
-                    # Add the output path argument for the script (script argument)
-                    script_args.extend(["-o", docker_output_path])
+            if output_arg_index != -1 and output_arg_index + 1 < len(processor_args_list):
+                host_output_path = Path(processor_args_list[output_arg_index+1]).resolve()
+                host_output_dir = host_output_path.parent
+                output_filename = host_output_path.name
+                docker_output_path = f"{docker_output_dir}/{output_filename}"
 
-            # Add the image and command
+                # Create host output directory if it doesn't exist
+                host_output_dir.mkdir(parents=True, exist_ok=True)
+                output_mount_needed = True
+                logger.info(f"Mounting output directory: {host_output_dir} -> {docker_output_dir}")
+            elif output_arg_index != -1:
+                 logger.error(f"Error: Argument {processor_args_list[output_arg_index]} requires a value.")
+                 return 1
+
+            if output_mount_needed and host_output_dir:
+                docker_cmd.extend(["-v", f"{host_output_dir}:{docker_output_dir}"])
+
+            # Add image name and entrypoint
             docker_cmd.extend([
-                "--entrypoint", cmd.replace("_", "-"),
+                "--entrypoint", cmd.replace("_", "-"), # Use the validated cmd
                 IMAGE_NAME
             ])
 
-            # Add script arguments
-            docker_cmd.extend(script_args)
+            # Add script arguments (processor args)
+            # Base arguments for most processors
+            docker_cmd.extend(["--directory", "/src"]) # Always run relative to /src in container
+
+            # Add the reconstructed processor-specific arguments
+            if output_arg_index != -1:
+                # Pass args before -o/--output
+                docker_cmd.extend(processor_args_list[:output_arg_index+1])
+                # Pass the mapped container path for output
+                docker_cmd.append(docker_output_path)
+                # Pass args after the output value
+                docker_cmd.extend(processor_args_list[output_arg_index+2:])
+            else:
+                # No output arg found, pass all reconstructed args as is
+                docker_cmd.extend(processor_args_list)
 
             # Run the Docker command
-            logger.info(f"Running {cmd} in Docker container")
+            logger.info(f"Running {cmd} in Docker container...")
             logger.debug(f"Docker command: {format_docker_cmd(docker_cmd)}")
-            result = subprocess.run(docker_cmd, check=True)
+            result = subprocess.run(docker_cmd)
+
             return result.returncode
         else:
-            # Create a Dockerfile
-            dockerfile_path = Path("Dockerfile")
-            with open(dockerfile_path, "w") as f:
-                f.write(DOCKERFILE_CONTENT)
-
-            # Build the Docker image if it doesn't exist
-            logger.info(f"Building Docker image: {IMAGE_NAME}")
-            build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
-            subprocess.run(build_cmd, check=True)
-
-            # Remove the temporary Dockerfile
-            dockerfile_path.unlink()
-
-            # Create Docker command with environment variables
-            docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
-
-            # Add each environment variable to the Docker command
-            for key, value in env_vars.items():
-                docker_cmd.extend(["-e", f"{key}={value}"])
-
-            # Mount source directory if provided
-            if src:
-                src_path = Path(src).resolve()
-                if not src_path.exists():
-                    logger.error(f"Error: Source directory '{src}' does not exist.")
-                    return 1
-                if not src_path.is_dir():
-                    logger.error(f"Error: '{src}' is not a directory.")
-                    return 1
-                logger.info(f"Mounting source directory: {src_path} -> /src")
-                docker_cmd.extend(["-v", f"{src_path}:/src"])
-
-            # Process output argument before adding the image name
-            script_args = ["--directory", "/src"]
-            for arg_name, arg_value in processor_args.items():
-                if arg_name == "output":
-                    # Mount the output file's directory as a volume in the Docker container
-                    output_path = Path(arg_value)
-                    output_dir = output_path.parent
-                    output_filename = output_path.name
-                    docker_output_path = f"/output/{output_filename}"
-
-                    # Create the output directory if it doesn't exist
-                    output_dir.mkdir(parents=True, exist_ok=True)
-
-                    # Add the volume mount for the output directory (Docker argument)
-                    docker_cmd.extend(["-v", f"{output_dir}:/output"])
-
-                    # Add the output path argument for the script (script argument)
-                    script_args.extend(["-o", docker_output_path])
-
-            # Add the image and command
-            docker_cmd.extend([
-                "--entrypoint", cmd.replace("_", "-"),
-                IMAGE_NAME
-            ])
-
-            # Add script arguments
-            docker_cmd.extend(script_args)
-
-            # Run the Docker command
-            logger.info(f"Running {cmd} in Docker container")
-            logger.debug(f"Docker command: {format_docker_cmd(docker_cmd)}")
-            result = subprocess.run(docker_cmd, check=True)
-            return result.returncode
+            # Should not happen due to logic at the start, but as a fallback
+            logger.error("Invalid state: Neither build_only nor run was specified or implied.")
+            return 1
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error running Docker command: {e}")
+        logger.error(f"Docker command failed: {e}")
         return e.returncode
-    except FileNotFoundError:
-        logger.error("Error: Docker not found. Please make sure Docker is installed and in your PATH.")
-        return 1
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.exception(f"An unexpected error occurred: {e}")
         return 1
-
+    finally:
+        # Ensure temporary Dockerfile is removed if it exists
+        if 'dockerfile_path' in locals() and dockerfile_path.exists():
+            try:
+                dockerfile_path.unlink()
+                logger.debug("Cleaned up temporary Dockerfile.")
+            except OSError as e:
+                logger.warning(f"Could not remove temporary Dockerfile: {e}")
 
 def configure_logging(verbose: bool = False):
-    """Configure logging for the TFC Code Pipeline.
+    """Configure logging for the main application.
 
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    # Set up root logger
-    root_logger = logging.getLogger()
-
-    # Remove existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Create console handler
-    console = logging.StreamHandler()
-
-    # Set format
-    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-    console.setFormatter(formatter)
-
-    # Add handler to root logger
-    root_logger.addHandler(console)
-
-    # Set level based on verbose flag
-    if verbose:
-        root_logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose logging enabled")
-    else:
-        root_logger.setLevel(logging.INFO)
+    # Note: verbose is not directly available here unless parsed globally earlier or passed down.
+    # For now, default to INFO level.
+    log_level = logging.INFO # logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=log_level, format='%(levelname)s - %(name)s - %(message)s')
+    logger.info(f"Logging configured to level: {logging.getLevelName(log_level)}")
 
 
-if __name__ == "__main__":
-    exit(main())
+# This script is not meant to be run directly, but via the CLI entry point.
+# if __name__ == "__main__":
+#     # Example of how you might call it if needed for testing
+#     # fake_args = argparse.Namespace(build_only=False, run=True, src=".", cmd="explain_code", output=None, skip=False) # etc.
+#     # exit(main(args=fake_args))
+#     pass

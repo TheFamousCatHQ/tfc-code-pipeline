@@ -90,7 +90,8 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=False, src=None, cmd="explain_code", processor_args={})
+        # All args except build_only, run, src, cmd should be passed to processor_args
+        mock_main.assert_called_once_with(build_only=False, run=False, src=None, cmd="explain_code", processor_args={'output': None})
 
     @patch('tfc_code_pipeline.cli.parse_args')
     @patch('tfc_code_pipeline.cli.main')
@@ -106,7 +107,8 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=True, run=False, src=None, cmd="explain_code", processor_args={})
+        # All args except build_only, run, src, cmd should be passed to processor_args
+        mock_main.assert_called_once_with(build_only=True, run=False, src=None, cmd="explain_code", processor_args={'output': None})
 
     @patch('tfc_code_pipeline.cli.parse_args')
     @patch('tfc_code_pipeline.cli.main')
@@ -122,7 +124,8 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code", processor_args={})
+        # All args except build_only, run, src, cmd should be passed to processor_args
+        mock_main.assert_called_once_with(build_only=False, run=True, src=None, cmd="explain_code", processor_args={'output': None})
 
     @patch('tfc_code_pipeline.cli.parse_args')
     @patch('tfc_code_pipeline.cli.main')
@@ -138,6 +141,7 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
+        # All args except build_only, run, src, cmd should be passed to processor_args
         mock_main.assert_called_once_with(build_only=False, run=False, src=None, cmd="analyze_complexity", processor_args={'output': '/tmp/output.json'})
 
     @patch('tfc_code_pipeline.cli.parse_args')
@@ -154,7 +158,8 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="explain_code", processor_args={})
+        # All args except build_only, run, src, cmd should be passed to processor_args
+        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="explain_code", processor_args={'output': None})
 
     @patch('tfc_code_pipeline.cli.parse_args')
     @patch('tfc_code_pipeline.cli.main')
@@ -170,4 +175,5 @@ class TestCli(unittest.TestCase):
         # Verify the result
         self.assertEqual(result, 0)
         mock_parse_args.assert_called_once()
-        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="write_tests", processor_args={})
+        # All args except build_only, run, src, cmd should be passed to processor_args
+        mock_main.assert_called_once_with(build_only=False, run=True, src="/path/to/src", cmd="write_tests", processor_args={'output': None})

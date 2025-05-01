@@ -14,7 +14,7 @@ import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -35,6 +35,27 @@ class CodeProcessor(ABC):
     operates_on_whole_codebase: bool = False
     """Whether this processor operates on the whole codebase at once (True)
        or on a file-by-file basis (False)."""
+
+    args: argparse.Namespace
+    """Parsed command-line arguments."""
+
+    def __init__(self, args: Optional[Union[argparse.Namespace, Sequence[str]]] = None):
+        """Initialize the CodeProcessor.
+
+        Args:
+            args: Pre-parsed arguments (Namespace) or sequence of strings to parse.
+                  If None, parsing is deferred until self.parse_args or self.run is called.
+                  If an empty list, parsing is also deferred.
+        """
+        if isinstance(args, argparse.Namespace):
+            # Args already parsed
+            self.args = args
+        elif isinstance(args, Sequence) and args: # Check if it's a non-empty sequence
+            # Parse the provided sequence of strings immediately
+            self.args = self.parse_args(list(args))
+        else:
+            # Defer parsing (args is None or an empty sequence)
+            self.args = None # type: ignore
 
     # --- Abstract Methods (Subclasses must implement) ---
 
@@ -67,10 +88,10 @@ class CodeProcessor(ABC):
         pass
 
     def parse_args(self, args: Optional[Sequence[str]] = None) -> argparse.Namespace:
-        """Parse command-line arguments.
+        """Parse command-line arguments and store them in self.args.
 
         Args:
-            args: Command line arguments. Defaults to None, which uses sys.argv.
+            args: Command line arguments. Defaults to None, which uses sys.argv[1:].
 
         Returns:
             Parsed command-line arguments.
@@ -109,7 +130,10 @@ class CodeProcessor(ABC):
         # Allow subclasses to add their own arguments
         self.add_arguments(parser)
 
-        return parser.parse_args(args)
+        # Store parsed args
+        parsed_args = parser.parse_args(args)
+        self.args = parsed_args
+        return parsed_args
 
     # --- Core Processing Logic ---
 
@@ -248,257 +272,139 @@ class CodeProcessor(ABC):
             chunk_info[parent_dir].append(len(chunk))
 
         logger.info("Directory breakdown:")
-        for parent_dir, file_counts in chunk_info.items():
-            chunk_count = len(file_counts)
-            total_files_in_dir = sum(file_counts)
-            if chunk_count == 1:
-                logger.info(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
-            else:
-                chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
-                logger.info(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
-
-        # Check for combined directories
-        combined_dirs = set()
-        for chunk in file_chunks:
-            if not chunk:  # Skip empty chunks (shouldn't happen)
-                continue
-            dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
-            if len(dirs_in_chunk) > 1:
-                combined_dirs.update(dirs_in_chunk)
-
-        if combined_dirs:
-            logger.info("Small directories combined into chunks:")
-            for dir_name in sorted(combined_dirs):
-                logger.info(f"  - {dir_name}")
-
-        # Display files in each chunk
-        logger.info("Detailed file listing by chunk:")
-        for i, chunk in enumerate(file_chunks, 1):
-            if not chunk:  # Skip empty chunks (shouldn't happen)
-                continue
-
-            # Get all unique parent directories in this chunk
-            dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
-            if len(dirs_in_chunk) == 1:
-                parent_dir = next(iter(dirs_in_chunk))
-                logger.info(f"Chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
-            else:
-                dir_list = ', '.join(sorted(dirs_in_chunk))
-                logger.info(f"Chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
-
-            for j, file_path in enumerate(chunk, 1):
-                logger.debug(f"  {j}. {file_path}")
+        for parent_dir, chunk_sizes in sorted(chunk_info.items()):
+            logger.info(f"  - {parent_dir}: {len(chunk_sizes)} chunk{'s' if len(chunk_sizes) > 1 else ''} ({sum(chunk_sizes)} files)")
+            # Optionally print individual chunk sizes per directory
+            # logger.info(f"    Sizes: {sorted(chunk_sizes)}")
 
     def _run_aider(self, files: List[str], message: str, debug: bool = False) -> bool:
-        """Run aider with the specified files and message.
+        """Run aider command with the given files and message.
 
         Args:
-            files: List of file paths to pass to aider.
+            files: List of files to pass to aider.
             message: Message to pass to aider.
             debug: Whether to run aider with debug flags (--pretty and --stream).
 
         Returns:
             True if aider ran successfully, False otherwise.
         """
+        aider_cmd = [
+            "aider",
+            "--yes",
+            "--model=openrouter/gpt-4.1-nano"
+        ]
         if debug:
-            command = ["aider", "--pretty", "--stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
-                      message] + files
-        else:
-            command = ["aider", "--no-pretty", "--no-stream", "--yes-always", "--no-git", "--no-auto-commits", "--message",
-                      message] + files
-        logger.debug(f"Running command: {' '.join(command)}")
+            aider_cmd.extend(["--pretty", "--stream"])
 
-        start_time = time.time()
+        # Filter out any empty strings or None values from files
+        valid_files = [f for f in files if f]
+        if not valid_files:
+            logger.warning("No valid files provided to aider. Skipping aider run.")
+            return True # No files, technically not a failure of aider itself
+
+        aider_cmd.extend(valid_files)
+        aider_cmd.extend(["--message", message])
+
+        logger.info(f"Running aider with {len(valid_files)} files...")
+        logger.debug(f"Aider command: {' '.join(aider_cmd)}")
         try:
-            # Capture the output from aider
-            result = subprocess.run(
-                command,
-                check=True,
-                text=True,
-                capture_output=True
-            )
+            # Run aider command
+            process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-            # Calculate execution time
-            execution_time = time.time() - start_time
-            logger.info(f"Aider execution completed in {execution_time:.2f} seconds")
+            # Log aider output in real-time
+            if process.stdout:
+                for line in iter(process.stdout.readline, ''):
+                    logger.info(f"[aider] {line.strip()}")
+            if process.stderr:
+                for line in iter(process.stderr.readline, ''):
+                    logger.error(f"[aider stderr] {line.strip()}")
 
-            # Log aider output
-            if result.stdout:
-                logger.debug("--- Aider Output Start ---")
-                logger.debug(f"{result.stdout}")
-                logger.debug("--- Aider Output End ---")
+            process.wait()
 
-            # Log any error output
-            if result.stderr:
-                logger.warning("--- Aider Warnings/Errors ---")
-                logger.warning(f"{result.stderr}")
-                logger.warning("--- End of Warnings/Errors ---")
-
-            return True
-        except subprocess.CalledProcessError as e:
-            # Calculate execution time even for failures
-            execution_time = time.time() - start_time
-            logger.error(f"Aider execution failed after {execution_time:.2f} seconds")
-
-            file_list = ', '.join(files)
-            logger.error(f"Error processing file(s) {file_list}: {e}")
-
-            # Log any captured output from the failed run
-            if e.stdout:
-                logger.debug("--- Aider Output Before Failure ---")
-                logger.debug(f"{e.stdout}")
-                logger.debug("--- End of Output ---")
-
-            if e.stderr:
-                logger.error("--- Aider Error Output ---")
-                logger.error(f"{e.stderr}")
-                logger.error("--- End of Error Output ---")
-
-            return False
+            if process.returncode == 0:
+                logger.info(f"Aider processing completed successfully for {len(valid_files)} files.")
+                return True
+            else:
+                logger.error(f"Aider failed with exit code {process.returncode}")
+                return False
         except FileNotFoundError:
-            # This error is critical, stop the process.
-            logger.critical("Error: 'aider' command not found. Please ensure it is installed and in your PATH.")
-            raise  # Re-raise to stop execution in run()
+            logger.error("Error: 'aider' command not found. Make sure aider is installed and in your PATH.")
+            logger.error("You can install aider using: pip install aider-chat")
+            # Re-raise the exception to be caught by the main run loop
+            raise
+        except Exception as e:
+            logger.error(f"An error occurred while running aider: {e}")
+            return False
 
-    def process_files(
-            self,
-            directory: str,
-            specific_file: Optional[str] = None,
-            message: Optional[str] = None,
-            debug: bool = False,
-    ) -> List[str]:
+    def process_files(self, args: argparse.Namespace) -> Optional[List[str]]:
         """Find source files and process them using aider.
 
-        Depending on the `operates_on_whole_codebase` flag, this will either
-        process files individually or all together.
-
         Args:
-            directory: Directory to search for source files.
-            specific_file: Optional specific file to process.
-            message: Message to pass to aider. If None, uses the default message.
-            debug: Whether to run aider with debug flags (--pretty and --stream).
+            args: Parsed command-line arguments containing directory, file, message, etc.
 
         Returns:
-            List of files that were successfully processed.
+            List of files that were successfully processed, or None if a critical error occurred (e.g., aider not found).
         """
-        # Start timing the entire process
-        process_start_time = time.time()
-
-        # Use default message if none provided
-        if message is None:
-            message = self.get_default_message()
-
-        # Determine the list of files to process
-        logger.info("Step 1: Finding source files...")
-        file_discovery_start = time.time()
-
-        if specific_file:
-            source_files = [specific_file]
-            # Force file-by-file if a specific file is given, regardless of flag?
-            # For now, let the flag decide even for a single specific file.
+        # Find source files
+        if args.file:
+            source_files = [args.file]
+            logger.info(f"Processing specific file: {args.file}")
         else:
-            # Find source files in the directory using the imported function
-            source_files = find_files(directory)
+            source_files = find_files(args.directory)
+            if not source_files:
+                logger.warning(f"No source files found in directory: {args.directory}")
+                return []
+            logger.info(f"Found {len(source_files)} source files in {args.directory}")
 
-        file_discovery_time = time.time() - file_discovery_start
-        logger.info(f"File discovery completed in {file_discovery_time:.2f} seconds")
+        # Determine the message to use
+        message = args.message if args.message else self.get_default_message()
 
-        if not source_files:
-            logger.error(f"No source files found in directory: {directory}")
-            return []
+        processed_files_list = []
+        start_time = time.time()
 
-        processed_files: List[str] = []
         try:
             if self.operates_on_whole_codebase:
-                # Process files in chunks grouped by parent directory
-                if specific_file:
-                    logger.warning(
-                        f"Warning: --file option ignored because {self.__class__.__name__} operates on the whole codebase. Processing all found files.")
-
-                # Group files by parent directory with a maximum of 20 files per chunk
-                logger.info("Step 2: Grouping files by parent directory...")
-                chunking_start = time.time()
-                file_chunks = self._group_files_by_parent_directory(source_files)
-                chunking_time = time.time() - chunking_start
-                logger.info(f"File chunking completed in {chunking_time:.2f} seconds")
-
-                # Display detailed information about the chunks
-                logger.info(f"Chunking algorithm: min 10 files, max 20 files per chunk (when possible)")
-                total_files = sum(len(chunk) for chunk in file_chunks)
-                logger.info(f"Found {len(file_chunks)} chunks with a total of {total_files} files")
-
-                # Count chunks by size
-                size_distribution = {}
-                for chunk in file_chunks:
-                    chunk_size = len(chunk)
-                    if chunk_size not in size_distribution:
-                        size_distribution[chunk_size] = 0
-                    size_distribution[chunk_size] += 1
-
-                # Display size distribution
-                logger.info("Chunk size distribution:")
-                for size in sorted(size_distribution.keys()):
-                    count = size_distribution[size]
-                    logger.info(f"  - {size} files: {count} chunk{'s' if count > 1 else ''}")
-
-                # Display detailed information about each chunk
-                chunk_info = {}
-                for chunk in file_chunks:
-                    if not chunk:  # Skip empty chunks (shouldn't happen)
-                        continue
-                    parent_dir = str(Path(chunk[0]).parent)
-                    if parent_dir not in chunk_info:
-                        chunk_info[parent_dir] = []
-                    chunk_info[parent_dir].append(len(chunk))
-
-                logger.info("Directory breakdown:")
-                for parent_dir, file_counts in chunk_info.items():
-                    chunk_count = len(file_counts)
-                    total_files_in_dir = sum(file_counts)
-                    if chunk_count == 1:
-                        logger.info(f"  - Directory '{parent_dir}': 1 chunk with {total_files_in_dir} files")
-                    else:
-                        chunks_desc = ', '.join([str(count) for count in sorted(file_counts, reverse=True)])
-                        logger.info(f"  - Directory '{parent_dir}': {chunk_count} chunks with {total_files_in_dir} files ({chunks_desc} files per chunk)")
-
-                # Process each chunk separately
-                logger.info("Step 3: Processing files with aider...")
-                for i, chunk in enumerate(file_chunks, 1):
-                    if not chunk:  # Skip empty chunks (shouldn't happen)
-                        continue
-
-                    # Get all unique parent directories in this chunk
-                    dirs_in_chunk = set(str(Path(file_path).parent) for file_path in chunk)
-                    if len(dirs_in_chunk) == 1:
-                        parent_dir = next(iter(dirs_in_chunk))
-                        logger.info(f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from directory: {parent_dir}")
-                    else:
-                        dir_list = ', '.join(sorted(dirs_in_chunk))
-                        logger.info(f"Processing chunk {i}/{len(file_chunks)}: {len(chunk)} files from multiple directories: {dir_list}")
-
-                    if self._run_aider(chunk, message, debug):
-                        processed_files.extend(chunk)  # Add all files in the chunk to processed_files
-                    # On failure, _run_aider logs error, we continue with the next chunk
+                logger.info("Processor operates on whole codebase. Running aider once.")
+                if self._run_aider(source_files, message, args.debug):
+                    processed_files_list = source_files
+                else:
+                    logger.error("Aider failed while processing the whole codebase.")
+                    # Returning None might be too drastic if only one chunk failed
+                    # Consider returning the list of files attempted
+                    return source_files # Indicate which files were attempted
             else:
-                # Process files one by one
-                logger.info("Step 2: Processing files with aider one by one...")
-                for file_path in source_files:
-                    logger.info(f"Processing file: {file_path}")
-                    if self._run_aider([file_path], message, debug):
-                        processed_files.append(file_path)
-                    # If _run_aider returns False, an error was already logged.
-                    # Continue processing other files unless aider itself is not found.
+                logger.info("Processor operates file-by-file (chunked).")
+                # Group files by parent directory
+                file_chunks = self._group_files_by_parent_directory(source_files)
+                total_chunks = len(file_chunks)
+                logger.info(f"Processing {len(source_files)} files in {total_chunks} chunks...")
+
+                for i, chunk in enumerate(file_chunks):
+                    chunk_start_time = time.time()
+                    logger.info(f"--- Processing Chunk {i + 1}/{total_chunks} ({len(chunk)} files) ---")
+                    if self._run_aider(chunk, message, args.debug):
+                        processed_files_list.extend(chunk)
+                        chunk_duration = time.time() - chunk_start_time
+                        logger.info(f"--- Chunk {i + 1}/{total_chunks} completed successfully in {chunk_duration:.2f}s ---")
+                    else:
+                        logger.error(f"--- Chunk {i + 1}/{total_chunks} failed ---: {chunk}")
+                        # Continue processing other chunks even if one fails
+                        continue
 
         except FileNotFoundError:
-            # Error already logged by _run_aider, just return empty list
-            # The exception is caught here to prevent crashing the caller if aider isn't found
-            return []
+            # Aider not found, handled by _run_aider logging, re-raise to stop execution
+            logger.critical("Aider not found. Cannot continue processing.")
+            return None # Indicate critical failure
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during file processing: {e}", exc_info=True)
+            # Depending on severity, you might return processed_files_list or None
+            return processed_files_list # Return files processed so far
 
-        # Calculate and display total processing time
-        total_processing_time = time.time() - process_start_time
-        logger.info(f"Total processing time: {total_processing_time:.2f} seconds")
+        end_time = time.time()
+        total_duration = end_time - start_time
+        logger.info(f"Finished processing {len(processed_files_list)} files in {total_duration:.2f} seconds.")
 
-        return processed_files
+        return processed_files_list
 
     def run(self) -> int:
         """Run the code processor.
@@ -507,11 +413,15 @@ class CodeProcessor(ABC):
             Exit code (0 for success, non-zero for failure).
         """
         try:
-            args = self.parse_args()
+            # Parse args if not already parsed during __init__
+            if self.args is None:
+                self.parse_args()
 
-            # Configure logging if debug flag is set
-            if hasattr(args, 'debug') and args.debug:
-                configure_logging(verbose=True)
+            # Now self.args is guaranteed to be set
+            args = self.args
+
+            # Configure logging based on args (assuming a --verbose or similar arg might be added)
+            configure_logging(getattr(args, 'verbose', False))
 
             # If --show-only-repo-files-chunks is specified, just show the chunks and exit
             if args.show_only_repo_files_chunks:
@@ -531,25 +441,24 @@ class CodeProcessor(ABC):
                 return 0
 
             # Normal processing mode
-            processed_files = self.process_files(
-                args.directory, args.file, args.message, args.debug
-            )
+            processed_files = self.process_files(args) # Pass the full args namespace
 
-            if processed_files is not None:  # Check if FileNotFoundError occurred in process_files
-                logger.info(f"Processed {len(processed_files)} files:")
-                for file in processed_files:
-                    logger.info(f"  - {file}")
+            if processed_files is not None:  # Check if None was returned due to critical error
+                logger.info(f"\nSuccessfully processed {len(processed_files)} files.")
+                # Optionally list processed files if needed, but logger already did
+                # for file in processed_files:
+                #     logger.debug(f"  - {file}")
             else:
-                # Error message already logged if aider not found
+                logger.error("Processing failed due to a critical error (e.g., aider not found).")
                 return 1  # Indicate failure
 
             return 0
         except FileNotFoundError:
-            # This catches the re-raised FileNotFoundError from _run_aider
+            # This catches the FileNotFoundError if re-raised from _run_aider/process_files
             # Error message already logged
             return 1
         except Exception as e:
-            logger.error(f"An unexpected error occurred: {e}")
+            logger.exception(f"An unexpected error occurred in the main run loop: {e}")
             return 1
 
 
@@ -562,7 +471,7 @@ def configure_logging(verbose: bool = False):
     # Set up root logger
     root_logger = logging.getLogger()
 
-    # Remove existing handlers
+    # Remove existing handlers if configuring multiple times
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
@@ -582,3 +491,16 @@ def configure_logging(verbose: bool = False):
         logger.debug("Verbose logging enabled")
     else:
         root_logger.setLevel(logging.INFO)
+
+# Example usage (for illustration, typically run via subclass main)
+# if __name__ == "__main__":
+#     # This part would need a concrete implementation of CodeProcessor
+#     # For example:
+#     # class MyProcessor(CodeProcessor):
+#     #     def get_default_message(self) -> str: return "/ask Explain this code."
+#     #     def get_description(self) -> str: return "Explains code using aider."
+#
+#     # processor = MyProcessor()
+#     # sys.exit(processor.run())
+#     print("This script provides a base class. Run a specific processor script instead.")
+#     sys.exit(1)
