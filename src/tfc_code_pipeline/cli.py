@@ -44,6 +44,11 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         default="explain_code",
         help="Command to run in the Docker container (explain_code, write_tests, find_bugs, or analyze_complexity)"
     )
+    parser.add_argument(
+        "-o", "--output",
+        type=str,
+        help="Path where the output will be saved (for commands that support it)"
+    )
 
     # Add processor-specific arguments based on the command
     if args is None:
@@ -61,11 +66,18 @@ def cli() -> int:
         Exit code (0 for success, non-zero for failure).
     """
     args = parse_args()
+
+    # Initialize processor_args dictionary if output is specified
+    processor_args = {}
+    if hasattr(args, 'output') and args.output is not None:
+        processor_args['output'] = args.output
+
     return main(
         build_only=args.build_only, 
         run=args.run, 
         src=args.src, 
-        cmd=args.cmd
+        cmd=args.cmd,
+        processor_args=processor_args
     )
 
 
