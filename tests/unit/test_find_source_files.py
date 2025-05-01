@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 from tempfile import TemporaryDirectory
 from argparse import Namespace
+from io import StringIO
 
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / 'src'))
@@ -374,11 +375,11 @@ class TestFindSourceFiles(unittest.TestCase):
     def test_main_success(self, mock_find_source_files, mock_parse_args):
         """Test main function with successful execution."""
         # Setup mocks
-        mock_parse_args.return_value = Namespace(directory="/path/to/dir")
+        mock_parse_args.return_value = Namespace(directory="/path/to/dir", verbose=False)
         mock_find_source_files.return_value = ["/path/to/dir/file1.py", "/path/to/dir/file2.js"]
 
-        # Redirect stdout to capture output
-        with patch('sys.stdout', new=MagicMock()) as mock_stdout:
+        # Capture logger output
+        with self.assertLogs('find_source_files', level='INFO') as cm:
             result = main()
 
             # Verify the result
@@ -386,30 +387,29 @@ class TestFindSourceFiles(unittest.TestCase):
             mock_parse_args.assert_called_once()
             mock_find_source_files.assert_called_once_with("/path/to/dir")
 
-            # Verify that print was called for each file
-            # Note: print() calls write() multiple times, so we check if the file paths are in the calls
-            calls = [call[0][0] for call in mock_stdout.write.call_args_list]
-            self.assertTrue(any("/path/to/dir/file1.py" in call for call in calls), "file1.py not printed")
-            self.assertTrue(any("/path/to/dir/file2.js" in call for call in calls), "file2.js not printed")
+            # Verify that the log messages contain the file paths
+            self.assertIn("INFO:find_source_files:/path/to/dir/file1.py", cm.output)
+            self.assertIn("INFO:find_source_files:/path/to/dir/file2.js", cm.output)
 
     @patch('argparse.ArgumentParser.parse_args')
-    def test_main_exception(self, mock_parse_args):
+    @patch('find_source_files.find_source_files')
+    def test_main_exception(self, mock_find_source_files, mock_parse_args):
         """Test main function with an exception."""
-        # Setup mocks to raise an exception
-        mock_parse_args.side_effect = Exception("Test exception")
+        # Setup mocks to raise an exception during find_source_files call
+        mock_parse_args.return_value = Namespace(directory="/path/to/dir", verbose=False)
+        mock_find_source_files.side_effect = Exception("Test exception")
 
-        # Redirect stderr to capture error output
-        with patch('sys.stderr', new=MagicMock()) as mock_stderr:
+        # Capture logger output
+        with self.assertLogs('find_source_files', level='ERROR') as cm:
             result = main()
 
             # Verify the result
             self.assertEqual(result, 1)
             mock_parse_args.assert_called_once()
+            mock_find_source_files.assert_called_once_with("/path/to/dir")
 
-            # Check that the error message was printed to stderr
-            # Note: print() calls write() multiple times, so we check if the error message is in the calls
-            calls = [call[0][0] for call in mock_stderr.write.call_args_list]
-            self.assertTrue(any("Error: Test exception" in call for call in calls), "Error message not printed")
+            # Check that the error message was logged
+            self.assertIn("ERROR:find_source_files:Error: Test exception", cm.output)
 
 
 if __name__ == "__main__":
