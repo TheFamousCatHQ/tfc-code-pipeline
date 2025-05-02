@@ -167,12 +167,8 @@ ENTRYPOINT ["/bin/bash"]
         logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
         # Default action if neither --build-only nor --run is specified
-        if src and cmd:
-            logger.info(f"TFC Code Pipeline - Defaulting to build and run {cmd}...")
-            run = True # Set run to true for the logic below
-        else:
-             logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run.")
-             return 1
+        logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run.")
+        return 1
 
     try:
         # --- Dockerfile Creation --- (Common for build and run)
@@ -220,6 +216,12 @@ ENTRYPOINT ["/bin/bash"]
 
             # Add source directory mount
             src_path = Path(src).resolve()
+            if not src_path.exists():
+                logger.error(f"Error: Source directory {src_path} does not exist.")
+                return 1
+            if not src_path.is_dir():
+                logger.error(f"Error: Source path {src_path} is not a directory.")
+                return 1
             logger.info(f"Mounting source directory: {src_path} -> /src")
             docker_cmd.extend(["-v", f"{src_path}:/src"])
 
