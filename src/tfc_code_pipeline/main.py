@@ -139,6 +139,16 @@ def main(args: argparse.Namespace) -> int:
     DOCKERFILE_CONTENT = """\
 FROM python:3.12-slim
 
+# Install system dependencies including Node.js and npm
+RUN apt-get update && apt-get install -y \
+    nodejs \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install sonar scan globally
+RUN npm install -g @sonar/scan
+
 # Install aider-chat and our package
 RUN pip install --no-cache-dir aider-chat
 COPY . /app
