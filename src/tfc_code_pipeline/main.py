@@ -239,18 +239,24 @@ ENTRYPOINT ["/bin/bash"]
             # Prepare Docker run command
             docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
 
-            # Add environment variables
-            for key, value in env_vars.items():
-                docker_cmd.extend(["-e", f"{key}={value}"])
-
             # Add source directory mount
             src_path = Path(src).resolve()
+
+            # Check if source directory exists and is a directory
             if not src_path.exists():
                 logger.error(f"Error: Source directory {src_path} does not exist.")
                 return 1
             if not src_path.is_dir():
                 logger.error(f"Error: Source path {src_path} is not a directory.")
                 return 1
+
+            # Add environment variables
+            for key, value in env_vars.items():
+                docker_cmd.extend(["-e", f"{key}={value}"])
+
+            # Add the original source directory name as an environment variable
+            src_dir_name = os.path.basename(src_path)
+            docker_cmd.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={src_dir_name}"])
             logger.info(f"Mounting source directory: {src_path} -> /src")
             docker_cmd.extend(["-v", f"{src_path}:/src"])
 

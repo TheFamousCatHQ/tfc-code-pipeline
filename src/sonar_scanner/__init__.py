@@ -43,8 +43,9 @@ class SonarScannerProcessor(CodeProcessor):
             directory: Directory where the file will be created.
             args: Parsed command-line arguments namespace.
         """
-        # Get the name of the source directory (last part of the path)
-        source_dir_name = os.path.basename(os.path.abspath(directory))
+        # Get the name of the original source directory from environment variables
+        # If not available, fall back to the name of the current directory
+        source_dir_name = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
 
         # Get the SONAR_TOKEN from environment variables
         sonar_token = os.environ.get("SONAR_TOKEN", "SONAR_TOKEN")

@@ -248,7 +248,7 @@ sonar.host.url=https://sonar.thefamouscat.com/
 sonar.token=SONAR_TOKEN
 ```
 
-Where `NAME_OF_SOURCE_DIR` is the name of the source directory (last part of the path). The `SONAR_TOKEN` value will be replaced with the value from the `SONAR_TOKEN` environment variable if it is set.
+Where `NAME_OF_SOURCE_DIR` is the name of the original source directory from the host (last part of the path), not the mounted directory in Docker. The `SONAR_TOKEN` value will be replaced with the value from the `SONAR_TOKEN` environment variable if it is set.
 
 **Usage:**
 ```bash
