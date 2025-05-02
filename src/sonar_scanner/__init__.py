@@ -4,10 +4,18 @@ Processor to run sonar-scanner on the whole codebase.
 """
 
 import argparse
+import json
 import logging
 import os
 import subprocess
 from typing import List, Optional
+
+try:
+    # Try importing directly (for Docker/installed package)
+    from sonar_scanner.client import SonarQubeClient
+except ImportError:
+    # Fall back to src-prefixed import (for local development)
+    from src.sonar_scanner.client import SonarQubeClient
 
 try:
     # Try importing directly (for Docker/installed package)
@@ -47,8 +55,8 @@ class SonarScannerProcessor(CodeProcessor):
         # If not available, fall back to the name of the current directory
         source_dir_name = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
 
-        # Get the SONAR_TOKEN from environment variables
-        sonar_token = os.environ.get("SONAR_TOKEN", "SONAR_TOKEN")
+        # Get the SONAR_TOKEN from command-line arguments or environment variables
+        sonar_token = args.login if hasattr(args, 'login') and args.login else os.environ.get("SONAR_TOKEN", "")
 
         # Create the content for the sonar-project.properties file
         content = f"""sonar.projectKey={source_dir_name}
@@ -182,9 +190,12 @@ sonar.token={sonar_token}
         # Build sonar-scanner command
         cmd = ["sonar-scanner"]
 
-        # Add project key if provided
-        if hasattr(args, 'project_key') and args.project_key:
-            cmd.extend([f"-Dsonar.projectKey={args.project_key}"])
+        # Get the name of the original source directory from environment variables
+        # If not available, fall back to the name of the current directory
+        source_dir_name = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
+
+        # Add project key (always use the name of the original directory)
+        cmd.extend([f"-Dsonar.projectKey={source_dir_name}"])
 
         # Add host URL if provided
         if hasattr(args, 'host_url') and args.host_url:
@@ -226,6 +237,38 @@ sonar.token={sonar_token}
             os.chdir(current_dir)
 
             logger.info("sonar-scanner completed successfully")
+
+            # Get project key (always use the name of the original directory)
+            project_key = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
+
+            # Get SonarQube host URL
+            host_url = args.host_url if hasattr(args, 'host_url') and args.host_url else "https://sonar.thefamouscat.com/"
+
+            # Get SonarQube token
+            token = args.login if hasattr(args, 'login') and args.login else os.environ.get("SONAR_TOKEN", "")
+
+            # Fetch measures and file_measures using SonarQubeClient
+            if token:
+                try:
+                    logger.info(f"Fetching measures for project: {project_key}")
+                    client = SonarQubeClient(host_url, token)
+
+                    # Fetch project measures
+                    measures = client.fetch_measures(project_key)
+                    print("\n=== PROJECT MEASURES ===")
+                    print(json.dumps(measures, indent=2))
+
+                    # Fetch file measures
+                    file_measures = client.fetch_file_measures(project_key)
+                    print("\n=== FILE MEASURES ===")
+                    print(json.dumps(file_measures, indent=2))
+
+                    logger.info("Successfully fetched and displayed measures")
+                except Exception as e:
+                    logger.error(f"Error fetching measures: {e}")
+            else:
+                logger.warning("No SonarQube token provided. Skipping measures fetch.")
+
             return [directory]  # Return the directory as processed
 
         except subprocess.CalledProcessError as e:

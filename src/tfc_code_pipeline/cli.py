@@ -5,13 +5,17 @@ including argument parsing and execution of the main functionality.
 """
 
 import argparse
-import sys
 import importlib
+import logging
+import sys
 from typing import Optional, Sequence, Tuple, List, Dict, Any
 
 # Local application imports
 from .main import main
 from code_processor import CodeProcessor # Import base class
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Map command names to processor module and class names
 PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
@@ -44,7 +48,7 @@ def get_processor_instance(cmd: Optional[str]) -> Optional[CodeProcessor]:
              raise TypeError(f"{class_name} is not a subclass of CodeProcessor")
         return processor
     except (ImportError, AttributeError, TypeError) as e:
-        print(f"Error loading processor for command '{cmd}': {e}", file=sys.stderr)
+        logger.error(f"Error loading processor for command '{cmd}': {e}")
         return None
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -108,7 +112,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         # Add a note if processor couldn't be loaded
         processor_group.description = "Arguments for the selected processor will appear here if --cmd is valid."
         if cmd:
-             print(f"Warning: Could not load arguments for processor '{cmd}'. Help message may be incomplete.", file=sys.stderr)
+             logger.warning(f"Could not load arguments for processor '{cmd}'. Help message may be incomplete.")
 
     # --- Parse all arguments together --- #
     parsed_args = parser.parse_args(args)
@@ -133,11 +137,17 @@ def cli() -> int:
         args = parse_args()
         # Pass the full args namespace to main
         return main(args)
+    except ImportError as e:
+        # Handle cases where essential modules might be missing
+        # Check if it's related to a specific processor before exiting
+        logger.critical(f"Critical import error during CLI setup: {e}. Please check dependencies.")
+        sys.exit(1)
     except Exception as e:
-        # Catch potential errors during parsing or processor loading
-        print(f"Error during CLI setup: {e}", file=sys.stderr)
-        return 1
+        logger.error(f"Error during CLI setup: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
+    # Configure basic logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
     sys.exit(cli())

@@ -7,11 +7,15 @@ tokenUtils.js and provides a custom prompt for aider.
 """
 
 import argparse
+import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -47,11 +51,11 @@ def find_token_utils_file(directory: str) -> Optional[str]:
     dir_path = Path(directory).resolve()
 
     if not dir_path.exists():
-        print(f"Error: Directory '{directory}' does not exist.", file=sys.stderr)
+        logger.error(f"Error: Directory '{directory}' does not exist.")
         return None
 
     if not dir_path.is_dir():
-        print(f"Error: '{directory}' is not a directory.", file=sys.stderr)
+        logger.error(f"Error: '{directory}' is not a directory.")
         return None
 
     # Search for tokenUtils.js in the directory and its subdirectories
@@ -60,7 +64,7 @@ def find_token_utils_file(directory: str) -> Optional[str]:
             if file.lower() == "tokenutils.js":
                 return str(Path(root) / file)
 
-    print(f"Error: tokenUtils.js not found in directory: {directory}", file=sys.stderr)
+    logger.error(f"Error: tokenUtils.js not found in directory: {directory}")
     return None
 
 
@@ -79,7 +83,7 @@ def write_tests_for_token_utils(file_path: str) -> bool:
         "If tests already exists, check if their are up to date, if not update them to cover the current functionality."
     )
 
-    print(f"Processing file: {file_path}")
+    logger.info(f"Processing file: {file_path}")
     try:
         # Call aider with the file and message
         subprocess.run(
@@ -89,10 +93,10 @@ def write_tests_for_token_utils(file_path: str) -> bool:
         )
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error processing file {file_path}: {e}", file=sys.stderr)
+        logger.error(f"Error processing file {file_path}: {e}")
         return False
     except FileNotFoundError:
-        print("Error: 'aider' command not found. Please ensure it is installed.", file=sys.stderr)
+        logger.error("Error: 'aider' command not found. Please ensure it is installed.")
         return False
 
 
@@ -104,24 +108,26 @@ def main() -> int:
     """
     try:
         args = parse_args()
-        
+
         # Find tokenUtils.js
         file_path = find_token_utils_file(args.directory)
         if not file_path:
             return 1
-        
+
         # Write tests for tokenUtils.js
         success = write_tests_for_token_utils(file_path)
-        
+
         if success:
-            print(f"\nSuccessfully processed: {file_path}")
+            logger.info(f"Successfully processed: {file_path}")
             return 0
         else:
             return 1
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        logger.error(f"Error: {e}")
         return 1
 
 
 if __name__ == "__main__":
+    # Configure basic logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(name)s - %(message)s')
     sys.exit(main())
