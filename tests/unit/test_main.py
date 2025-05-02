@@ -6,6 +6,7 @@ This module contains tests for the main functionality of the TFC Code Pipeline.
 import os
 import subprocess
 import unittest
+from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
