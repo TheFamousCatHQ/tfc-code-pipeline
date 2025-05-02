@@ -234,13 +234,45 @@ analyze-complexity --file /path/to/file.py
 analyze-complexity --directory /path/to/source --show-only-repo-files-chunks
 ```
 
+### sonar-scan
+
+Runs sonar-scanner on the entire codebase. This processor executes the sonar-scanner command-line tool to perform static code analysis and send the results to a SonarQube server.
+
+**Usage:**
+```bash
+sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url "http://sonarqube-server:9000"] [--login "auth-token"]
+```
+
+**Options:**
+- All [Common Options for All Processors](#common-options-for-all-processors)
+- `--project-key`: SonarQube project key
+- `--host-url`: SonarQube host URL (default: http://localhost:9000)
+- `--login`: SonarQube authentication token
+- `--sources`: Comma-separated list of source directories to scan (relative to project root)
+- `--exclusions`: Comma-separated list of file path patterns to exclude from analysis
+
+**Example:**
+```bash
+# Run sonar-scanner on a directory with default settings
+sonar-scan --directory /path/to/source
+
+# Run sonar-scanner with custom project key and host URL
+sonar-scan --directory /path/to/source --project-key "my-project" --host-url "http://sonarqube.example.com:9000"
+
+# Run sonar-scanner with authentication token
+sonar-scan --directory /path/to/source --login "auth-token"
+
+# Run sonar-scanner with custom source directories and exclusions
+sonar-scan --directory /path/to/source --sources "src,tests" --exclusions "**/*.test.js,**/node_modules/**"
+```
+
 ### tfc-code-pipeline
 
 A Docker-based wrapper for the other scripts. It creates a Docker container based on Python 3.12, installs Aider and the package itself in the container, and runs the specified command with the provided messages.
 
 **Usage:**
 ```bash
-tfc-code-pipeline [--build-only] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity]
+tfc-code-pipeline [--build-only] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan]
 ```
 
 **Options:**
@@ -248,7 +280,7 @@ tfc-code-pipeline [--build-only] [--run] [--src /path/to/source] [--messages "cu
 - `--run`: Run the Docker container with the provided messages
 - `--src`: Directory to mount in the Docker container under /src
 - `--messages`: Custom message to pass to aider (default: "Hello")
-- `--cmd`: Command to run in the Docker container (choices: "explain_code", "write_tests", "find_bugs", or "analyze_complexity", default: "explain_code")
+- `--cmd`: Command to run in the Docker container (choices: "explain_code", "write_tests", "find_bugs", "analyze_complexity", or "sonar_scan", default: "explain_code")
 
 **Example:**
 ```bash
@@ -266,6 +298,9 @@ tfc-code-pipeline --run --src /path/to/source --cmd find_bugs
 
 # Run analyze-complexity in a Docker container
 tfc-code-pipeline --run --src /path/to/source --cmd analyze_complexity
+
+# Run sonar-scan in a Docker container
+tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan
 ```
 
 ## Common Options for All Processors

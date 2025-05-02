@@ -19,6 +19,7 @@ PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
     "write_tests": {"module": "write_tests", "class": "WriteTestsProcessor"},
     "find_bugs": {"module": "find_bugs", "class": "FindBugsProcessor"},
     "analyze_complexity": {"module": "complexity_analyzer", "class": "ComplexityAnalyzerProcessor"},
+    "sonar_scan": {"module": "sonar_scanner", "class": "SonarScannerProcessor"},
 }
 
 def get_processor_instance(cmd: Optional[str]) -> Optional[CodeProcessor]:
