@@ -1,22 +1,72 @@
 #!/usr/bin/env python3
 """
-Processor to analyze code complexity using agno/LLM.
+Processor to analyze code complexity using pydantic-ai/LLM.
 """
 
 import argparse
 import glob
+import json
 import logging
 import os
 import sys
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
-# Import agno for direct LLM calls
-from agno.agent import Agent
-from agno.models.openrouter import OpenRouter
-from agno.run.response import RunResponse
+from pydantic import BaseModel, Field
+
+try:
+    # Try importing directly
+    from ai import create_agent
+except ImportError:
+    # Fall back to src-prefixed import
+    from src.ai import create_agent
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+
+# Pydantic models for the master complexity report
+class ComplexComponent(BaseModel):
+    """Model for a complex component in a file."""
+    name: str = Field(description="Name of the component (function, class, method, etc.)")
+    line_range: List[int] = Field(description="Start and end line numbers of the component", min_items=2, max_items=2)
+    complexity_reason: str = Field(description="Explanation of why the component is considered complex")
+    changeability_score: int = Field(
+        description="Score indicating how easy it is to make changes to this component (0-100, where 0 is impossible and 100 is super easy)",
+        ge=0, le=100)
+    improvement_suggestions: str = Field(
+        description="Suggestions for simplifying or improving the readability of this component")
+    llm_improvement_prompt: str = Field(
+        description="A specific prompt for an LLM to improve or resolve this complexity issue")
+
+
+class FileReport(BaseModel):
+    """Model for a complexity report for a single file."""
+    file_path: str = Field(description="Path to the analyzed source code file")
+    components: List[ComplexComponent] = Field(description="List of complex components identified in the file")
+
+
+class MostComplexComponent(BaseModel):
+    """Model for a summary of a complex component."""
+    name: str = Field(description="Name of the component")
+    file_path: str = Field(description="Path to the file containing the component")
+    changeability_score: int = Field(description="Changeability score of the component", ge=0, le=100)
+
+
+class Summary(BaseModel):
+    """Model for the summary section of the master report."""
+    total_files_analyzed: int = Field(description="Total number of files analyzed", ge=0)
+    total_components_analyzed: int = Field(description="Total number of components analyzed across all files", ge=0)
+    average_changeability_score: float = Field(description="Average changeability score across all components", ge=0,
+                                               le=100)
+    most_complex_components: List[MostComplexComponent] = Field(
+        description="List of the most complex components across the entire codebase")
+
+
+class MasterComplexityReport(BaseModel):
+    """Model for the master complexity report."""
+    summary: Summary = Field(description="Summary statistics and highlights of the most complex components")
+    detailed_reports: List[FileReport] = Field(description="List of complexity reports for individual files")
+
 
 try:
     # Try importing directly
@@ -36,7 +86,7 @@ except ImportError:
 
 
 class ComplexityAnalyzerProcessor(CodeProcessor):
-    """Processor for analyzing code complexity using agno/LLM."""
+    """Processor for analyzing code complexity using pydantic-ai/LLM."""
 
     operates_on_whole_codebase: bool = True
     """This processor analyzes the context of the whole codebase."""
@@ -55,7 +105,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         parser.add_argument(
             "--skip",
             action="store_true",
-            help="Skip analysis for components where a COMPLEXITY_REPORT.json already exists"
+            help="Skip generating individual reports and only generate the master report from existing COMPLEXITY_REPORTs"
         )
 
     def run(self) -> int:
@@ -77,15 +127,20 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             if args.show_only_repo_files_chunks:
                 return super().run()  # Delegate to base class run for this flag
 
-            # Normal processing mode: generate individual reports
-            # The base class process_files will handle calling aider
-            processed_files = self.process_files(args)  # Pass the full args namespace
+            # Check if we should skip individual report generation
+            if hasattr(args, 'skip') and args.skip:
+                logger.info("Skipping individual report generation as --skip flag is used.")
+                processed_files = []  # No files processed as we're skipping
+            else:
+                # Normal processing mode: generate individual reports
+                # The base class process_files will handle calling aider
+                processed_files = self.process_files(args)  # Pass the full args namespace
 
-            if processed_files is None:  # Indicates critical error like aider not found
-                logger.error("Complexity analysis failed due to a critical error during file processing.")
-                return 1
+                if processed_files is None:  # Indicates critical error like aider not found
+                    logger.error("Complexity analysis failed due to a critical error during file processing.")
+                    return 1
 
-            logger.info(f"\nInitial complexity analysis generated reports for {len(processed_files)} files.")
+                logger.info(f"\nInitial complexity analysis generated reports for {len(processed_files)} files.")
 
             # Combine reports (logic moved from process_files to run)
             logger.info("Combining complexity reports into a master report...")
@@ -107,6 +162,8 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                 # If it's possible no complex files were found, return 0.
                 if not args.skip:  # If we weren't skipping, not finding reports might be unexpected
                     logger.warning("No complex components identified in the analyzed files.")
+                else:
+                    logger.warning("No existing COMPLEXITY_REPORT.json files found in the directory.")
                 # Assuming success if processing ran but no reports generated
 
             return 0
@@ -157,7 +214,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
         Returns:
             Description string.
         """
-        return "Analyze code complexity using an LLM via agno"
+        return "Analyze code complexity using an LLM via pydantic-ai"
 
     def _find_complexity_reports(self, directory: str) -> List[str]:
         """Find all COMPLEXITY_REPORT.json files in the directory.
@@ -174,7 +231,7 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
 
     def _combine_complexity_reports(self, report_files: List[str], output_dir: str,
                                     output_path: Optional[str] = None) -> Optional[str]:
-        """Combine multiple complexity reports into a master report using agno to call an LLM.
+        """Combine multiple complexity reports into a master report using pydantic-ai to call an LLM.
 
         Args:
             report_files: List of paths to complexity report files.
@@ -197,53 +254,18 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             schema_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
                                        "doc", "master_complexity_report_schema.json")
 
-        # Read the schema file if it exists
-        schema_content = ""
-        if os.path.exists(schema_path):
-            try:
-                with open(schema_path, 'r') as schema_file:
-                    schema_content = schema_file.read()
-                logger.info(f"Successfully read schema from {schema_path}")
-            except Exception as e:
-                logger.warning(f"Failed to read schema file: {e}")
-                schema_content = "Schema file could not be read."
+        # Determine the master report path
+        if output_path:
+            master_report_path = output_path
+            # Ensure the directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(master_report_path)), exist_ok=True)
+            logger.info(f"Using custom output path for master report: {master_report_path}")
         else:
-            logger.warning("Schema file not found.")
-            schema_content = "Schema file not found."
+            master_report_path = os.path.join(output_dir, "MASTER_COMPLEXITY_REPORT.json")
+            logger.info(f"Using default output path for master report: {master_report_path}")
 
-        # Create a message for aider to combine the reports
-        combine_message = (
-            "I have multiple COMPLEXITY_REPORT.json files that need to be combined into a master report.\n"
-            "Each report contains complexity analysis for different parts of the codebase.\n"
-            "Please combine all these reports into a single comprehensive MASTER_COMPLEXITY_REPORT.json file.\n"
-            "The master report should maintain the same structure but combine all components from all files.\n"
-            "Also add a summary section that highlights the most complex components across the entire codebase.\n"
-            "Sort the components by changeability_score (ascending) so the most difficult components are listed first.\n"
-            "Include statistics like total components analyzed, total files analyzed, and average changeability score.\n"
-            "Make sure to preserve all fields from the original reports, including the 'llm_improvement_prompt' field.\n"
-            "\nHere is the master schema for the MASTER_COMPLEXITY_REPORT.json file:\n"
-            f"```json\n{schema_content}\n```\n"
-        )
-
-        # Use agno to call an LLM to combine the reports
         try:
-            import json
-            import shutil
-            import requests
-
-            # Determine the master report path
-            if output_path:
-                master_report_path = output_path
-                # Ensure the directory exists
-                os.makedirs(os.path.dirname(os.path.abspath(master_report_path)), exist_ok=True)
-                logger.info(f"Using custom output path for master report: {master_report_path}")
-            else:
-                master_report_path = os.path.join(output_dir, "MASTER_COMPLEXITY_REPORT.json")
-                logger.info(f"Using default output path for master report: {master_report_path}")
-
-            # agno library is used directly
-
-            # Load all report files into a single dictionary
+            # Load all report files
             all_reports = []
             for report_file in report_files:
                 try:
@@ -254,115 +276,46 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
                 except Exception as e:
                     logger.warning(f"Error loading report {report_file}: {e}")
 
-            # Create a temporary file with all reports
-            temp_input_file = os.path.join(output_dir, "_temp_all_reports.json")
-            with open(temp_input_file, 'w') as f:
-                json.dump(all_reports, f)
-
-            logger.info(f"Running agno to generate master complexity report with {len(report_files)} report files")
-
-            # Set up agno to call the LLM
-            model_name = "openrouter/gpt-4.1-nano"
-            # Prepare the prompt for agno
-            prompt = f"{combine_message}\n\nHere are all the reports to combine:\n"
-
-            # Add the content of all reports to the prompt
-            for i, report in enumerate(all_reports):
-                prompt += f"\nReport {i + 1}:\n```json\n{json.dumps(report, indent=2)}\n```\n"
-
-            # Use agno library directly
-            try:
-                # Create an OpenRouter model instance
-                model = OpenRouter()
-
-                # Create an Agent instance with the model
-                agent = Agent(model=model)
-
-                # Run the agent with the prompt
-                response = agent.run(prompt, stream=False, format="json")
-
-                # Process the response from agno
-                try:
-                    # Initialize master_report
-                    master_report = None
-                    response_data = None
-
-                    # Extract data based on response type
-                    if isinstance(response, RunResponse):
-                        # Access the content attribute of the RunResponse object
-                        response_data = response.content
-                        logger.debug("Processing RunResponse content.")
-                    else:
-                        # Handle direct dict or str responses (or other unexpected types)
-                        response_data = response
-                        logger.debug(f"Processing response of type: {type(response)}")
-
-
-                    # Check if response_data is already a dict (parsed JSON)
-                    if isinstance(response_data, dict):
-                        master_report = response_data
-                        logger.debug("Response data is already a dictionary.")
-                    # Check if response_data is a string
-                    elif isinstance(response_data, str):
-                        logger.debug("Response data is a string, attempting JSON parsing.")
-                        # Try to find and parse JSON in the response string
-                        try:
-                            # Attempt direct parsing first
-                            master_report = json.loads(response_data)
-                        except json.JSONDecodeError:
-                            logger.warning("Direct JSON parsing failed. Searching for JSON block.")
-                            # Fallback to finding JSON block within the string
-                            json_start = response_data.find('{')
-                            json_end = response_data.rfind('}')
-                            if json_start != -1 and json_end != -1 and json_end > json_start:
-                                json_str = response_data[json_start:json_end + 1]
-                                try:
-                                    master_report = json.loads(json_str)
-                                    logger.debug("Successfully parsed JSON block from string.")
-                                except json.JSONDecodeError as e:
-                                    logger.error(f"Failed to parse extracted JSON block: {e}")
-                                    logger.debug(f"Extracted string: {json_str}")
-                            else:
-                                logger.error("Could not find a valid JSON block in the string response.")
-                    else:
-                        # If response_data is neither dict nor string, log an error
-                        logger.error(f"Unexpected response data type after extraction: {type(response_data)}. Cannot process.")
-                        logger.debug(f"Original agno response: {response}")
-                        logger.debug(f"Extracted response data: {response_data}")
-
-
-                    # Ensure master_report was successfully parsed/assigned
-                    if master_report is None:
-                         logger.error("Failed to obtain valid JSON data from the agno response.")
-                         return None
-
-
-                    # Write the master report to the output file
-                    with open(master_report_path, 'w') as f:
-                        json.dump(master_report, f, indent=2)
-
-                    logger.info(f"Master report created at {master_report_path}")
-                except json.JSONDecodeError as e:
-                    logger.error(f"Error decoding JSON from agno response: {e}")
-                    logger.debug(f"Raw response data causing error: {response_data}")
-                    return None
-                except Exception as e:
-                    logger.error(f"Error processing agno response content: {e}")
-                    logger.debug(f"Original agno response: {response}")
-                    logger.debug(f"Response data being processed: {response_data}")
-                    return None
-
-            except ImportError:
-                 logger.error("Failed to import agno library. Please ensure it is installed.")
-                 return None
-            except Exception as e:
-                logger.error(f"Error running agno library or processing its response: {e}")
-                logger.debug(f"Exception details:", exc_info=True)
+            if not all_reports:
+                logger.error("No valid reports could be loaded.")
                 return None
 
-            # Clean up temporary file
-            if os.path.exists(temp_input_file):
-                os.remove(temp_input_file)
+            logger.info(f"Using pydantic-ai to generate master complexity report with {len(report_files)} report files")
+
+            # Create a system prompt for the agent
+            system_prompt = """
+            Generate a master complexity report by combining multiple individual reports.
+
+            Instructions:
+            - Combine all components from all reports into a single comprehensive report
+            - Add a summary section with statistics and the most complex components
+            - Sort components by changeability_score (ascending) so the most difficult components are listed first
+            - Include total_files_analyzed, total_components_analyzed, and average_changeability_score
+            - Preserve all fields from the original reports, including the 'llm_improvement_prompt' field
+            """
+
+            # Create an agent using the ai module
+            agent = create_agent(
+                output_type=MasterComplexityReport,
+                system_prompt=system_prompt
+            )
+
+            # Generate the master report
+            try:
+                master_report = agent.run(all_reports)
+                logger.info("Successfully generated master report using pydantic-ai")
+
+                # Convert to dict and write to file
+                master_report_dict = master_report.model_dump()
+                with open(master_report_path, 'w') as f:
+                    json.dump(master_report_dict, f, indent=2)
+
+                logger.info(f"Master report created at {master_report_path}")
+
+            except Exception as e:
+                logger.error(f"Error generating master report with pydantic-ai: {e}")
+                logger.debug("Exception details:", exc_info=True)
+                return None
 
             # Check if the master report was created
             if os.path.exists(master_report_path):
@@ -551,7 +504,7 @@ def main() -> int:
     """
     import argparse
 
-    parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via agno")
+    parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via pydantic-ai")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--schema-validation", action="store_true",
                         help="Enable detailed schema validation logging")
