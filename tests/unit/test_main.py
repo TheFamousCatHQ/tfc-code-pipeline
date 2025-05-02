@@ -47,7 +47,8 @@ class TestMain(unittest.TestCase):
 
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function
-            result = main()
+            args = Namespace(build_only=False, run=False, src=None, cmd="explain_code", output=None)
+            result = main(args)
 
             # Verify the result
             self.assertEqual(result, 0)
@@ -107,7 +108,8 @@ class TestMain(unittest.TestCase):
         mock_run.side_effect = subprocess.CalledProcessError(1, "docker run")
 
         # Call the main function
-        result = main()
+        args = Namespace(build_only=False, run=False, src=None, cmd="explain_code", output=None)
+        result = main(args)
 
         # Verify the result
         self.assertEqual(result, 1)
@@ -136,7 +138,8 @@ class TestMain(unittest.TestCase):
 
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function
-            result = main()
+            args = Namespace(build_only=False, run=False, src=None, cmd="explain_code", output=None)
+            result = main(args)
 
             # Verify the result
             self.assertEqual(result, 0)
@@ -188,7 +191,8 @@ class TestMain(unittest.TestCase):
         mock_run.return_value = mock_result
 
         # Call the main function with build_only=True
-        result = main(build_only=True)
+        args = Namespace(build_only=True, run=False, src=None, cmd="explain_code", output=None)
+        result = main(args)
 
         # Verify the result
         self.assertEqual(result, 0)
@@ -236,7 +240,8 @@ class TestMain(unittest.TestCase):
 
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function with run=True
-            result = main(run=True)
+            args = Namespace(build_only=False, run=True, src="/path/to/src", cmd="explain_code", output=None)
+            result = main(args)
 
             # Verify the result - should be 1 because Docker is not available
             self.assertEqual(result, 1)
@@ -290,7 +295,8 @@ class TestMain(unittest.TestCase):
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function with run=True and src option
             with patch('builtins.open', new_callable=unittest.mock.mock_open) as mock_open:
-                result = main(run=True, src="/path/to/src")
+                args = Namespace(build_only=False, run=True, src="/path/to/src", cmd="explain_code", output=None)
+                result = main(args)
 
                 # Verify the result
                 self.assertEqual(result, 0)
@@ -357,7 +363,8 @@ class TestMain(unittest.TestCase):
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function with run=True and src option
             with patch('builtins.open', new_callable=unittest.mock.mock_open):
-                result = main(run=True, src="src_dir")
+                args = Namespace(build_only=False, run=True, src="src_dir", cmd="explain_code", output=None)
+                result = main(args)
 
                 # Verify the result - should be 1 because src doesn't exist
                 self.assertEqual(result, 1)
@@ -387,7 +394,8 @@ class TestMain(unittest.TestCase):
         with patch.dict(os.environ, test_env, clear=True):
             # Call the main function with run=True and src option
             with patch('builtins.open', new_callable=unittest.mock.mock_open):
-                result = main(run=True, src="src_file")
+                args = Namespace(build_only=False, run=True, src="src_file", cmd="explain_code", output=None)
+                result = main(args)
 
                 # Verify the result - should be 1 because src is not a directory
                 self.assertEqual(result, 1)

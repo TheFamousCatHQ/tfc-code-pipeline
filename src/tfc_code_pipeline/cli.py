@@ -131,7 +131,7 @@ def cli() -> int:
     try:
         args = parse_args()
         # Pass the full args namespace to main
-        return main(args=args)
+        return main(args)
     except Exception as e:
         # Catch potential errors during parsing or processor loading
         print(f"Error during CLI setup: {e}", file=sys.stderr)
