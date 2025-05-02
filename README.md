@@ -238,6 +238,18 @@ analyze-complexity --directory /path/to/source --show-only-repo-files-chunks
 
 Runs sonar-scanner on the entire codebase. This processor executes the sonar-scanner command-line tool to perform static code analysis and send the results to a SonarQube server.
 
+When running through the Docker-based wrapper (`tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan`), a `sonar-project.properties` file is automatically created in the source directory with the following content:
+
+```
+sonar.projectKey=NAME_OF_SOURCE_DIR
+sonar.projectVersion=1.0
+sonar.sources=.
+sonar.host.url=https://sonar.thefamouscat.com/
+sonar.token=SONAR_TOKEN
+```
+
+Where `NAME_OF_SOURCE_DIR` is the name of the source directory (last part of the path). The `SONAR_TOKEN` value will be replaced with the value from the `SONAR_TOKEN` environment variable if it is set.
+
 **Usage:**
 ```bash
 sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url "http://sonarqube-server:9000"] [--login "auth-token"]
@@ -327,12 +339,14 @@ This project supports loading environment variables from a `.env` file. When usi
 Common environment variables:
 - `OPENAI_API_KEY`: API key for OpenAI (used by Aider)
 - `DEBUG`: Enable debug mode (set to "True" to enable)
+- `SONAR_TOKEN`: Authentication token for SonarQube (used by sonar-scanner)
 
 To use environment variables, create a `.env` file in the project root directory:
 
 ```
 OPENAI_API_KEY=your-api-key-here
 DEBUG=False
+SONAR_TOKEN=your-sonar-token-here
 ```
 
 ## Running Scripts
