@@ -10,28 +10,10 @@ import subprocess
 import sys
 from typing import List, Optional
 
+from code_processor import CodeProcessor
+from find_source_files import find_source_files as find_files
 from logging_utils import get_logger
-
-try:
-    # Try importing directly (for Docker/installed package)
-    from sonar_scanner.client import SonarQubeClient
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.sonar_scanner.client import SonarQubeClient
-
-try:
-    # Try importing directly (for Docker/installed package)
-    from code_processor import CodeProcessor
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.code_processor import CodeProcessor
-
-try:
-    # Try importing directly (for Docker/installed package)
-    from find_source_files import find_source_files as find_files
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.find_source_files import find_source_files as find_files
+from sonar_scanner.client import SonarQubeClient
 
 # Set up logging
 logger = get_logger()
