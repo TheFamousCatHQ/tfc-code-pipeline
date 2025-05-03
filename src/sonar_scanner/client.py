@@ -72,7 +72,7 @@ class SonarQubeClient:
         all_metrics = f"{security_metrics},{complexity_metrics},{maintainability_metrics},{general_metrics}"
 
         url = f"{self.host}/api/measures/component?component={project}&metricKeys={all_metrics}"
-        self.logger.info(f"Fetching measures from {url} with token {self.token[0:10]}")
+        self.logger.debug(f"Fetching measures from {url} with token {self.token[0:10]}")
         request = urllib.request.Request(url)
         request.add_header("Authorization", f"Bearer {self.token}")
         with urllib.request.urlopen(request) as response:
