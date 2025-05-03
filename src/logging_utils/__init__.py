@@ -12,16 +12,23 @@ import yaml
 
 # Setup paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
-grand_parent_dir = os.path.dirname(os.path.dirname(script_dir))
-logging_config_path = os.path.join(grand_parent_dir, 'logging.yaml')
+parent_dir = os.path.dirname(script_dir)
+logging_config_path = os.path.join(parent_dir, 'logging.yaml')
+
+isInitialized = False
 
 
 def init_logging() -> None:
     """Initialize logging configuration from YAML file."""
+    global isInitialized
+    if isInitialized:
+        return
+    isInitialized = True
     try:
         with open(logging_config_path, 'rt') as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
+        logging.info("Initialized logging")
     except Exception as e:
         # Fallback to basic configuration if YAML loading fails
         logging.basicConfig(
@@ -29,6 +36,9 @@ def init_logging() -> None:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         logging.error(f"Failed to load logging config from {logging_config_path}: {e}")
+
+
+init_logging()
 
 
 def get_logger(name: str = "tfc-code-pipeline") -> logging.Logger:

@@ -20,13 +20,7 @@ handlers:
     encoding: utf8
 
 loggers:
-  usual-suspects:
-    level: INFO
-  pipedrive:
-    level: INFO
-    handlers: [ console, file ]
-    propagate: no
-  pipedrive-sync:
+  tfc-code-pipeline:
     level: INFO
     handlers: [ console, file ]
     propagate: no
