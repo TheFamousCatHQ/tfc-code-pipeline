@@ -62,6 +62,7 @@ This is a poetry project. Use poetry to run things. Look up pyproject.toml on ho
 - **Mocking is not allowed in unit tests**
 - Tests should be simple, focused, and independent
 - Use direct assertions to verify behavior
+- When using `assertLogs()`, use the logger name 'tfc-code-pipeline', not the module name
 
 ## Error Handling
 
