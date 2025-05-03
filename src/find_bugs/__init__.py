@@ -71,7 +71,7 @@ class FindBugsProcessor(CodeProcessor):
             source_files = find_files(directory)
 
         if not source_files:
-            logger.warning(f"No source files found in directory: {directory}", file=sys.stderr)
+            logger.warning(f"No source files found in directory: {directory}")
             return []
 
         # Process each file with aider and collect bug information
