@@ -216,12 +216,7 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    try:
-        # Try importing directly (for Docker/installed package)
-        from logging_utils import configure_logging as setup_logging
-    except ImportError:
-        # Fall back to src-prefixed import (for local development)
-        from src.logging_utils import configure_logging as setup_logging
+    from logging_utils import configure_logging as setup_logging
 
     # Configure logging using the centralized function
     setup_logging(verbose, module_name="find_bugs")

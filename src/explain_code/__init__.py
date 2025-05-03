@@ -8,11 +8,7 @@ and then calls aider for each file with the message "explain this code".
 
 import sys
 
-try:
-    from code_processor import CodeProcessor
-except ImportError:
-    # When running tests, the import path is different
-    from src.code_processor import CodeProcessor
+from code_processor import CodeProcessor
 
 
 class ExplainCodeProcessor(CodeProcessor):

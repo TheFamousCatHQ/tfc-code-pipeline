@@ -98,6 +98,12 @@ sonar.token={sonar_token}
             action="store_true",
             help="Skip sonar-scanner invocation and just output the measures"
         )
+        parser.add_argument(
+            "--merge-reports",
+            action="store_true",
+            default=True,
+            help="Merge SonarQube measures with complexity report if available"
+        )
 
     def get_description(self) -> str:
         """Get the description for the argument parser.
@@ -105,7 +111,7 @@ sonar.token={sonar_token}
         Returns:
             Description string.
         """
-        return "Run sonar-scanner on the codebase or just output measures"
+        return "Run sonar-scanner on the codebase, output measures, and optionally merge with complexity reports"
 
     def run(self) -> int:
         """Run the sonar-scanner processor.
@@ -157,6 +163,52 @@ sonar.token={sonar_token}
         except Exception as e:
             logger.exception(f"An unexpected error occurred in the main run loop: {e}")
             return 1
+
+    def _merge_reports(self, complexity_path: str, measures_path: str, file_measures_path: str, output_dir: str) -> \
+    Optional[str]:
+        """Merge the complexity report with SonarQube measures into a single JSON file.
+
+        Args:
+            complexity_path: Path to the master complexity report.
+            measures_path: Path to the SonarQube project measures.
+            file_measures_path: Path to the SonarQube file measures.
+            output_dir: Directory where the merged report will be saved.
+
+        Returns:
+            Path to the merged report file, or None if merging failed.
+        """
+        try:
+            # Load the reports
+            with open(complexity_path, 'r') as f:
+                complexity_report = json.load(f)
+
+            with open(measures_path, 'r') as f:
+                sonar_measures = json.load(f)
+
+            with open(file_measures_path, 'r') as f:
+                sonar_file_measures = json.load(f)
+
+            # Create the merged sonar measures structure (same as what's output to STDOUT)
+            merged_sonar_measures = {
+                "project_measures": sonar_measures,
+                "file_measures": sonar_file_measures
+            }
+
+            # Create the merged report structure
+            merged_report = {
+                "complexity_report": complexity_report,
+                "sonar_measures": merged_sonar_measures
+            }
+
+            # Save the merged report
+            merged_report_path = os.path.join(output_dir, "MERGED_MEASUREMENT_REPORT.json")
+            with open(merged_report_path, 'w') as f:
+                json.dump(merged_report, f, indent=2)
+
+            return merged_report_path
+        except Exception as e:
+            logger.error(f"Error merging reports: {e}")
+            return None
 
     def process_files(self, args: argparse.Namespace) -> Optional[List[str]]:
         """Process files using sonar-scanner.
@@ -253,15 +305,48 @@ sonar.token={sonar_token}
         # Fetch measures and file_measures using SonarQubeClient
         logger.info(f"Fetching measures for project: {project_key} from {host_url}")
         client = SonarQubeClient(host_url, token)
+
         # Fetch project measures
         measures = client.fetch_measures(project_key)
-        print(json.dumps(measures, indent=2))
+        measures_file_path = os.path.join(directory, "SONAR_MEASURES.json")
+        with open(measures_file_path, 'w') as f:
+            json.dump(measures, f, indent=2)
+        logger.info(f"Project measures saved to {measures_file_path}")
 
         # Fetch file measures
         file_measures = client.fetch_file_measures(project_key)
-        print(json.dumps(file_measures, indent=2))
+        file_measures_path = os.path.join(directory, "SONAR_FILE_MEASURES.json")
+        with open(file_measures_path, 'w') as f:
+            json.dump(file_measures, f, indent=2)
+        logger.info(f"File measures saved to {file_measures_path}")
 
-        logger.info("Successfully fetched and displayed measures")
+        # Merge SONAR_MEASURES.json and SONAR_FILE_MEASURES.json into one report for STDOUT
+        merged_sonar_report = {
+            "project_measures": measures,
+            "file_measures": file_measures
+        }
+        # Output the merged report to STDOUT
+        print(json.dumps(merged_sonar_report, indent=2))
+
+        # Merge with complexity report if it exists and --merge-reports flag is set
+        merge_reports = hasattr(args, 'merge_reports') and args.merge_reports
+        if merge_reports:
+            master_complexity_path = os.path.join(directory, "MASTER_COMPLEXITY_REPORT.json")
+            if os.path.exists(master_complexity_path):
+                logger.info(
+                    f"Found master complexity report at {master_complexity_path}, merging with SonarQube measures")
+                merged_report_path = self._merge_reports(master_complexity_path, measures_file_path, file_measures_path,
+                                                         directory)
+                if merged_report_path:
+                    logger.info(f"Successfully merged reports into {merged_report_path}")
+                else:
+                    logger.error("Failed to merge reports")
+            else:
+                logger.info("No master complexity report found, skipping merge")
+        else:
+            logger.info("Skipping report merge (use --merge-reports flag to enable)")
+
+        logger.info("Successfully fetched, saved, and processed measures")
 
         return [directory]  # Return the directory as processed
 
@@ -272,12 +357,7 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    try:
-        # Try importing directly (for Docker/installed package)
-        from logging_utils import configure_logging as setup_logging
-    except ImportError:
-        # Fall back to src-prefixed import (for local development)
-        from src.logging_utils import configure_logging as setup_logging
+    from logging_utils import configure_logging as setup_logging
 
     # Configure logging using the centralized function
     setup_logging(verbose, module_name="sonar_scanner")

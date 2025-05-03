@@ -15,12 +15,7 @@ from logging_utils import get_logger
 
 from pydantic import BaseModel, Field
 
-try:
-    # Try importing directly
-    from ai import create_agent
-except ImportError:
-    # Fall back to src-prefixed import
-    from src.ai import create_agent
+from ai import create_agent
 
 # Set up logging
 logger = get_logger()
@@ -70,21 +65,10 @@ class MasterComplexityReport(BaseModel):
     detailed_reports: List[FileReport] = Field(description="List of complexity reports for individual files")
 
 
-try:
-    # Try importing directly
-    from validate_complexity_report import validate_and_fix_complexity_report
-except ImportError:
-    # Fall back to src-prefixed import
-    from src.validate_complexity_report import validate_and_fix_complexity_report
+from validate_complexity_report import validate_and_fix_complexity_report
 
-try:
-    # Try importing directly (for Docker/installed package)
-    from code_processor import CodeProcessor
-    from find_source_files import find_source_files as find_files
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.code_processor import CodeProcessor
-    from src.find_source_files import find_source_files as find_files
+from code_processor import CodeProcessor
+from find_source_files import find_source_files as find_files
 
 
 class ComplexityAnalyzerProcessor(CodeProcessor):
@@ -473,12 +457,7 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    try:
-        # Try importing directly (for Docker/installed package)
-        from logging_utils import configure_logging as setup_logging
-    except ImportError:
-        # Fall back to src-prefixed import (for local development)
-        from src.logging_utils import configure_logging as setup_logging
+    from logging_utils import configure_logging as setup_logging
 
     # Configure logging using the centralized function
     setup_logging(verbose, module_name="complexity_analyzer")

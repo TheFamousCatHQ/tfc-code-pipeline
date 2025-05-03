@@ -19,12 +19,7 @@ from logging_utils import get_logger
 logger = get_logger()
 
 # Configure logging using the centralized function
-try:
-    # Try importing directly (for Docker/installed package)
-    from logging_utils import configure_logging
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.logging_utils import configure_logging
+from logging_utils import configure_logging
 
 # Configure this specific logger with a simpler format (no module name in output)
 configure_logging(specific_logger=logger, include_module_name=False, module_name="validate_complexity_report")

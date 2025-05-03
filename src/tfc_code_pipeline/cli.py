@@ -139,28 +139,14 @@ def cli() -> int:
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
-    try:
-        args = parse_args()
-        # Pass the full args namespace to main
-        return main(args)
-    except ImportError as e:
-        # Handle cases where essential modules might be missing
-        # Check if it's related to a specific processor before exiting
-        logger.critical(f"Critical import error during CLI setup: {e}. Please check dependencies.")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Error during CLI setup: {e}")
-        sys.exit(1)
+    args = parse_args()
+    # Pass the full args namespace to main
+    return main(args)
 
 
 if __name__ == "__main__":
     # Configure logging using the centralized function
-    try:
-        # Try importing directly (for Docker/installed package)
-        from logging_utils import configure_logging
-    except ImportError:
-        # Fall back to src-prefixed import (for local development)
-        from src.logging_utils import configure_logging
+    from logging_utils import configure_logging
 
     configure_logging(module_name="tfc_code_pipeline.cli")
     sys.exit(cli())

@@ -17,21 +17,7 @@ from logging_utils import get_logger
 logger = get_logger()
 
 # Third-party imports
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    # Fallback if dotenv is not installed
-    def load_dotenv(dotenv_path: Optional[Union[str, Path]] = None) -> bool:
-        """Dummy function if dotenv is not installed.
-
-        Args:
-            dotenv_path: Path to the .env file. Defaults to None.
-
-        Returns:
-            bool: Always False as no environment variables are loaded.
-        """
-        logger.warning("python-dotenv package not installed. Environment variables from .env file will not be loaded.")
-        return False
+from dotenv import load_dotenv
 
 
 def read_env_file(env_file_path: Union[str, Path]) -> Dict[str, str]:
@@ -359,12 +345,7 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    try:
-        # Try importing directly (for Docker/installed package)
-        from logging_utils import configure_logging as setup_logging
-    except ImportError:
-        # Fall back to src-prefixed import (for local development)
-        from src.logging_utils import configure_logging as setup_logging
+    from logging_utils import configure_logging as setup_logging
 
     # Configure logging using the centralized function
     setup_logging(verbose, module_name="tfc_code_pipeline")

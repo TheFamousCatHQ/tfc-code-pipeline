@@ -90,28 +90,38 @@ def configure_logging(verbose: bool = False, module_name: Optional[str] = None,
         include_module_name: Whether to include the module name in the log format.
                             Set to False for simpler output format.
     """
+    # Use a global flag to track if logging has been configured
+    global _logging_configured
+    if not hasattr(configure_logging, '_logging_configured'):
+        configure_logging._logging_configured = False
+
     # Determine which logger to configure
     target_logger = specific_logger if specific_logger else logging.getLogger()
 
-    # Remove existing handlers to prevent duplicate logs
-    for handler in target_logger.handlers[:]:
-        target_logger.removeHandler(handler)
+    # Only configure handlers if logging hasn't been configured yet
+    if not configure_logging._logging_configured:
+        # Remove existing handlers to prevent duplicate logs
+        for handler in target_logger.handlers[:]:
+            target_logger.removeHandler(handler)
 
-    # Create console handler with stderr
-    console = logging.StreamHandler(sys.stderr)
+        # Create console handler with stderr
+        console = logging.StreamHandler(sys.stderr)
 
-    # Set format based on whether to include module name
-    if include_module_name:
-        formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-    else:
-        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        # Set format based on whether to include module name
+        if include_module_name:
+            formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
+        else:
+            formatter = logging.Formatter('%(levelname)s - %(message)s')
 
-    console.setFormatter(formatter)
+        console.setFormatter(formatter)
 
-    # Add handler to target logger
-    target_logger.addHandler(console)
+        # Add handler to target logger
+        target_logger.addHandler(console)
 
-    # Set level based on verbose flag
+        # Mark logging as configured
+        configure_logging._logging_configured = True
+
+    # Set level based on verbose flag (always update the level even if handlers exist)
     if verbose:
         target_logger.setLevel(logging.DEBUG)
         log_level_name = "DEBUG"
