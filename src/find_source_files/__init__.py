@@ -7,14 +7,15 @@ excluding dependencies, tests, and other non-core files.
 """
 
 import argparse
-import logging
 import os
 import sys
 from pathlib import Path
 from typing import List, Set
 
+from logging_utils import get_logger
+
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def parse_args() -> argparse.Namespace:

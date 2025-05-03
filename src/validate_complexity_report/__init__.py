@@ -13,8 +13,10 @@ from typing import Dict, Any, Optional, Tuple
 import jsonschema
 import requests
 
+from logging_utils import get_logger
+
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 # Configure logging using the centralized function
 try:
@@ -72,10 +74,10 @@ def validate_against_schema(data: Dict[str, Any], schema: Dict[str, Any]) -> Tup
 
 
 def fix_json_with_openrouter(
-    json_data: Dict[str, Any], 
-    schema: Dict[str, Any], 
-    error_message: str,
-    api_key: Optional[str] = None
+        json_data: Dict[str, Any],
+        schema: Dict[str, Any],
+        error_message: str,
+        api_key: Optional[str] = None
 ) -> Optional[Dict[str, Any]]:
     """Use OpenRouter API to fix the JSON data using gpt-4o-mini.
 
@@ -182,10 +184,10 @@ Return only the fixed JSON with no additional explanation.
 
 
 def validate_and_fix_complexity_report(
-    report_path: str, 
-    schema_path: str, 
-    output_path: Optional[str] = None,
-    api_key: Optional[str] = None
+        report_path: str,
+        schema_path: str,
+        output_path: Optional[str] = None,
+        api_key: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
     """Validate a complexity report against its schema and fix it if needed.
 
@@ -267,7 +269,7 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Validate a MASTER_COMPLEXITY_REPORT.json against its schema.")
     parser.add_argument("--report", required=True, help="Path to the MASTER_COMPLEXITY_REPORT.json file")
-    parser.add_argument("--schema", default="master_complexity_report_schema.json", 
+    parser.add_argument("--schema", default="master_complexity_report_schema.json",
                         help="Path to the JSON schema file (default: master_complexity_report_schema.json)")
     parser.add_argument("--output", help="Path to save the fixed JSON file (default: overwrites the original)")
     parser.add_argument("--api-key", help="OpenRouter API key (default: uses OPENROUTER_API_KEY env var)")
@@ -280,8 +282,8 @@ def main() -> int:
         logger.debug("Verbose logging enabled")
 
     success, result = validate_and_fix_complexity_report(
-        args.report, 
-        args.schema, 
+        args.report,
+        args.schema,
         args.output,
         args.api_key
     )

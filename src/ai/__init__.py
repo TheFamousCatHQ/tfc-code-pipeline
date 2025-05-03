@@ -1,8 +1,8 @@
-import logging
 import os
 from typing import Type, TypeVar, Optional
 
 import httpx
+from logging_utils import get_logger
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
@@ -29,7 +29,7 @@ OPENROUTER_HTTP_REFERER = os.getenv("OPENROUTER_HTTP_REFERER", "https://www.thef
 # Define a generic type for the output model
 T = TypeVar('T')
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def create_agent(output_type: Type[T], system_prompt: str, model: Optional[str] = None) -> Agent:

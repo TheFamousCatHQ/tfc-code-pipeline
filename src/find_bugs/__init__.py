@@ -8,15 +8,16 @@ bug details including location, line number, filename, explanation, confidence, 
 """
 
 import json
-import logging
 import os
 import re
 import subprocess
 import sys
 from typing import Dict, List, Optional, Any
 
+from logging_utils import get_logger
+
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 # Import relative to the 'src' package
 from code_processor import CodeProcessor

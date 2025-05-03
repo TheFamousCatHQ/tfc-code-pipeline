@@ -7,15 +7,16 @@ tokenUtils.js and provides a custom prompt for aider.
 """
 
 import argparse
-import logging
 import os
 import subprocess
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
 
+from logging_utils import get_logger
+
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:

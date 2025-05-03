@@ -5,11 +5,12 @@ Processor to run sonar-scanner on the whole codebase.
 
 import argparse
 import json
-import logging
 import os
 import subprocess
 import sys
 from typing import List, Optional
+
+from logging_utils import get_logger
 
 try:
     # Try importing directly (for Docker/installed package)
@@ -33,7 +34,7 @@ except ImportError:
     from src.find_source_files import find_source_files as find_files
 
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 class SonarScannerProcessor(CodeProcessor):

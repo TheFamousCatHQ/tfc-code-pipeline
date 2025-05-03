@@ -11,6 +11,8 @@ import os
 import sys
 from typing import List, Optional, Dict, Any
 
+from logging_utils import get_logger
+
 from pydantic import BaseModel, Field
 
 try:
@@ -21,7 +23,7 @@ except ImportError:
     from src.ai import create_agent
 
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 
 # Pydantic models for the master complexity report
@@ -503,7 +505,7 @@ def main() -> int:
 
     # Set validation module logging level if schema-validation is enabled
     if args.schema_validation:
-        validation_logger = logging.getLogger('validate_complexity_report')
+        validation_logger = get_logger('validate_complexity_report')
         validation_logger.setLevel(logging.DEBUG)
         logger.info("Detailed schema validation logging enabled")
 

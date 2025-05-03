@@ -3,10 +3,11 @@ SonarQube Client - A module for interacting with the SonarQube API.
 """
 
 import json
-import logging
 import urllib.error
 import urllib.request
 from typing import Dict, Any
+
+from logging_utils import get_logger
 
 
 class SonarQubeClient:
@@ -24,7 +25,7 @@ class SonarQubeClient:
         """
         self.host = host
         self.token = token
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger()
 
     def fetch_issues(self, project: str) -> Dict[str, Any]:
         """

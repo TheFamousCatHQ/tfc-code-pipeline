@@ -6,16 +6,17 @@ including argument parsing and execution of the main functionality.
 
 import argparse
 import importlib
-import logging
 import sys
 from typing import Optional, Sequence, Tuple, List, Dict, Any
+
+from logging_utils import get_logger
 
 # Local application imports
 from .main import main
 from code_processor import CodeProcessor # Import base class
 
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 # Map command names to processor module and class names
 PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
