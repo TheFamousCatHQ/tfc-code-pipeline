@@ -93,7 +93,7 @@ def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
 def reconstruct_processor_args(args: argparse.Namespace) -> List[str]:
     """Reconstruct the list of processor-specific arguments from the parsed namespace."""
     processor_args_list = []
-    known_main_args = {'build_only', 'run', 'src', 'cmd'} # Args handled by main.py/cli.py
+    known_main_args = {'build_only', 'skip_build', 'run', 'src', 'cmd'} # Args handled by main.py/cli.py
     args_dict = vars(args)
 
     for key, value in args_dict.items():
@@ -130,6 +130,7 @@ def main(args: argparse.Namespace) -> int:
         Exit code (0 for success, non-zero for failure).
     """
     build_only = args.build_only
+    skip_build = args.skip_build
     run = args.run
     src = args.src
     cmd = args.cmd
@@ -170,21 +171,28 @@ ENTRYPOINT ["/bin/bash"]
     if run and not src:
         logger.error("Error: --src is required when using --run")
         return 1
+    if build_only and skip_build:
+        logger.error("Error: --build-only and --skip-build cannot be used together")
+        return 1
 
     if build_only:
         logger.info(f"TFC Code Pipeline - Building Docker image: {IMAGE_NAME}...")
     elif run:
-        logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
+        if skip_build:
+            logger.info(f"TFC Code Pipeline - Skipping Docker image build and running {cmd} in Docker container...")
+        else:
+            logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
         # Default action if neither --build-only nor --run is specified
-        logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run.")
+        logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run. Use --skip-build with --run to skip the Docker image build.")
         return 1
 
     try:
         # --- Dockerfile Creation --- (Common for build and run)
         dockerfile_path = Path("Dockerfile")
         dockerfile_already_unlinked = False  # Flag to track if we've already unlinked
-        needs_build = not dockerfile_path.exists() or build_only
+        # Skip build if skip_build flag is set, otherwise check if Dockerfile exists or build_only is set
+        needs_build = (not skip_build) and (not dockerfile_path.exists() or build_only)
         if needs_build:
             logger.info("Creating temporary Dockerfile...")
             with open(dockerfile_path, "w") as f:

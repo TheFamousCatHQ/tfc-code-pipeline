@@ -85,6 +85,11 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help="Only build the Docker image, do not run."
     )
     parser.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="Skip building the Docker image, only run the command."
+    )
+    parser.add_argument(
         "--run",
         action="store_true",
         help="Run the command in the Docker container (requires --src and --cmd)."

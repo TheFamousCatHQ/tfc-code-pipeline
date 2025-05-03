@@ -284,11 +284,12 @@ A Docker-based wrapper for the other scripts. It creates a Docker container base
 
 **Usage:**
 ```bash
-tfc-code-pipeline [--build-only] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan]
+tfc-code-pipeline [--build-only] [--skip-build] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan]
 ```
 
 **Options:**
 - `--build-only`: Only build the Docker image without running the container
+- `--skip-build`: Skip building the Docker image, only run the command
 - `--run`: Run the Docker container with the provided messages
 - `--src`: Directory to mount in the Docker container under /src
 - `--messages`: Custom message to pass to aider (default: "Hello")
@@ -313,6 +314,9 @@ tfc-code-pipeline --run --src /path/to/source --cmd analyze_complexity
 
 # Run sonar-scan in a Docker container
 tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan
+
+# Run explain-code in a Docker container, skipping the Docker image build
+tfc-code-pipeline --run --skip-build --src /path/to/source --cmd explain_code
 ```
 
 ## Common Options for All Processors
