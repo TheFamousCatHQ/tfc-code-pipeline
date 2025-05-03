@@ -442,6 +442,20 @@ You can run the scripts in two ways:
    poetry run explain-code --directory /path/to/source
    ```
 
+## Testing
+
+When writing tests for this project, be aware that the logger name used in the code is "tfc-code-pipeline", not the module name. When using `assertLogs()` in tests, make sure to use the correct logger name:
+
+```python
+# Incorrect - will fail:
+with self.assertLogs('find_source_files', level='INFO') as cm:
+    # test code
+
+# Correct - will pass:
+with self.assertLogs('tfc-code-pipeline', level='INFO') as cm:
+    # test code
+```
+
 ## Integration with Development Workflows
 
 Code processors can be integrated into development workflows in several ways:
