@@ -244,7 +244,7 @@ When running through the Docker-based wrapper (`tfc-code-pipeline --run --src /p
 sonar.projectKey=NAME_OF_SOURCE_DIR
 sonar.projectVersion=1.0
 sonar.sources=.
-sonar.host.url=https://sonar.thefamouscat.com/
+sonar.host.url=https://sonar.thefamouscat.com
 sonar.token=SONAR_TOKEN
 ```
 

@@ -62,7 +62,7 @@ class SonarScannerProcessor(CodeProcessor):
         content = f"""sonar.projectKey={source_dir_name}
 sonar.projectVersion=1.0
 sonar.sources=.
-sonar.host.url=https://sonar.thefamouscat.com/
+sonar.host.url=https://sonar.thefamouscat.com
 sonar.token={sonar_token}
 """
 
@@ -109,6 +109,11 @@ sonar.token={sonar_token}
             type=str,
             help="Comma-separated list of file path patterns to exclude from analysis"
         )
+        parser.add_argument(
+            "--skip-scanner",
+            action="store_true",
+            help="Skip sonar-scanner invocation and just output the measures"
+        )
 
     def get_description(self) -> str:
         """Get the description for the argument parser.
@@ -116,7 +121,7 @@ sonar.token={sonar_token}
         Returns:
             Description string.
         """
-        return "Run sonar-scanner on the codebase"
+        return "Run sonar-scanner on the codebase or just output measures"
 
     def run(self) -> int:
         """Run the sonar-scanner processor.
@@ -187,97 +192,96 @@ sonar.token={sonar_token}
         # Create sonar-project.properties file in the source directory
         self._create_sonar_properties_file(directory, args)
 
-        # Build sonar-scanner command
-        cmd = ["sonar-scanner"]
-
         # Get the name of the original source directory from environment variables
         # If not available, fall back to the name of the current directory
         source_dir_name = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
 
-        # Add project key (always use the name of the original directory)
-        cmd.extend([f"-Dsonar.projectKey={source_dir_name}"])
+        # Get project key (always use the name of the original directory)
+        project_key = source_dir_name
 
-        # Add host URL if provided
-        if hasattr(args, 'host_url') and args.host_url:
-            cmd.extend([f"-Dsonar.host.url={args.host_url}"])
+        # Check if we should skip the scanner invocation
+        skip_scanner = hasattr(args, 'skip_scanner') and args.skip_scanner
 
-        # Add login token if provided
-        if hasattr(args, 'login') and args.login:
-            cmd.extend([f"-Dsonar.login={args.login}"])
+        if not skip_scanner:
+            # Build sonar-scanner command
+            cmd = ["sonar-scanner"]
 
-        # Add sources if provided
-        if hasattr(args, 'sources') and args.sources:
-            cmd.extend([f"-Dsonar.sources={args.sources}"])
-        else:
-            # Default to the provided directory
-            cmd.extend([f"-Dsonar.sources={directory}"])
+            # Add project key (always use the name of the original directory)
+            cmd.extend([f"-Dsonar.projectKey={project_key}"])
 
-        # Add exclusions if provided
-        if hasattr(args, 'exclusions') and args.exclusions:
-            cmd.extend([f"-Dsonar.exclusions={args.exclusions}"])
+            # Add host URL if provided
+            if hasattr(args, 'host_url') and args.host_url:
+                cmd.extend([f"-Dsonar.host.url={args.host_url}"])
 
-        # Run sonar-scanner
-        logger.info(f"Running sonar-scanner on directory: {directory}")
-        logger.info(f"Command: {' '.join(cmd)}")
+            # Add login token if provided
+            if hasattr(args, 'login') and args.login:
+                cmd.extend([f"-Dsonar.login={args.login}"])
 
-        try:
-            # Change to the directory before running sonar-scanner
-            current_dir = os.getcwd()
-            os.chdir(directory)
+            # Add sources if provided
+            if hasattr(args, 'sources') and args.sources:
+                cmd.extend([f"-Dsonar.sources={args.sources}"])
+            else:
+                # Default to the provided directory
+                cmd.extend([f"-Dsonar.sources={directory}"])
+
+            # Add exclusions if provided
+            if hasattr(args, 'exclusions') and args.exclusions:
+                cmd.extend([f"-Dsonar.exclusions={args.exclusions}"])
 
             # Run sonar-scanner
-            result = subprocess.run(cmd, check=True, text=True, capture_output=True)
+            logger.info(f"Running sonar-scanner on directory: {directory}")
+            logger.info(f"Command: {' '.join(cmd)}")
 
-            # Log output
-            logger.info("sonar-scanner output:")
-            for line in result.stdout.splitlines():
-                logger.info(line)
+            try:
+                # Change to the directory before running sonar-scanner
+                current_dir = os.getcwd()
+                os.chdir(directory)
 
-            # Change back to original directory
-            os.chdir(current_dir)
+                # Run sonar-scanner
+                result = subprocess.run(cmd, check=True, text=True, capture_output=True)
 
-            logger.info("sonar-scanner completed successfully")
+                # Log output
+                logger.info("sonar-scanner output:")
+                for line in result.stdout.splitlines():
+                    logger.info(line)
 
-            # Get project key (always use the name of the original directory)
-            project_key = os.environ.get("ORIGINAL_SRC_DIR_NAME", os.path.basename(os.path.abspath(directory)))
+                # Change back to original directory
+                os.chdir(current_dir)
 
-            # Get SonarQube host URL
-            host_url = args.host_url if hasattr(args, 'host_url') and args.host_url else "https://sonar.thefamouscat.com/"
+                logger.info("sonar-scanner completed successfully")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"sonar-scanner failed with exit code {e.returncode}")
+                logger.error(f"Error output: {e.stderr}")
+                return None
+            except Exception as e:
+                logger.error(f"Error running sonar-scanner: {e}")
+                return None
+        else:
+            logger.info(f"Skipping sonar-scanner invocation as requested by --skip-scanner parameter")
+            logger.info(f"Will attempt to fetch measures for project: {project_key}")
 
-            # Get SonarQube token
-            token = args.login if hasattr(args, 'login') and args.login else os.environ.get("SONAR_TOKEN", "")
+        # Get SonarQube host URL
+        host_url = args.host_url if hasattr(args, 'host_url') and args.host_url else "https://sonar.thefamouscat.com"
 
-            # Fetch measures and file_measures using SonarQubeClient
-            if token:
-                try:
-                    logger.info(f"Fetching measures for project: {project_key}")
-                    client = SonarQubeClient(host_url, token)
+        # Get SonarQube token
+        token = args.login if hasattr(args, 'login') and args.login else os.environ.get("SONAR_TOKEN", "")
 
-                    # Fetch project measures
-                    measures = client.fetch_measures(project_key)
-                    print("\n=== PROJECT MEASURES ===")
-                    print(json.dumps(measures, indent=2))
+        # Fetch measures and file_measures using SonarQubeClient
+        logger.info(f"Fetching measures for project: {project_key} from {host_url}")
+        client = SonarQubeClient(host_url, token)
+        # Fetch project measures
+        measures = client.fetch_measures(project_key)
+        print("\n=== PROJECT MEASURES ===")
+        print(json.dumps(measures, indent=2))
 
-                    # Fetch file measures
-                    file_measures = client.fetch_file_measures(project_key)
-                    print("\n=== FILE MEASURES ===")
-                    print(json.dumps(file_measures, indent=2))
+        # Fetch file measures
+        file_measures = client.fetch_file_measures(project_key)
+        print("\n=== FILE MEASURES ===")
+        print(json.dumps(file_measures, indent=2))
 
-                    logger.info("Successfully fetched and displayed measures")
-                except Exception as e:
-                    logger.error(f"Error fetching measures: {e}")
-            else:
-                logger.warning("No SonarQube token provided. Skipping measures fetch.")
+        logger.info("Successfully fetched and displayed measures")
 
-            return [directory]  # Return the directory as processed
-
-        except subprocess.CalledProcessError as e:
-            logger.error(f"sonar-scanner failed with exit code {e.returncode}")
-            logger.error(f"Error output: {e.stderr}")
-            return None
-        except Exception as e:
-            logger.error(f"Error running sonar-scanner: {e}")
-            return None
+        return [directory]  # Return the directory as processed
 
 
 def configure_logging(verbose: bool = False):

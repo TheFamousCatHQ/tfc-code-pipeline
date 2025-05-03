@@ -3,6 +3,7 @@ SonarQube Client - A module for interacting with the SonarQube API.
 """
 
 import json
+import logging
 import urllib.error
 import urllib.request
 from typing import Dict, Any
@@ -23,6 +24,7 @@ class SonarQubeClient:
         """
         self.host = host
         self.token = token
+        self.logger = logging.getLogger(__name__)
 
     def fetch_issues(self, project: str) -> Dict[str, Any]:
         """
@@ -70,7 +72,7 @@ class SonarQubeClient:
         all_metrics = f"{security_metrics},{complexity_metrics},{maintainability_metrics},{general_metrics}"
 
         url = f"{self.host}/api/measures/component?component={project}&metricKeys={all_metrics}"
-
+        self.logger.info(f"Fetching measures from {url} with token {self.token[0:10]}")
         request = urllib.request.Request(url)
         request.add_header("Authorization", f"Bearer {self.token}")
         with urllib.request.urlopen(request) as response:
