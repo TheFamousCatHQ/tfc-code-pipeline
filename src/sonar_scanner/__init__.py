@@ -98,12 +98,6 @@ sonar.token={sonar_token}
             action="store_true",
             help="Skip sonar-scanner invocation and just output the measures"
         )
-        parser.add_argument(
-            "--merge-reports",
-            action="store_true",
-            default=True,
-            help="Merge SonarQube measures with complexity report if available"
-        )
 
     def get_description(self) -> str:
         """Get the description for the argument parser.
@@ -160,52 +154,6 @@ sonar.token={sonar_token}
         except Exception as e:
             logger.exception(f"An unexpected error occurred in the main run loop: {e}")
             return 1
-
-    def _merge_reports(self, complexity_path: str, measures_path: str, file_measures_path: str, output_dir: str) -> \
-            Optional[str]:
-        """Merge the complexity report with SonarQube measures into a single JSON file.
-
-        Args:
-            complexity_path: Path to the master complexity report.
-            measures_path: Path to the SonarQube project measures.
-            file_measures_path: Path to the SonarQube file measures.
-            output_dir: Directory where the merged report will be saved.
-
-        Returns:
-            Path to the merged report file, or None if merging failed.
-        """
-        try:
-            # Load the reports
-            with open(complexity_path, 'r') as f:
-                complexity_report = json.load(f)
-
-            with open(measures_path, 'r') as f:
-                sonar_measures = json.load(f)
-
-            with open(file_measures_path, 'r') as f:
-                sonar_file_measures = json.load(f)
-
-            # Create the merged sonar measures structure (same as what's output to STDOUT)
-            merged_sonar_measures = {
-                "project_measures": sonar_measures,
-                "file_measures": sonar_file_measures
-            }
-
-            # Create the merged report structure
-            merged_report = {
-                "complexity_report": complexity_report,
-                "sonar_measures": merged_sonar_measures
-            }
-
-            # Save the merged report
-            merged_report_path = os.path.join(output_dir, "MERGED_MEASUREMENT_REPORT.json")
-            with open(merged_report_path, 'w') as f:
-                json.dump(merged_report, f, indent=2)
-
-            return merged_report_path
-        except Exception as e:
-            logger.error(f"Error merging reports: {e}")
-            return None
 
     def process_files(self, args: argparse.Namespace) -> Optional[List[str]]:
         """Process files using sonar-scanner.
@@ -305,26 +253,19 @@ sonar.token={sonar_token}
 
         # Fetch project measures
         measures = client.fetch_measures(project_key)
-        measures_file_path = os.path.join(directory, "SONAR_MEASURES.json")
-        with open(measures_file_path, 'w') as f:
-            json.dump(measures, f, indent=2)
-        logger.info(f"Project measures saved to {measures_file_path}")
-
         # Fetch file measures
         file_measures = client.fetch_file_measures(project_key)
-        file_measures_path = os.path.join(directory, "SONAR_FILE_MEASURES.json")
-        with open(file_measures_path, 'w') as f:
-            json.dump(file_measures, f, indent=2)
-        logger.info(f"File measures saved to {file_measures_path}")
 
         # Merge SONAR_MEASURES.json and SONAR_FILE_MEASURES.json into one report for STDOUT
         merged_sonar_report = {
             "project_measures": measures,
             "file_measures": file_measures
         }
-        # Output the merged report to STDOUT
-        print(json.dumps(merged_sonar_report, indent=2))
-        logger.info("Successfully fetched, saved, and processed measures")
+
+        report_path = os.path.join(directory, "SONAR_REPORT.json")
+        with open(report_path, 'w') as f:
+            json.dump(merged_sonar_report, f, indent=2)
+        logger.info(f"Successfully fetched, saved, and processed measures to {report_path}")
 
         return [directory]  # Return the directory as processed
 
