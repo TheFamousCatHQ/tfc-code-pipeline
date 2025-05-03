@@ -379,7 +379,7 @@ class TestFindSourceFiles(unittest.TestCase):
         mock_find_source_files.return_value = ["/path/to/dir/file1.py", "/path/to/dir/file2.js"]
 
         # Capture logger output
-        with self.assertLogs('find_source_files', level='INFO') as cm:
+        with self.assertLogs('tfc-code-pipeline', level='INFO') as cm:
             result = main()
 
             # Verify the result
@@ -388,8 +388,8 @@ class TestFindSourceFiles(unittest.TestCase):
             mock_find_source_files.assert_called_once_with("/path/to/dir")
 
             # Verify that the log messages contain the file paths
-            self.assertIn("INFO:find_source_files:/path/to/dir/file1.py", cm.output)
-            self.assertIn("INFO:find_source_files:/path/to/dir/file2.js", cm.output)
+            self.assertTrue(any("/path/to/dir/file1.py" in msg for msg in cm.output))
+            self.assertTrue(any("/path/to/dir/file2.js" in msg for msg in cm.output))
 
     @patch('argparse.ArgumentParser.parse_args')
     @patch('find_source_files.find_source_files')
@@ -400,7 +400,7 @@ class TestFindSourceFiles(unittest.TestCase):
         mock_find_source_files.side_effect = Exception("Test exception")
 
         # Capture logger output
-        with self.assertLogs('find_source_files', level='ERROR') as cm:
+        with self.assertLogs('tfc-code-pipeline', level='ERROR') as cm:
             result = main()
 
             # Verify the result
@@ -409,7 +409,7 @@ class TestFindSourceFiles(unittest.TestCase):
             mock_find_source_files.assert_called_once_with("/path/to/dir")
 
             # Check that the error message was logged
-            self.assertIn("ERROR:find_source_files:Error: Test exception", cm.output)
+            self.assertTrue(any("Error: Test exception" in msg for msg in cm.output))
 
 
 if __name__ == "__main__":
