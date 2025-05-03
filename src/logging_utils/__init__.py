@@ -38,9 +38,6 @@ def init_logging() -> None:
         logging.error(f"Failed to load logging config from {logging_config_path}: {e}")
 
 
-init_logging()
-
-
 def get_logger(name: str = "tfc-code-pipeline") -> logging.Logger:
     """
     Get a logger instance with the specified name.
