@@ -336,6 +336,61 @@ The `--show-only-repo-files-chunks` option is particularly useful for processors
 explain-code --directory /path/to/source --show-only-repo-files-chunks
 ```
 
+## Logging
+
+This project uses a centralized logging configuration to ensure consistent logging behavior across all components. The logging utilities are provided by the `logging_utils` module.
+
+### Basic Usage
+
+The simplest way to get a configured logger is to use the `get_logger` function:
+
+```python
+# Get a configured logger for your module
+try:
+    # Try importing directly (for Docker/installed package)
+    from logging_utils import get_logger
+except ImportError:
+    # Fall back to src-prefixed import (for local development)
+    from src.logging_utils import get_logger
+
+# Get a configured logger (automatically uses your module name)
+logger = get_logger()
+
+# Now you can use the logger
+logger.info("This is an info message")
+logger.debug("This is a debug message - only shown when verbose=True")
+```
+
+For more advanced configuration or backward compatibility, you can still use the original approach:
+
+```python
+import logging
+
+# Set up module-level logger
+logger = logging.getLogger(__name__)
+
+# Configure logging using the centralized function
+try:
+    # Try importing directly (for Docker/installed package)
+    from logging_utils import configure_logging
+except ImportError:
+    # Fall back to src-prefixed import (for local development)
+    from src.logging_utils import configure_logging
+
+# Configure logging for this module
+configure_logging(module_name="your_module_name")
+```
+
+### Key Features
+
+- Consistent log formatting across all modules
+- All logs directed to stderr
+- Automatic handling of log levels based on verbose flag
+- Prevention of duplicate log messages
+- Support for module-specific logging configuration
+
+For more detailed documentation, including configuration options, examples, and best practices, see the [Logging Utilities README](src/logging_utils/README.md).
+
 ## Environment Variables
 
 This project supports loading environment variables from a `.env` file. When using the Docker-based approach (`tfc-code-pipeline`), these variables are automatically passed to the Docker container.

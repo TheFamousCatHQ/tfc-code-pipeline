@@ -7,7 +7,6 @@ such as explaining code or writing tests.
 """
 
 import argparse
-import logging
 import subprocess
 import time
 from abc import ABC, abstractmethod
@@ -15,8 +14,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
+from logging_utils import get_logger
+
 # Set up logging
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 try:
     # Try importing directly (for Docker/installed package)
