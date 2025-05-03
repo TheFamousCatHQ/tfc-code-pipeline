@@ -394,12 +394,7 @@ The simplest way to get a configured logger is to use the `get_logger` function:
 
 ```python
 # Get a configured logger for your module
-try:
-    # Try importing directly (for Docker/installed package)
-    from logging_utils import get_logger
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.logging_utils import get_logger
+from logging_utils import get_logger
 
 # Get a configured logger (automatically uses your module name)
 logger = get_logger()
