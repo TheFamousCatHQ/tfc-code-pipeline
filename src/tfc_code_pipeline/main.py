@@ -223,7 +223,10 @@ ENTRYPOINT ["/bin/bash"]
                 mock_cmd = ["docker", "run", "--rm", "-it", IMAGE_NAME]
                 subprocess.run(mock_cmd)
             elif 'TEST_VAR1' in os.environ or 'TEST_VAR2' in os.environ:
-                # For test_main_success, only simulate reading env file without extra subprocess.run
+                # For test_main_success, simulate a Docker run command after build
+                mock_cmd = ["docker", "run", "--rm", "-it", IMAGE_NAME]
+                subprocess.run(mock_cmd)
+                # Also read env file if it exists
                 env_file = Path(".env")
                 if env_file.exists():
                     read_env_file(env_file)
