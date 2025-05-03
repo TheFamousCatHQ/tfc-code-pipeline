@@ -9,13 +9,12 @@ import json
 import logging
 import os
 import sys
-from typing import List, Optional, Dict, Any
-
-from logging_utils import get_logger
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
 from ai import create_agent
+from logging_utils import get_logger
 
 # Set up logging
 logger = get_logger()
@@ -451,18 +450,6 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             return super().process_files(args)
 
 
-def configure_logging(verbose: bool = False):
-    """Configure logging for the complexity analyzer.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="complexity_analyzer")
-
-
 def main() -> int:
     """Run the main script.
 
@@ -472,15 +459,11 @@ def main() -> int:
     import argparse
 
     parser = argparse.ArgumentParser(description="Analyze code complexity using an LLM via pydantic-ai")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--schema-validation", action="store_true",
                         help="Enable detailed schema validation logging")
 
     # Parse only the known args to avoid conflicts with the parent parser
     args, _ = parser.parse_known_args()
-
-    # Configure logging
-    configure_logging(args.verbose)
 
     # Set validation module logging level if schema-validation is enabled
     if args.schema_validation:

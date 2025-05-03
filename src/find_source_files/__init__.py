@@ -10,7 +10,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
-from typing import List, Set
+from typing import List
 
 from logging_utils import get_logger
 
@@ -285,18 +285,6 @@ def find_source_files(directory: str) -> List[str]:
     return source_files
 
 
-def configure_logging(verbose: bool = False):
-    """Configure logging for the find_source_files module.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="find_source_files")
-
-
 def main() -> int:
     """Run the main script.
 
@@ -305,9 +293,6 @@ def main() -> int:
     """
     try:
         args = parse_args()
-
-        # Configure logging
-        configure_logging(getattr(args, 'verbose', False))
 
         source_files = find_source_files(args.directory)
 

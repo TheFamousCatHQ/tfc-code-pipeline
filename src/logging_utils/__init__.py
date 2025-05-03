@@ -1,136 +1,85 @@
-#!/usr/bin/env python3
 """
-Utility module for configuring logging across the codebase.
-
-This module provides a centralized way to configure logging for all components
-of the TFC Code Pipeline, ensuring consistent logging behavior.
+Logging configuration and utility functions for the Usual Suspects application.
+Provides a centralized logging setup with YAML configuration and convenience methods.
 """
 
 import logging
-import sys
-import inspect
-from typing import Optional
+import logging.config
+import os
+from typing import Any
 
-# Set up module-level logger
-logger = logging.getLogger(__name__)
+import yaml
+
+# Setup paths
+script_dir = os.path.dirname(os.path.abspath(__file__))
+grand_parent_dir = os.path.dirname(os.path.dirname(script_dir))
+logging_config_path = os.path.join(grand_parent_dir, 'logging.yaml')
 
 
-def get_logger(
-    module_name: Optional[str] = None,
-    verbose: bool = False,
-    include_module_name: bool = True
-) -> logging.Logger:
-    """Get a configured logger instance in a single call.
+def init_logging() -> None:
+    """Initialize logging configuration from YAML file."""
+    try:
+        with open(logging_config_path, 'rt') as f:
+            config = yaml.safe_load(f.read())
+        logging.config.dictConfig(config)
+    except Exception as e:
+        # Fallback to basic configuration if YAML loading fails
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        logging.error(f"Failed to load logging config from {logging_config_path}: {e}")
 
-    This function creates and configures a logger with consistent settings,
-    returning it ready to use. It's the recommended way to get a logger
-    in the TFC Code Pipeline.
+
+def get_logger(name: str = "tfc-code-pipeline") -> logging.Logger:
+    """
+    Get a logger instance with the specified name.
 
     Args:
-        module_name: Name of the module requesting the logger. If None,
-                    attempts to determine the caller's module name.
-        verbose: Whether to enable verbose (DEBUG) logging.
-        include_module_name: Whether to include the module name in the log format.
-                            Set to False for simpler output format.
+        name: Logger name, defaults to "usual-suspects"
 
     Returns:
-        A configured logger instance ready to use.
-
-    Example:
-        ```python
-        # Get a configured logger for your module
-        from logging_utils import get_logger
-
-        logger = get_logger()  # Automatically uses your module name
-        logger.info("This is an info message")
-        ```
+        logging.Logger: Configured logger instance
     """
-    # If module_name is not provided, try to determine it from the caller's frame
-    if module_name is None:
-        # Get the caller's frame (2 levels up: caller -> get_logger)
-        frame = inspect.currentframe()
-        if frame:
-            try:
-                frame = frame.f_back
-                if frame and frame.f_globals.get('__name__'):
-                    module_name = frame.f_globals['__name__']
-            finally:
-                # Always delete the frame reference to avoid reference cycles
-                del frame
-
-    # Create the logger
-    new_logger = logging.getLogger(module_name)
-
-    # Configure it
-    configure_logging(
-        verbose=verbose,
-        module_name=module_name,
-        specific_logger=new_logger,
-        include_module_name=include_module_name
-    )
-
-    return new_logger
+    return logging.getLogger(name)
 
 
-def configure_logging(verbose: bool = False, module_name: Optional[str] = None, 
-                     specific_logger: Optional[logging.Logger] = None,
-                     include_module_name: bool = True):
-    """Configure logging for the application.
+def log_info(*args: Any) -> None:
+    """Log an INFO level message."""
+    get_logger().info(*args)
 
-    This function sets up consistent logging across all modules in the codebase.
-    It configures the root logger (or a specific logger if provided) to output 
-    to stderr with a consistent format, and sets the appropriate log level based 
-    on the verbose flag.
+
+def log_debug(*args: Any) -> None:
+    """Log a DEBUG level message."""
+    get_logger().debug(*args)
+
+
+def log_warn(*args: Any) -> None:
+    """Log a WARNING level message."""
+    get_logger().warning(*args)
+
+
+def log_error(*args: Any, **kwargs: Any) -> None:
+    """
+    Log an ERROR level message.
 
     Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-        module_name: Optional name of the module being configured, used for the
-                    confirmation message. If None, a generic message is used.
-        specific_logger: Optional specific logger to configure instead of the root logger.
-        include_module_name: Whether to include the module name in the log format.
-                            Set to False for simpler output format.
+        *args: Message and arguments to log
+        **kwargs: Additional logging parameters (e.g., exc_info, stack_info)
     """
-    # Use a global flag to track if logging has been configured
-    global _logging_configured
-    if not hasattr(configure_logging, '_logging_configured'):
-        configure_logging._logging_configured = False
+    get_logger().error(*args, **kwargs)
 
-    # Determine which logger to configure
-    target_logger = specific_logger if specific_logger else logging.getLogger()
 
-    # Only configure handlers if logging hasn't been configured yet
-    if not configure_logging._logging_configured:
-        # Remove existing handlers to prevent duplicate logs
-        for handler in target_logger.handlers[:]:
-            target_logger.removeHandler(handler)
+def log_exception(*args: Any, **kwargs: Any) -> None:
+    """
+    Log an exception with traceback at ERROR level.
 
-        # Create console handler with stderr
-        console = logging.StreamHandler(sys.stderr)
+    Args:
+        *args: Message and arguments to log
+        **kwargs: Additional logging parameters (e.g., exc_info, stack_info)
+    """
+    get_logger().exception(*args, **kwargs)
 
-        # Set format based on whether to include module name
-        if include_module_name:
-            formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-        else:
-            formatter = logging.Formatter('%(levelname)s - %(message)s')
 
-        console.setFormatter(formatter)
-
-        # Add handler to target logger
-        target_logger.addHandler(console)
-
-        # Mark logging as configured
-        configure_logging._logging_configured = True
-
-    # Set level based on verbose flag (always update the level even if handlers exist)
-    if verbose:
-        target_logger.setLevel(logging.DEBUG)
-        log_level_name = "DEBUG"
-    else:
-        target_logger.setLevel(logging.INFO)
-        log_level_name = "INFO"
-
-    # Log confirmation message
-    if module_name:
-        logger.debug(f"Logging configured for {module_name} at level: {log_level_name}")
-    else:
-        logger.debug(f"Logging configured at level: {log_level_name}")
+# Initialize logging when module is imported
+init_logging()

@@ -410,8 +410,6 @@ class CodeProcessor(ABC):
             # Now self.args is guaranteed to be set
             args = self.args
 
-            # Configure logging based on args (assuming a --verbose or similar arg might be added)
-            configure_logging(getattr(args, 'verbose', False))
 
             # If --show-only-repo-files-chunks is specified, just show the chunks and exit
             if args.show_only_repo_files_chunks:
@@ -452,16 +450,6 @@ class CodeProcessor(ABC):
             return 1
 
 
-def configure_logging(verbose: bool = False):
-    """Configure logging for the code processor.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="code_processor")
 
 # Example usage (for illustration, typically run via subclass main)
 # if __name__ == "__main__":

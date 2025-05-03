@@ -5,7 +5,6 @@ If validation fails, uses OpenRouter with gpt-4o-mini to fix the JSON.
 """
 
 import json
-import logging
 import os
 import sys
 from typing import Dict, Any, Optional, Tuple
@@ -17,12 +16,6 @@ from logging_utils import get_logger
 
 # Set up logging
 logger = get_logger()
-
-# Configure logging using the centralized function
-from logging_utils import configure_logging
-
-# Configure this specific logger with a simpler format (no module name in output)
-configure_logging(specific_logger=logger, include_module_name=False, module_name="validate_complexity_report")
 
 
 def load_json_file(file_path: str) -> Dict[str, Any]:
@@ -268,13 +261,7 @@ def main() -> int:
                         help="Path to the JSON schema file (default: master_complexity_report_schema.json)")
     parser.add_argument("--output", help="Path to save the fixed JSON file (default: overwrites the original)")
     parser.add_argument("--api-key", help="OpenRouter API key (default: uses OPENROUTER_API_KEY env var)")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     args = parser.parse_args()
-
-    # Set logging level based on verbose flag
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose logging enabled")
 
     success, result = validate_and_fix_complexity_report(
         args.report,

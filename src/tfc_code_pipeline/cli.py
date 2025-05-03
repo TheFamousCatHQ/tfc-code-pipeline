@@ -7,13 +7,12 @@ including argument parsing and execution of the main functionality.
 import argparse
 import importlib
 import sys
-from typing import Optional, Sequence, Tuple, List, Dict, Any
+from typing import Optional, Sequence, Dict
 
+from code_processor import CodeProcessor  # Import base class
 from logging_utils import get_logger
-
 # Local application imports
 from .main import main
-from code_processor import CodeProcessor # Import base class
 
 # Set up logging
 logger = get_logger()
@@ -26,6 +25,7 @@ PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
     "analyze_complexity": {"module": "complexity_analyzer", "class": "ComplexityAnalyzerProcessor"},
     "sonar_scan": {"module": "sonar_scanner", "class": "SonarScannerProcessor"},
 }
+
 
 def get_processor_instance(cmd: Optional[str]) -> Optional[CodeProcessor]:
     """Dynamically import and instantiate the appropriate CodeProcessor based on cmd."""
@@ -46,11 +46,12 @@ def get_processor_instance(cmd: Optional[str]) -> Optional[CodeProcessor]:
         # Pass None initially, args will be parsed fully later by the main parser
         processor = ProcessorClass(args=None)
         if not isinstance(processor, CodeProcessor):
-             raise TypeError(f"{class_name} is not a subclass of CodeProcessor")
+            raise TypeError(f"{class_name} is not a subclass of CodeProcessor")
         return processor
     except (ImportError, AttributeError, TypeError) as e:
         logger.error(f"Error loading processor for command '{cmd}': {e}")
         return None
+
 
 def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments, including processor-specific args.
@@ -65,7 +66,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         args = sys.argv[1:]
 
     # --- Pre-parse to find --cmd --- #
-    pre_parser = argparse.ArgumentParser(add_help=False) # Don't interfere with main help
+    pre_parser = argparse.ArgumentParser(add_help=False)  # Don't interfere with main help
     pre_parser.add_argument("--cmd", type=str)
     # Ignore other args for now
     known_pre_args, _ = pre_parser.parse_known_args(args)
@@ -77,7 +78,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     # --- Build the main parser --- #
     parser = argparse.ArgumentParser(
         description="TFC Code Pipeline - Build/Run code processors in Docker.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter # Show defaults
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter  # Show defaults
     )
     # Add main arguments
     parser.add_argument(
@@ -104,7 +105,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--cmd",
         type=str,
         choices=list(PROCESSOR_MAP.keys()),
-        required=True, # Make cmd required
+        required=True,  # Make cmd required
         help="Command (processor) to run."
     )
     # Add a group for processor-specific arguments for clarity in help message
@@ -113,12 +114,12 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
     # --- Add processor-specific arguments --- #
     if processor:
         # Call the processor's method to add its specific arguments to the group
-        processor.add_arguments(processor_group) # Pass the group
+        processor.add_arguments(processor_group)  # Pass the group
     else:
         # Add a note if processor couldn't be loaded
         processor_group.description = "Arguments for the selected processor will appear here if --cmd is valid."
         if cmd:
-             logger.warning(f"Could not load arguments for processor '{cmd}'. Help message may be incomplete.")
+            logger.warning(f"Could not load arguments for processor '{cmd}'. Help message may be incomplete.")
 
     # --- Parse all arguments together --- #
     parsed_args = parser.parse_args(args)
@@ -145,8 +146,4 @@ def cli() -> int:
 
 
 if __name__ == "__main__":
-    # Configure logging using the centralized function
-    from logging_utils import configure_logging
-
-    configure_logging(module_name="tfc_code_pipeline.cli")
     sys.exit(cli())

@@ -127,9 +127,6 @@ sonar.token={sonar_token}
             # Now self.args is guaranteed to be set
             args = self.args
 
-            # Configure logging based on args
-            configure_logging(getattr(args, 'verbose', False))
-
             # If --show-only-repo-files-chunks is specified, just show the chunks and exit
             if args.show_only_repo_files_chunks:
                 # Find source files
@@ -165,7 +162,7 @@ sonar.token={sonar_token}
             return 1
 
     def _merge_reports(self, complexity_path: str, measures_path: str, file_measures_path: str, output_dir: str) -> \
-    Optional[str]:
+            Optional[str]:
         """Merge the complexity report with SonarQube measures into a single JSON file.
 
         Args:
@@ -327,40 +324,9 @@ sonar.token={sonar_token}
         }
         # Output the merged report to STDOUT
         print(json.dumps(merged_sonar_report, indent=2))
-
-        # Merge with complexity report if it exists and --merge-reports flag is set
-        merge_reports = hasattr(args, 'merge_reports') and args.merge_reports
-        if merge_reports:
-            master_complexity_path = os.path.join(directory, "MASTER_COMPLEXITY_REPORT.json")
-            if os.path.exists(master_complexity_path):
-                logger.info(
-                    f"Found master complexity report at {master_complexity_path}, merging with SonarQube measures")
-                merged_report_path = self._merge_reports(master_complexity_path, measures_file_path, file_measures_path,
-                                                         directory)
-                if merged_report_path:
-                    logger.info(f"Successfully merged reports into {merged_report_path}")
-                else:
-                    logger.error("Failed to merge reports")
-            else:
-                logger.info("No master complexity report found, skipping merge")
-        else:
-            logger.info("Skipping report merge (use --merge-reports flag to enable)")
-
         logger.info("Successfully fetched, saved, and processed measures")
 
         return [directory]  # Return the directory as processed
-
-
-def configure_logging(verbose: bool = False):
-    """Configure logging for the sonar scanner processor.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="sonar_scanner")
 
 
 def main() -> int:
@@ -372,13 +338,9 @@ def main() -> int:
     import argparse
 
     parser = argparse.ArgumentParser(description="Run sonar-scanner on the codebase")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     # Parse only the known args to avoid conflicts with the parent parser
     args, _ = parser.parse_known_args()
-
-    # Configure logging
-    configure_logging(args.verbose)
 
     processor = SonarScannerProcessor()
     return processor.run()

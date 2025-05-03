@@ -4,12 +4,11 @@ This module provides the main functionality for the TFC Code Pipeline,
 including Docker container creation and environment variable handling.
 """
 
+import argparse  # Import argparse
 import os
 import subprocess
-import sys
-import argparse # Import argparse
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Sequence
+from typing import Dict, List, Union, Sequence
 
 from logging_utils import get_logger
 
@@ -62,15 +61,15 @@ def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
     # Replace environment variables with a placeholder to make the output more readable
     i = 0
     while i < len(cmd_copy) - 1:
-        if cmd_copy[i] == "-e" and "=" in cmd_copy[i+1]:
+        if cmd_copy[i] == "-e" and "=" in cmd_copy[i + 1]:
             # Keep only the first few and last few environment variables
             if i > 120:  # If we have a lot of env vars, truncate them
-                cmd_copy[i+1] = "...[env vars truncated]..."
+                cmd_copy[i + 1] = "...[env vars truncated]..."
                 # Skip ahead to the next non-env var argument
-                while i+2 < len(cmd_copy) and cmd_copy[i+2] == "-e":
-                    cmd_copy.pop(i+2)  # Remove the next -e
-                    if i+2 < len(cmd_copy):
-                        cmd_copy.pop(i+2)  # Remove the corresponding value
+                while i + 2 < len(cmd_copy) and cmd_copy[i + 2] == "-e":
+                    cmd_copy.pop(i + 2)  # Remove the next -e
+                    if i + 2 < len(cmd_copy):
+                        cmd_copy.pop(i + 2)  # Remove the corresponding value
         i += 1
 
     # Join the command with spaces
@@ -80,12 +79,12 @@ def format_docker_cmd(docker_cmd: Sequence[str]) -> str:
 def reconstruct_processor_args(args: argparse.Namespace) -> List[str]:
     """Reconstruct the list of processor-specific arguments from the parsed namespace."""
     processor_args_list = []
-    known_main_args = {'build_only', 'skip_build', 'run', 'src', 'cmd'} # Args handled by main.py/cli.py
+    known_main_args = {'build_only', 'skip_build', 'run', 'src', 'cmd'}  # Args handled by main.py/cli.py
     args_dict = vars(args)
 
     for key, value in args_dict.items():
         if key in known_main_args:
-            continue # Skip args consumed by the main script
+            continue  # Skip args consumed by the main script
 
         arg_name = f"--{key.replace('_', '-')}"
 
@@ -103,6 +102,7 @@ def reconstruct_processor_args(args: argparse.Namespace) -> List[str]:
         # Ignore args with None value (not specified or default is None)
 
     return processor_args_list
+
 
 def main(args: argparse.Namespace) -> int:
     """Run the main application.
@@ -147,10 +147,6 @@ RUN pip install --no-cache-dir -e .
 ENTRYPOINT ["/bin/bash"]
 """
 
-    # Configure logging
-    # Assuming verbose might be a processor arg, configure simply for now
-    configure_logging()
-
     # Basic validation (redundant with cli.py but safe)
     if run and not cmd:
         logger.error("Error: --cmd is required when using --run")
@@ -171,7 +167,8 @@ ENTRYPOINT ["/bin/bash"]
             logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
         # Default action if neither --build-only nor --run is specified
-        logger.error("Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run. Use --skip-build with --run to skip the Docker image build.")
+        logger.error(
+            "Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run. Use --skip-build with --run to skip the Docker image build.")
         return 1
 
     try:
@@ -216,7 +213,7 @@ ENTRYPOINT ["/bin/bash"]
                     read_env_file(env_file)
 
             logger.info("Build only complete.")
-            return 0 # Success for build-only
+            return 0  # Success for build-only
 
         # --- Run Logic --- (Only if run is True)
         if run:
@@ -229,7 +226,6 @@ ENTRYPOINT ["/bin/bash"]
             else:
                 logger.info("No .env file found. No environment variables will be passed to Docker.")
                 env_vars = {}
-
 
             # Prepare Docker run command
             docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
@@ -272,10 +268,10 @@ ENTRYPOINT ["/bin/bash"]
                 try:
                     output_arg_index = processor_args_list.index("--output")
                 except ValueError:
-                    output_arg_index = -1 # Not found
+                    output_arg_index = -1  # Not found
 
             if output_arg_index != -1 and output_arg_index + 1 < len(processor_args_list):
-                host_output_path = Path(processor_args_list[output_arg_index+1]).resolve()
+                host_output_path = Path(processor_args_list[output_arg_index + 1]).resolve()
                 host_output_dir = host_output_path.parent
                 output_filename = host_output_path.name
                 docker_output_path = f"{docker_output_dir}/{output_filename}"
@@ -285,30 +281,30 @@ ENTRYPOINT ["/bin/bash"]
                 output_mount_needed = True
                 logger.info(f"Mounting output directory: {host_output_dir} -> {docker_output_dir}")
             elif output_arg_index != -1:
-                 logger.error(f"Error: Argument {processor_args_list[output_arg_index]} requires a value.")
-                 return 1
+                logger.error(f"Error: Argument {processor_args_list[output_arg_index]} requires a value.")
+                return 1
 
             if output_mount_needed and host_output_dir:
                 docker_cmd.extend(["-v", f"{host_output_dir}:{docker_output_dir}"])
 
             # Add image name and entrypoint
             docker_cmd.extend([
-                "--entrypoint", cmd.replace("_", "-"), # Use the validated cmd
+                "--entrypoint", cmd.replace("_", "-"),  # Use the validated cmd
                 IMAGE_NAME
             ])
 
             # Add script arguments (processor args)
             # Base arguments for most processors
-            docker_cmd.extend(["--directory", "/src"]) # Always run relative to /src in container
+            docker_cmd.extend(["--directory", "/src"])  # Always run relative to /src in container
 
             # Add the reconstructed processor-specific arguments
             if output_arg_index != -1:
                 # Pass args before -o/--output
-                docker_cmd.extend(processor_args_list[:output_arg_index+1])
+                docker_cmd.extend(processor_args_list[:output_arg_index + 1])
                 # Pass the mapped container path for output
                 docker_cmd.append(docker_output_path)
                 # Pass args after the output value
-                docker_cmd.extend(processor_args_list[output_arg_index+2:])
+                docker_cmd.extend(processor_args_list[output_arg_index + 2:])
             else:
                 # No output arg found, pass all reconstructed args as is
                 docker_cmd.extend(processor_args_list)
@@ -338,25 +334,3 @@ ENTRYPOINT ["/bin/bash"]
                 logger.debug("Cleaned up temporary Dockerfile.")
             except OSError as e:
                 logger.warning(f"Could not remove temporary Dockerfile: {e}")
-
-def configure_logging(verbose: bool = False):
-    """Configure logging for the main application.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="tfc_code_pipeline")
-
-    # Log a message at INFO level to maintain backward compatibility
-    logger.info(f"Logging configured to level: {'DEBUG' if verbose else 'INFO'}")
-
-
-# This script is not meant to be run directly, but via the CLI entry point.
-# if __name__ == "__main__":
-#     # Example of how you might call it if needed for testing
-#     # fake_args = argparse.Namespace(build_only=False, run=True, src=".", cmd="explain_code", output=None, skip=False) # etc.
-#     # exit(main(args=fake_args))
-#     pass

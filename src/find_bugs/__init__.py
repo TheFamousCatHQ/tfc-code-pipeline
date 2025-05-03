@@ -210,16 +210,6 @@ class FindBugsProcessor(CodeProcessor):
         return bugs
 
 
-def configure_logging(verbose: bool = False):
-    """Configure logging for the find_bugs module.
-
-    Args:
-        verbose: Whether to enable verbose (DEBUG) logging.
-    """
-    from logging_utils import configure_logging as setup_logging
-
-    # Configure logging using the centralized function
-    setup_logging(verbose, module_name="find_bugs")
 
 
 def main() -> int:
@@ -228,8 +218,6 @@ def main() -> int:
     Returns:
         Exit code (0 for success, non-zero for failure).
     """
-    # Configure logging
-    configure_logging()
 
     processor = FindBugsProcessor()
     return processor.run()

@@ -4,7 +4,8 @@ This framework provides a common base class for processing code files using Aide
 
 ## Overview
 
-The `code_processor` module provides a base class (`CodeProcessor`) that can be extended to create specialized code processors for different tasks, such as:
+The `code_processor` module provides a base class (`CodeProcessor`) that can be extended to create specialized code
+processors for different tasks, such as:
 
 - Explaining code
 - Writing unit tests
@@ -13,21 +14,25 @@ The `code_processor` module provides a base class (`CodeProcessor`) that can be 
 - Refactoring code
 - Documenting code
 
-Each processor only needs to define its specific message and description, while the common functionality (finding files, processing them with Aider, etc.) is handled by the base class.
+Each processor only needs to define its specific message and description, while the common functionality (finding files,
+processing them with Aider, etc.) is handled by the base class.
 
 ## How Code Processors Work
 
-1. **Source File Discovery**: The processor finds source files in the specified directory using the `find-source-files` tool, which excludes dependencies, tests, and other non-core files.
+1. **Source File Discovery**: The processor finds source files in the specified directory using the `find-source-files`
+   tool, which excludes dependencies, tests, and other non-core files.
 
 2. **File Processing Strategy**:
-   - If `operates_on_whole_codebase` is `False` (default): Each file is processed individually
-   - If `operates_on_whole_codebase` is `True`: Files are grouped by parent directory and processed in chunks of up to 20 files
+    - If `operates_on_whole_codebase` is `False` (default): Each file is processed individually
+    - If `operates_on_whole_codebase` is `True`: Files are grouped by parent directory and processed in chunks of up to
+      20 files
 
-3. **Aider Integration**: The processor calls Aider with a specific prompt (the default message or a custom one provided by the user) and the file(s) to process.
+3. **Aider Integration**: The processor calls Aider with a specific prompt (the default message or a custom one provided
+   by the user) and the file(s) to process.
 
 4. **Processing Output**:
-   - Basic processors (like `ExplainCodeProcessor`) simply display Aider's output
-   - Advanced processors (like `FindBugsProcessor`) parse Aider's output to generate structured data or reports
+    - Basic processors (like `ExplainCodeProcessor`) simply display Aider's output
+    - Advanced processors (like `FindBugsProcessor`) parse Aider's output to generate structured data or reports
 
 5. **Reporting**: All processors report which files were processed and any errors encountered.
 
@@ -43,27 +48,37 @@ Each processor only needs to define its specific message and description, while 
 
 - **Script**: `write-tests`
 - **Purpose**: Writes unit tests for source files without using mocks
-- **Default Message**: "write unit tests without using mocks for all functions found in this file. If tests already exist, check if they are up to date, if not update them to cover the current functionality."
+- **Default Message**: "write unit tests without using mocks for all functions found in this file. If tests already
+  exist, check if they are up to date, if not update them to cover the current functionality."
 
 ### FindBugsProcessor
 
 - **Script**: `find-bugs`
 - **Purpose**: Finds potential bugs in source files and outputs results as JSON
-- **Default Message**: "Analyze this code and identify potential bugs. I am not interested in general suggestions for improvements just hard, plain bugs like off-by-one-errors. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), and 5) a suggested fix. Your output will be an artifact name FILENAME-bugreport.json"
+- **Default Message**: "Analyze this code and identify potential bugs. I am not interested in general suggestions for
+  improvements just hard, plain bugs like off-by-one-errors. For each issue found, provide: 1) a brief description, 2)
+  the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), and 5) a suggested fix. Your
+  output will be an artifact name FILENAME-bugreport.json"
 - **Output**: Generates a `bugs_report.json` file in the specified directory
 
 ### ComplexityAnalyzerProcessor
 
 - **Script**: `analyze-complexity`
-- **Purpose**: Analyzes code complexity using an LLM via `aider` to identify complex/hard-to-understand code sections and suggest improvements.
-- **Default Message**: "Analyze this code to identify the most complex and difficult-to-understand parts. For each complex section you identify, please explain: 1. Why it is considered complex (e.g., high cognitive load, complex logic, deep nesting, unclear naming, potential for bugs). 2. The specific line numbers or range of lines for the complex code. 3. Suggestions for simplifying or improving the readability of this section. Focus on areas that would be challenging for a new developer to grasp quickly."
+- **Purpose**: Analyzes code complexity using an LLM via `aider` to identify complex/hard-to-understand code sections
+  and suggest improvements.
+- **Default Message**: "Analyze this code to identify the most complex and difficult-to-understand parts. For each
+  complex section you identify, please explain: 1. Why it is considered complex (e.g., high cognitive load, complex
+  logic, deep nesting, unclear naming, potential for bugs). 2. The specific line numbers or range of lines for the
+  complex code. 3. Suggestions for simplifying or improving the readability of this section. Focus on areas that would
+  be challenging for a new developer to grasp quickly."
 - **Output**: LLM analysis printed to standard output (via `aider`).
 
 ## Processor Configuration
 
 ### operates_on_whole_codebase
 
-Each processor can be configured to operate on the whole codebase at once or on a file-by-file basis using the `operates_on_whole_codebase` property:
+Each processor can be configured to operate on the whole codebase at once or on a file-by-file basis using the
+`operates_on_whole_codebase` property:
 
 ```python
 class MyProcessor(CodeProcessor):
@@ -72,13 +87,14 @@ class MyProcessor(CodeProcessor):
 ```
 
 When `operates_on_whole_codebase` is `True`:
+
 - Files are grouped by parent directory
 - Each chunk contains between 10 and 20 files (when possible)
 - The algorithm optimizes for:
-  - Keeping files from the same directory together when possible
-  - Ensuring chunks have at least 10 files (minimum size)
-  - Ensuring no chunk exceeds 20 files (maximum size)
-  - Combining small directories that have fewer than 10 files
+    - Keeping files from the same directory together when possible
+    - Ensuring chunks have at least 10 files (minimum size)
+    - Ensuring no chunk exceeds 20 files (maximum size)
+    - Combining small directories that have fewer than 10 files
 - Each chunk is processed separately with Aider
 - Detailed logging shows how many chunks were created and how files are distributed
 
@@ -91,8 +107,8 @@ To create a new processor:
 1. Create a new module in `src/`
 2. Define a class that inherits from `CodeProcessor`
 3. Implement the required methods:
-   - `get_default_message()`
-   - `get_description()`
+    - `get_default_message()`
+    - `get_description()`
 4. Optionally set configuration properties like `operates_on_whole_codebase`
 5. Optionally override other methods for specialized behavior
 6. Add the module to `pyproject.toml`
@@ -101,6 +117,7 @@ Example:
 
 ```python
 from code_processor import CodeProcessor
+
 
 class MyCustomProcessor(CodeProcessor):
     # Set to True if this processor should operate on multiple files at once
@@ -112,12 +129,15 @@ class MyCustomProcessor(CodeProcessor):
     def get_description(self) -> str:
         return "My custom code processor"
 
+
 def main() -> int:
     processor = MyCustomProcessor()
     return processor.run()
 
+
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())
 ```
 
@@ -145,21 +165,25 @@ After installation, all commands will be available in your PATH when the Poetry 
 
 ## Poetry Scripts
 
-This project provides several Poetry scripts that can be used to process code files. All scripts are available after installation when the Poetry environment is active.
+This project provides several Poetry scripts that can be used to process code files. All scripts are available after
+installation when the Poetry environment is active.
 
 ### find-source-files
 
 Finds source files in a directory, excluding dependencies, tests, and other non-core files.
 
 **Usage:**
+
 ```bash
 find-source-files --directory /path/to/source
 ```
 
 **Options:**
+
 - `--directory`: Directory to search for source files (required)
 
 **Example:**
+
 ```bash
 # Find source files in a directory
 find-source-files --directory /path/to/project
@@ -167,9 +191,11 @@ find-source-files --directory /path/to/project
 
 ### explain-code
 
-Explains code in source files using aider. This script finds source files in a specified directory and then calls aider for each file with the message "explain this code".
+Explains code in source files using aider. This script finds source files in a specified directory and then calls aider
+for each file with the message "explain this code".
 
 **Usage:**
+
 ```bash
 explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
@@ -177,6 +203,7 @@ explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--m
 **Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
+
 ```bash
 # Explain code in a directory
 explain-code --directory /path/to/source
@@ -190,9 +217,11 @@ explain-code --directory /path/to/source --show-only-repo-files-chunks
 
 ### write-tests
 
-Writes unit tests for source files using aider. This script finds source files in a specified directory and then calls aider for each file with a message to write unit tests without using mocks.
+Writes unit tests for source files using aider. This script finds source files in a specified directory and then calls
+aider for each file with a message to write unit tests without using mocks.
 
 **Usage:**
+
 ```bash
 write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
@@ -200,6 +229,7 @@ write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--me
 **Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
+
 ```bash
 # Write tests for all source files in a directory
 write-tests --directory /path/to/source
@@ -213,9 +243,11 @@ write-tests --directory /path/to/source --show-only-repo-files-chunks
 
 ### analyze-complexity
 
-Analyzes code complexity in source files using an LLM via the `aider` tool. This script finds source files in a specified directory and prompts `aider` to identify complex/hard-to-understand sections and suggest improvements.
+Analyzes code complexity in source files using an LLM via the `aider` tool. This script finds source files in a
+specified directory and prompts `aider` to identify complex/hard-to-understand sections and suggest improvements.
 
 **Usage:**
+
 ```bash
 analyze-complexity --directory /path/to/source [--file /path/to/specific/file.py] [--message "custom analysis prompt"]
 ```
@@ -223,6 +255,7 @@ analyze-complexity --directory /path/to/source [--file /path/to/specific/file.py
 **Options:** See [Common Options for All Processors](#common-options-for-all-processors)
 
 **Example:**
+
 ```bash
 # Analyze complexity for all source files in a directory
 analyze-complexity --directory /path/to/source
@@ -236,9 +269,11 @@ analyze-complexity --directory /path/to/source --show-only-repo-files-chunks
 
 ### sonar-scan
 
-Runs sonar-scanner on the entire codebase. This processor executes the sonar-scanner command-line tool to perform static code analysis and send the results to a SonarQube server.
+Runs sonar-scanner on the entire codebase. This processor executes the sonar-scanner command-line tool to perform static
+code analysis and send the results to a SonarQube server.
 
-When running through the Docker-based wrapper (`tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan`), a `sonar-project.properties` file is automatically created in the source directory with the following content:
+When running through the Docker-based wrapper (`tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan`), a
+`sonar-project.properties` file is automatically created in the source directory with the following content:
 
 ```
 sonar.projectKey=NAME_OF_SOURCE_DIR
@@ -248,14 +283,18 @@ sonar.host.url=https://sonar.thefamouscat.com
 sonar.token=SONAR_TOKEN
 ```
 
-Where `NAME_OF_SOURCE_DIR` is the name of the original source directory from the host (last part of the path), not the mounted directory in Docker. The `SONAR_TOKEN` value will be replaced with the value from the `SONAR_TOKEN` environment variable if it is set.
+Where `NAME_OF_SOURCE_DIR` is the name of the original source directory from the host (last part of the path), not the
+mounted directory in Docker. The `SONAR_TOKEN` value will be replaced with the value from the `SONAR_TOKEN` environment
+variable if it is set.
 
 **Usage:**
+
 ```bash
 sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url "http://sonarqube-server:9000"] [--login "auth-token"]
 ```
 
 **Options:**
+
 - All [Common Options for All Processors](#common-options-for-all-processors)
 - `--project-key`: SonarQube project key
 - `--host-url`: SonarQube host URL (default: http://localhost:9000)
@@ -264,6 +303,7 @@ sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url
 - `--exclusions`: Comma-separated list of file path patterns to exclude from analysis
 
 **Example:**
+
 ```bash
 # Run sonar-scanner on a directory with default settings
 sonar-scan --directory /path/to/source
@@ -280,22 +320,27 @@ sonar-scan --directory /path/to/source --sources "src,tests" --exclusions "**/*.
 
 ### tfc-code-pipeline
 
-A Docker-based wrapper for the other scripts. It creates a Docker container based on Python 3.12, installs Aider and the package itself in the container, and runs the specified command with the provided messages.
+A Docker-based wrapper for the other scripts. It creates a Docker container based on Python 3.12, installs Aider and the
+package itself in the container, and runs the specified command with the provided messages.
 
 **Usage:**
+
 ```bash
 tfc-code-pipeline [--build-only] [--skip-build] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan]
 ```
 
 **Options:**
+
 - `--build-only`: Only build the Docker image without running the container
 - `--skip-build`: Skip building the Docker image, only run the command
 - `--run`: Run the Docker container with the provided messages
 - `--src`: Directory to mount in the Docker container under /src
 - `--messages`: Custom message to pass to aider (default: "Hello")
-- `--cmd`: Command to run in the Docker container (choices: "explain_code", "write_tests", "find_bugs", "analyze_complexity", or "sonar_scan", default: "explain_code")
+- `--cmd`: Command to run in the Docker container (choices: "explain_code", "write_tests", "find_bugs", "
+  analyze_complexity", or "sonar_scan", default: "explain_code")
 
 **Example:**
+
 ```bash
 # Build the Docker image only
 tfc-code-pipeline --build-only
@@ -328,9 +373,11 @@ All code processors support the following common options:
 - `--message`: Custom message to pass to aider (optional, defaults to processor-specific message)
 - `--show-only-repo-files-chunks`: Only show the file chunks that would be processed, then exit without processing
 
-The `--show-only-repo-files-chunks` option is particularly useful for processors with `operates_on_whole_codebase=True` to preview how files will be grouped before running the actual processing.
+The `--show-only-repo-files-chunks` option is particularly useful for processors with `operates_on_whole_codebase=True`
+to preview how files will be grouped before running the actual processing.
 
 **Example:**
+
 ```bash
 # Show how files would be chunked without processing them
 explain-code --directory /path/to/source --show-only-repo-files-chunks
@@ -338,7 +385,8 @@ explain-code --directory /path/to/source --show-only-repo-files-chunks
 
 ## Logging
 
-This project uses a centralized logging configuration to ensure consistent logging behavior across all components. The logging utilities are provided by the `logging_utils` module.
+This project uses a centralized logging configuration to ensure consistent logging behavior across all components. The
+logging utilities are provided by the `logging_utils` module.
 
 ### Basic Usage
 
@@ -358,44 +406,15 @@ logger = get_logger()
 
 # Now you can use the logger
 logger.info("This is an info message")
-logger.debug("This is a debug message - only shown when verbose=True")
 ```
-
-For more advanced configuration or backward compatibility, you can still use the original approach:
-
-```python
-import logging
-
-# Set up module-level logger
-logger = logging.getLogger(__name__)
-
-# Configure logging using the centralized function
-try:
-    # Try importing directly (for Docker/installed package)
-    from logging_utils import configure_logging
-except ImportError:
-    # Fall back to src-prefixed import (for local development)
-    from src.logging_utils import configure_logging
-
-# Configure logging for this module
-configure_logging(module_name="your_module_name")
-```
-
-### Key Features
-
-- Consistent log formatting across all modules
-- All logs directed to stderr
-- Automatic handling of log levels based on verbose flag
-- Prevention of duplicate log messages
-- Support for module-specific logging configuration
-
-For more detailed documentation, including configuration options, examples, and best practices, see the [Logging Utilities README](src/logging_utils/README.md).
 
 ## Environment Variables
 
-This project supports loading environment variables from a `.env` file. When using the Docker-based approach (`tfc-code-pipeline`), these variables are automatically passed to the Docker container.
+This project supports loading environment variables from a `.env` file. When using the Docker-based approach (
+`tfc-code-pipeline`), these variables are automatically passed to the Docker container.
 
 Common environment variables:
+
 - `OPENAI_API_KEY`: API key for OpenAI (used by Aider)
 - `DEBUG`: Enable debug mode (set to "True" to enable)
 - `SONAR_TOKEN`: Authentication token for SonarQube (used by sonar-scanner)
@@ -427,9 +446,11 @@ You can run the scripts in two ways:
 
 Code processors can be integrated into development workflows in several ways:
 
-1. **Local Development**: Developers can run processors on their local machines to explain code, write tests, or find bugs.
+1. **Local Development**: Developers can run processors on their local machines to explain code, write tests, or find
+   bugs.
 
-2. **CI/CD Pipelines**: Processors can be integrated into CI/CD pipelines to automatically analyze code, find bugs, or generate tests.
+2. **CI/CD Pipelines**: Processors can be integrated into CI/CD pipelines to automatically analyze code, find bugs, or
+   generate tests.
 
 3. **Code Review**: Processors can be used during code review to identify potential issues or suggest improvements.
 
