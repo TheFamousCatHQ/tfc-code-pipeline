@@ -432,7 +432,7 @@ class CodeProcessor(ABC):
             processed_files = self.process_files(args)  # Pass the full args namespace
 
             if processed_files is not None:  # Check if None was returned due to critical error
-                logger.info(f"\nSuccessfully processed {len(processed_files)} files.")
+                logger.info(f"Successfully processed {len(processed_files)} files.")
                 # Optionally list processed files if needed, but logger already did
                 # for file in processed_files:
                 #     logger.debug(f"  - {file}")
