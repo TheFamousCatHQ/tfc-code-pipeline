@@ -16,11 +16,16 @@ import requests
 # Set up logging
 logger = logging.getLogger(__name__)
 
-# Create a handler that writes to stderr
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
+# Configure logging using the centralized function
+try:
+    # Try importing directly (for Docker/installed package)
+    from logging_utils import configure_logging
+except ImportError:
+    # Fall back to src-prefixed import (for local development)
+    from src.logging_utils import configure_logging
+
+# Configure this specific logger with a simpler format (no module name in output)
+configure_logging(specific_logger=logger, include_module_name=False, module_name="validate_complexity_report")
 
 
 def load_json_file(file_path: str) -> Dict[str, Any]:
@@ -84,7 +89,7 @@ def fix_json_with_openrouter(
         The fixed JSON data if successful, None otherwise.
     """
     logger.info("Attempting to fix JSON using OpenRouter API with gpt-4o-mini...")
-    
+
     # Get API key from environment if not provided
     if api_key is None:
         api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -119,7 +124,7 @@ Return only the fixed JSON with no additional explanation.
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    
+
     payload = {
         "model": "openrouter/gpt-4o-mini",
         "messages": [
@@ -127,7 +132,7 @@ Return only the fixed JSON with no additional explanation.
         ],
         "response_format": {"type": "json_object"}
     }
-    
+
     try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -135,13 +140,13 @@ Return only the fixed JSON with no additional explanation.
             json=payload
         )
         response.raise_for_status()
-        
+
         result = response.json()
         logger.debug(f"Received response from OpenRouter: {result}")
-        
+
         if "choices" in result and len(result["choices"]) > 0:
             content = result["choices"][0]["message"]["content"]
-            
+
             # Try to parse the JSON from the response
             try:
                 fixed_json = json.loads(content)
@@ -163,14 +168,14 @@ Return only the fixed JSON with no additional explanation.
                         except json.JSONDecodeError:
                             logger.error("Failed to parse JSON extracted from markdown")
                             pass
-                
+
                 logger.error(f"Could not parse JSON from OpenRouter response")
                 logger.debug(f"Raw response content: {content}")
                 return None
         else:
             logger.error(f"Unexpected response format from OpenRouter")
             return None
-            
+
     except requests.exceptions.RequestException as e:
         logger.error(f"Error calling OpenRouter API: {e}")
         return None
@@ -197,50 +202,50 @@ def validate_and_fix_complexity_report(
     """
     logger.info(f"Validating complexity report: {report_path}")
     logger.info(f"Using schema: {schema_path}")
-    
+
     try:
         # Load the report and schema
         logger.info("Loading report and schema files...")
         report_data = load_json_file(report_path)
         schema_data = load_json_file(schema_path)
-        
+
         # Validate against schema
         logger.info("Validating report against schema...")
         is_valid, error_message = validate_against_schema(report_data, schema_data)
-        
+
         if is_valid:
             logger.info(f"Report is valid according to the schema")
             return True, report_path
-        
+
         logger.warning(f"Validation failed: {error_message}")
-        
+
         # Fix the JSON using OpenRouter
         logger.info("Attempting to fix the report using OpenRouter...")
         fixed_json = fix_json_with_openrouter(report_data, schema_data, error_message, api_key)
-        
+
         if fixed_json is None:
             logger.error("Failed to fix the JSON using OpenRouter API")
             return False, "Failed to fix the JSON using OpenRouter API"
-        
+
         # Validate the fixed JSON
         logger.info("Validating fixed JSON...")
         is_fixed_valid, fixed_error = validate_against_schema(fixed_json, schema_data)
-        
+
         if not is_fixed_valid:
             logger.error(f"Fixed JSON still fails validation: {fixed_error}")
             return False, f"Fixed JSON still fails validation: {fixed_error}"
-        
+
         # Save the fixed JSON
         if output_path is None:
             output_path = report_path
-        
+
         logger.info(f"Saving fixed JSON to: {output_path}")
         with open(output_path, 'w') as f:
             json.dump(fixed_json, f, indent=2)
-        
+
         logger.info("Successfully validated and fixed the complexity report")
         return True, output_path
-        
+
     except FileNotFoundError as e:
         logger.error(f"File not found: {str(e)}")
         return False, f"File not found: {str(e)}"
@@ -259,7 +264,7 @@ def main() -> int:
         Exit code (0 for success, non-zero for failure).
     """
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Validate a MASTER_COMPLEXITY_REPORT.json against its schema.")
     parser.add_argument("--report", required=True, help="Path to the MASTER_COMPLEXITY_REPORT.json file")
     parser.add_argument("--schema", default="master_complexity_report_schema.json", 
@@ -280,7 +285,7 @@ def main() -> int:
         args.output,
         args.api_key
     )
-    
+
     if success:
         logger.info(f"Success! Report saved to: {result}")
         return 0

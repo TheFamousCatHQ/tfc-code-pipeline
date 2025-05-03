@@ -358,11 +358,18 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    # Note: verbose is not directly available here unless parsed globally earlier or passed down.
-    # For now, default to INFO level.
-    log_level = logging.INFO # logging.DEBUG if verbose else logging.INFO
-    logging.basicConfig(level=log_level, format='%(levelname)s - %(name)s - %(message)s')
-    logger.info(f"Logging configured to level: {logging.getLevelName(log_level)}")
+    try:
+        # Try importing directly (for Docker/installed package)
+        from logging_utils import configure_logging as setup_logging
+    except ImportError:
+        # Fall back to src-prefixed import (for local development)
+        from src.logging_utils import configure_logging as setup_logging
+
+    # Configure logging using the centralized function
+    setup_logging(verbose, module_name="tfc_code_pipeline")
+
+    # Log a message at INFO level to maintain backward compatibility
+    logger.info(f"Logging configured to level: {'DEBUG' if verbose else 'INFO'}")
 
 
 # This script is not meant to be run directly, but via the CLI entry point.

@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 from typing import List, Optional
 
 try:
@@ -271,12 +272,10 @@ sonar.token={sonar_token}
         client = SonarQubeClient(host_url, token)
         # Fetch project measures
         measures = client.fetch_measures(project_key)
-        print("\n=== PROJECT MEASURES ===")
         print(json.dumps(measures, indent=2))
 
         # Fetch file measures
         file_measures = client.fetch_file_measures(project_key)
-        print("\n=== FILE MEASURES ===")
         print(json.dumps(file_measures, indent=2))
 
         logger.info("Successfully fetched and displayed measures")
@@ -290,29 +289,15 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    # Set up root logger
-    root_logger = logging.getLogger()
+    try:
+        # Try importing directly (for Docker/installed package)
+        from logging_utils import configure_logging as setup_logging
+    except ImportError:
+        # Fall back to src-prefixed import (for local development)
+        from src.logging_utils import configure_logging as setup_logging
 
-    # Remove existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Create console handler
-    console = logging.StreamHandler()
-
-    # Set format
-    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-    console.setFormatter(formatter)
-
-    # Add handler to root logger
-    root_logger.addHandler(console)
-
-    # Set level based on verbose flag
-    if verbose:
-        root_logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose logging enabled")
-    else:
-        root_logger.setLevel(logging.INFO)
+    # Configure logging using the centralized function
+    setup_logging(verbose, module_name="sonar_scanner")
 
 
 def main() -> int:
@@ -337,6 +322,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    import sys
-
     sys.exit(main())

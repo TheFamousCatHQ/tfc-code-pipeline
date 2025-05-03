@@ -153,6 +153,13 @@ def cli() -> int:
 
 
 if __name__ == "__main__":
-    # Configure basic logging
-    logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
+    # Configure logging using the centralized function
+    try:
+        # Try importing directly (for Docker/installed package)
+        from logging_utils import configure_logging
+    except ImportError:
+        # Fall back to src-prefixed import (for local development)
+        from src.logging_utils import configure_logging
+
+    configure_logging(module_name="tfc_code_pipeline.cli")
     sys.exit(cli())

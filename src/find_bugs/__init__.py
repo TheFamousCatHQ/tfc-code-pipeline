@@ -70,7 +70,7 @@ class FindBugsProcessor(CodeProcessor):
             source_files = find_files(directory)
 
         if not source_files:
-            print(f"No source files found in directory: {directory}", file=sys.stderr)
+            logger.warning(f"No source files found in directory: {directory}", file=sys.stderr)
             return []
 
         # Process each file with aider and collect bug information
@@ -78,7 +78,7 @@ class FindBugsProcessor(CodeProcessor):
         bugs_list = []
 
         for file_path in source_files:
-            print(f"Processing file: {file_path}")
+            logger.info(f"Processing file: {file_path}")
             try:
                 # Create a temporary file to capture aider output
                 temp_output_file = f"{file_path}.aider_output.txt"
@@ -215,29 +215,15 @@ def configure_logging(verbose: bool = False):
     Args:
         verbose: Whether to enable verbose (DEBUG) logging.
     """
-    # Set up root logger
-    root_logger = logging.getLogger()
+    try:
+        # Try importing directly (for Docker/installed package)
+        from logging_utils import configure_logging as setup_logging
+    except ImportError:
+        # Fall back to src-prefixed import (for local development)
+        from src.logging_utils import configure_logging as setup_logging
 
-    # Remove existing handlers
-    for handler in root_logger.handlers[:]:
-        root_logger.removeHandler(handler)
-
-    # Create console handler
-    console = logging.StreamHandler()
-
-    # Set format
-    formatter = logging.Formatter('%(levelname)s - %(name)s - %(message)s')
-    console.setFormatter(formatter)
-
-    # Add handler to root logger
-    root_logger.addHandler(console)
-
-    # Set level based on verbose flag
-    if verbose:
-        root_logger.setLevel(logging.DEBUG)
-        logger.debug("Verbose logging enabled")
-    else:
-        root_logger.setLevel(logging.INFO)
+    # Configure logging using the centralized function
+    setup_logging(verbose, module_name="find_bugs")
 
 
 def main() -> int:
