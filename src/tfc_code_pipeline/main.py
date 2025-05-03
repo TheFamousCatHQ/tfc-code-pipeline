@@ -130,7 +130,7 @@ def main(args: argparse.Namespace) -> int:
         Exit code (0 for success, non-zero for failure).
     """
     build_only = args.build_only
-    skip_build = args.skip_build
+    skip_build = getattr(args, 'skip_build', False)  # Default to False if not present
     run = args.run
     src = args.src
     cmd = args.cmd
