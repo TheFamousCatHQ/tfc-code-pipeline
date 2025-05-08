@@ -4,7 +4,7 @@ This framework provides a common base class for processing code files using Aide
 
 ## Sonar Analyzer
 
-The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file, including prompts suitable for AI Coding Agents.
+The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file, including prompts suitable for AI Coding Agents. It processes both issues and file complexity measures.
 
 ### Usage
 
@@ -25,7 +25,24 @@ poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity
 poetry run sonar-analyze --report-file doc/SONAR_REPORT.json --min-severity HIGH --output-file sonar_suggestions.json
 ```
 
-This will analyze the Sonar scanner report, filter out issues below the HIGH severity level, and write the suggestions to sonar_suggestions.json.
+This will analyze the Sonar scanner report, filter out issues below the HIGH severity level, identify overly complex files, and write the suggestions to sonar_suggestions.json.
+
+### Features
+
+The tool provides two types of analysis:
+
+1. **Issue Analysis**: Identifies and categorizes issues reported by Sonar scanner based on severity level.
+
+2. **Complexity Analysis**: Identifies overly complex files based on the following metrics:
+   - Cyclomatic complexity (threshold: 30)
+   - Cognitive complexity (threshold: 25)
+   - Lines of code (threshold: 500)
+   - Complexity per function (threshold: 5)
+
+For each component/file, the tool generates:
+- A summary of issues and/or complexity problems
+- Suggestions for improvement
+- A detailed prompt for an AI Coding Agent to fix the issues and/or refactor complex code
 
 ## Overview
 

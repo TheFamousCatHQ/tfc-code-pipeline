@@ -151,34 +151,54 @@ class SonarAnalyzerProcessor(CodeProcessor):
         Returns:
             A dictionary of suggestions for each component/file
         """
-        # Check if the report contains issues
-        if 'issues' not in report_data or 'issues' not in report_data['issues']:
-            logger.warning("No issues found in the Sonar scanner report")
-            return {}
-
-        # Group issues by component
-        issues_by_component = defaultdict(list)
-        for issue in report_data['issues']['issues']:
-            severity = issue.get('severity', 'INFO')
-            severity_level = SeverityLevel.from_string(severity)
-
-            # Skip issues below the minimum severity level
-            if severity_level.value < min_severity_level.value:
-                continue
-
-            component = issue.get('component', '')
-            issues_by_component[component].append(issue)
-
-        # Generate suggestions for each component
         suggestions = {}
-        for component, issues in issues_by_component.items():
-            if not issues:
-                continue
 
-            # Generate a suggestion for the component
-            suggestion = self._generate_suggestion(component, issues)
-            if suggestion:
-                suggestions[component] = suggestion
+        # Process issues
+        if 'issues' in report_data and 'issues' in report_data['issues']:
+            # Group issues by component
+            issues_by_component = defaultdict(list)
+            for issue in report_data['issues']['issues']:
+                severity = issue.get('severity', 'INFO')
+                severity_level = SeverityLevel.from_string(severity)
+
+                # Skip issues below the minimum severity level
+                if severity_level.value < min_severity_level.value:
+                    continue
+
+                component = issue.get('component', '')
+                issues_by_component[component].append(issue)
+
+            # Generate suggestions for each component with issues
+            for component, issues in issues_by_component.items():
+                if not issues:
+                    continue
+
+                # Generate a suggestion for the component based on issues
+                suggestion = self._generate_suggestion(component, issues)
+                if suggestion:
+                    suggestions[component] = suggestion
+        else:
+            logger.warning("No issues found in the Sonar scanner report")
+
+        # Process file measures for complexity
+        if 'file_measures' in report_data and 'components' in report_data['file_measures']:
+            # Analyze file complexity
+            complex_files = self._analyze_file_complexity(report_data['file_measures']['components'])
+
+            # Generate suggestions for complex files
+            for component, complexity_data in complex_files.items():
+                if component in suggestions:
+                    # Component already has issues, add complexity information
+                    suggestions[component]["complexity_data"] = complexity_data
+                    suggestions[component]["prompt"] = self._combine_prompts(
+                        suggestions[component]["prompt"],
+                        self._generate_complexity_prompt(component, complexity_data)
+                    )
+                else:
+                    # Component only has complexity issues
+                    suggestions[component] = self._generate_complexity_suggestion(component, complexity_data)
+        else:
+            logger.warning("No file measures found in the Sonar scanner report")
 
         return suggestions
 
@@ -264,6 +284,176 @@ class SonarAnalyzerProcessor(CodeProcessor):
 
         return prompt
 
+    def _analyze_file_complexity(self, components: List[Dict]) -> Dict[str, Dict]:
+        """
+        Analyze file complexity and identify overly complex files.
+
+        Args:
+            components: List of components from file_measures
+
+        Returns:
+            Dictionary of complex files with their complexity metrics
+        """
+        # Define thresholds for complexity
+        COMPLEXITY_THRESHOLD = 30  # Cyclomatic complexity
+        COGNITIVE_COMPLEXITY_THRESHOLD = 25  # Cognitive complexity
+        NCLOC_THRESHOLD = 500  # Number of lines of code
+
+        complex_files = {}
+
+        for component in components:
+            key = component.get('key', '')
+            measures = component.get('measures', [])
+
+            # Extract complexity metrics
+            complexity = None
+            cognitive_complexity = None
+            ncloc = None
+            functions = None
+
+            for measure in measures:
+                metric = measure.get('metric', '')
+                value = measure.get('value', '0')
+
+                if metric == 'complexity':
+                    complexity = int(value) if value.isdigit() else 0
+                elif metric == 'cognitive_complexity':
+                    cognitive_complexity = int(value) if value.isdigit() else 0
+                elif metric == 'ncloc':
+                    ncloc = int(value) if value.isdigit() else 0
+                elif metric == 'functions':
+                    functions = int(value) if value.isdigit() else 0
+
+            # Check if the file is complex
+            is_complex = False
+            complexity_reasons = []
+
+            if complexity and complexity > COMPLEXITY_THRESHOLD:
+                is_complex = True
+                complexity_reasons.append(f"High cyclomatic complexity: {complexity} (threshold: {COMPLEXITY_THRESHOLD})")
+
+            if cognitive_complexity and cognitive_complexity > COGNITIVE_COMPLEXITY_THRESHOLD:
+                is_complex = True
+                complexity_reasons.append(f"High cognitive complexity: {cognitive_complexity} (threshold: {COGNITIVE_COMPLEXITY_THRESHOLD})")
+
+            if ncloc and ncloc > NCLOC_THRESHOLD:
+                is_complex = True
+                complexity_reasons.append(f"Large file size: {ncloc} lines of code (threshold: {NCLOC_THRESHOLD})")
+
+            # Calculate complexity per function if possible
+            complexity_per_function = None
+            if complexity and functions and functions > 0:
+                complexity_per_function = complexity / functions
+                if complexity_per_function > 5:  # Threshold for complexity per function
+                    is_complex = True
+                    complexity_reasons.append(f"High average complexity per function: {complexity_per_function:.2f} (threshold: 5)")
+
+            if is_complex:
+                complex_files[key] = {
+                    "complexity": complexity,
+                    "cognitive_complexity": cognitive_complexity,
+                    "ncloc": ncloc,
+                    "functions": functions,
+                    "complexity_per_function": complexity_per_function,
+                    "reasons": complexity_reasons
+                }
+
+        return complex_files
+
+    def _generate_complexity_suggestion(self, component: str, complexity_data: Dict) -> Dict:
+        """
+        Generate a suggestion for a complex file.
+
+        Args:
+            component: The component name
+            complexity_data: Complexity metrics and reasons
+
+        Returns:
+            A dictionary containing the suggestion details
+        """
+        # Extract complexity reasons
+        reasons = complexity_data.get('reasons', [])
+
+        # Generate a summary
+        summary = [f"Complexity issue: {reason}" for reason in reasons]
+
+        # Generate a prompt
+        prompt = self._generate_complexity_prompt(component, complexity_data)
+
+        return {
+            "component": component,
+            "complexity_data": complexity_data,
+            "summary": summary,
+            "suggestion": "Refactor to reduce complexity",
+            "prompt": prompt,
+            "issues_count": 0  # No Sonar issues, only complexity
+        }
+
+    def _generate_complexity_prompt(self, component: str, complexity_data: Dict) -> str:
+        """
+        Generate a prompt for refactoring a complex file.
+
+        Args:
+            component: The component name
+            complexity_data: Complexity metrics and reasons
+
+        Returns:
+            A prompt string
+        """
+        # Extract the file path from the component
+        file_path = component.split(':')[-1] if ':' in component else component
+
+        # Extract complexity metrics
+        complexity = complexity_data.get('complexity', 'N/A')
+        cognitive_complexity = complexity_data.get('cognitive_complexity', 'N/A')
+        ncloc = complexity_data.get('ncloc', 'N/A')
+        functions = complexity_data.get('functions', 'N/A')
+        complexity_per_function = complexity_data.get('complexity_per_function', 'N/A')
+        if complexity_per_function is not None:
+            complexity_per_function = f"{complexity_per_function:.2f}"
+
+        # Extract reasons
+        reasons = complexity_data.get('reasons', [])
+        reasons_text = "\n".join([f"- {reason}" for reason in reasons])
+
+        # Create the prompt
+        prompt = (
+            f"Please refactor the file '{file_path}' to reduce its complexity. The file has the following complexity issues:\n\n"
+            f"{reasons_text}\n\n"
+            f"Complexity metrics:\n"
+            f"- Cyclomatic complexity: {complexity}\n"
+            f"- Cognitive complexity: {cognitive_complexity}\n"
+            f"- Lines of code: {ncloc}\n"
+            f"- Number of functions: {functions}\n"
+            f"- Average complexity per function: {complexity_per_function}\n\n"
+            f"Please suggest refactoring strategies to reduce the complexity while maintaining the existing functionality. "
+            f"Consider techniques such as:\n"
+            f"- Breaking down complex functions into smaller, more focused functions\n"
+            f"- Extracting complex logic into separate classes or modules\n"
+            f"- Simplifying conditional logic\n"
+            f"- Removing duplication\n"
+            f"- Improving naming and documentation"
+        )
+
+        return prompt
+
+    def _combine_prompts(self, issues_prompt: str, complexity_prompt: str) -> str:
+        """
+        Combine issue and complexity prompts.
+
+        Args:
+            issues_prompt: The prompt for fixing issues
+            complexity_prompt: The prompt for reducing complexity
+
+        Returns:
+            A combined prompt
+        """
+        return (
+            f"{issues_prompt}\n\n"
+            f"Additionally, this file has complexity issues that should be addressed:\n\n"
+            f"{complexity_prompt}"
+        )
+
     def _print_suggestions(self, suggestions: Dict) -> None:
         """
         Print the suggestions to stdout.
@@ -280,10 +470,27 @@ class SonarAnalyzerProcessor(CodeProcessor):
 
         for component, suggestion in suggestions.items():
             print(f"Component: {component}")
-            print(f"Issues Count: {suggestion['issues_count']}")
+
+            # Print issues information if available
+            if 'issues_count' in suggestion:
+                print(f"Issues Count: {suggestion['issues_count']}")
+
+            # Print complexity information if available
+            if 'complexity_data' in suggestion:
+                complexity_data = suggestion['complexity_data']
+                print("Complexity Metrics:")
+                print(f"  - Cyclomatic complexity: {complexity_data.get('complexity', 'N/A')}")
+                print(f"  - Cognitive complexity: {complexity_data.get('cognitive_complexity', 'N/A')}")
+                print(f"  - Lines of code: {complexity_data.get('ncloc', 'N/A')}")
+                print(f"  - Functions: {complexity_data.get('functions', 'N/A')}")
+                if complexity_data.get('complexity_per_function') is not None:
+                    print(f"  - Complexity per function: {complexity_data.get('complexity_per_function'):.2f}")
+
+            # Print summary
             print("Summary:")
             for summary_item in suggestion['summary']:
                 print(f"  - {summary_item}")
+
             print(f"Suggestion: {suggestion['suggestion']}")
             print("Prompt for AI Coding Agent:")
             print(f"{suggestion['prompt']}")
