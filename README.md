@@ -2,13 +2,30 @@
 
 This framework provides a common base class for processing code files using Aider.
 
-## TODO
+## Sonar Analyzer
 
-### Add Improvement suggestions including a prompt to implement it to the SONAR-REPORT
+The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file, including prompts suitable for AI Coding Agents.
 
-Create a new cli tool which takes the report created by sonar_scanner (example in doc/SONAR_REPORT.json),
-analyzes the issues for each component/file and creates a suggestion what to improve (or NONE) including a
-prompt suitable to feed into an AI Coding Agent, so that it can automatically fix the isseus.
+### Usage
+
+```bash
+poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity SEVERITY] [--output-file path/to/output.json]
+```
+
+### Options
+
+- `--report-file`: Path to the Sonar scanner report JSON file (required)
+- `--min-severity`: Minimum severity level to include in the analysis (default: MEDIUM)
+  - Available options: LOW, INFO, MEDIUM, HIGH, BLOCKER
+- `--output-file`: Path to the output file for the analysis results (default: stdout)
+
+### Example
+
+```bash
+poetry run sonar-analyze --report-file doc/SONAR_REPORT.json --min-severity HIGH --output-file sonar_suggestions.json
+```
+
+This will analyze the Sonar scanner report, filter out issues below the HIGH severity level, and write the suggestions to sonar_suggestions.json.
 
 ## Overview
 
