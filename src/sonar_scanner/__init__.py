@@ -255,11 +255,14 @@ sonar.token={sonar_token}
         measures = client.fetch_measures(project_key)
         # Fetch file measures
         file_measures = client.fetch_file_measures(project_key)
+        # Fetch issues
+        issues = client.fetch_issues(project_key)
 
-        # Merge SONAR_MEASURES.json and SONAR_FILE_MEASURES.json into one report for STDOUT
+        # Merge SONAR_MEASURES.json, SONAR_FILE_MEASURES.json, and issues into one report for STDOUT
         merged_sonar_report = {
             "project_measures": measures,
-            "file_measures": file_measures
+            "file_measures": file_measures,
+            "issues": issues
         }
 
         report_path = os.path.join(directory, "SONAR_REPORT.json")

@@ -35,19 +35,49 @@ class SonarQubeClient:
             project (str): Project name or key.
 
         Returns:
-            Dict[str, Any]: JSON response from SonarQube API.
+            Dict[str, Any]: JSON response from SonarQube API with all issues.
 
         Raises:
             urllib.error.URLError: If there's an error with the request.
             json.JSONDecodeError: If the response is not valid JSON.
         """
-        url = f"{self.host}/api/issues/search?component={project}"
+        # Set a reasonable page size
+        page_size = 500
+        page = 1
+        all_issues = []
+        total_issues = None
 
-        request = urllib.request.Request(url)
-        request.add_header("Authorization", f"Bearer {self.token}")
+        # Keep fetching pages until we've got all issues
+        while total_issues is None or len(all_issues) < total_issues:
+            url = f"{self.host}/api/issues/search?component={project}&p={page}&ps={page_size}"
 
-        with urllib.request.urlopen(request) as response:
-            return json.loads(response.read().decode('utf-8'))
+            self.logger.debug(f"Fetching issues page {page} from {url}")
+            request = urllib.request.Request(url)
+            request.add_header("Authorization", f"Bearer {self.token}")
+
+            with urllib.request.urlopen(request) as response:
+                response_data = json.loads(response.read().decode('utf-8'))
+
+                # Get the total number of issues if this is the first page
+                if total_issues is None:
+                    total_issues = response_data.get('paging', {}).get('total', 0)
+                    self.logger.info(f"Total issues to fetch: {total_issues}")
+
+                # Add issues from this page to our collection
+                issues = response_data.get('issues', [])
+                all_issues.extend(issues)
+                self.logger.info(f"Fetched {len(issues)} issues from page {page}, total so far: {len(all_issues)}/{total_issues}")
+
+                # If this page had fewer issues than the page size, we're done
+                if len(issues) < page_size:
+                    break
+
+                # Move to the next page
+                page += 1
+
+        # Return the original response structure but with all issues
+        response_data['issues'] = all_issues
+        return response_data
 
     def fetch_measures(self, project: str) -> Dict[str, Any]:
         """
