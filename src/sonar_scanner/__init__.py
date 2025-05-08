@@ -10,6 +10,7 @@ import subprocess
 import sys
 from typing import List, Optional
 
+from ai import categorize_files_openrouter_xml
 from code_processor import CodeProcessor
 from find_source_files import find_source_files as find_files
 from logging_utils import get_logger
@@ -263,6 +264,7 @@ sonar.token={sonar_token}
         measures = None
         file_measures = None
         issues = None
+        file_component_categories = None
 
         try:
             # Fetch project measures
@@ -280,6 +282,24 @@ sonar.token={sonar_token}
             logger.error(f"Failed to fetch file measures: {e}")
             file_measures = {"paging": {"total": 0}, "baseComponent": {"key": project_key}, "components": []}
 
+        # AI-based file-to-component categorization
+        try:
+            # Gather file paths from file_measures
+            file_paths = [comp.get('path') or comp.get('key') for comp in file_measures.get('components', []) if
+                          comp.get('path') or comp.get('key')]
+            if file_paths:
+                logger.info(
+                    f"Running OpenRouter XML-based file-to-component categorization for {len(file_paths)} file paths")
+                file_component_categories = categorize_files_openrouter_xml(file_paths)
+                logger.info(
+                    f"OpenRouter XML-based file-to-component categorization result as length: {len(file_component_categories)}")
+            else:
+                file_component_categories = {}
+                logger.warning("No file paths found for AI categorization.")
+        except Exception as e:
+            logger.error(f"OpenRouter XML-based file-to-component categorization failed: {e}")
+            file_component_categories = {}
+
         try:
             # Fetch issues
             issues = client.fetch_issues(project_key)
@@ -292,7 +312,8 @@ sonar.token={sonar_token}
         merged_sonar_report = {
             "project_measures": measures,
             "file_measures": file_measures,
-            "issues": issues
+            "issues": issues,
+            "file_component_categories": file_component_categories
         }
 
         report_path = os.path.join(directory, "SONAR_REPORT.json")
