@@ -2,6 +2,14 @@
 
 This framework provides a common base class for processing code files using Aider.
 
+## TODO
+
+### Add Improvement suggestions including a prompt to implement it to the SONAR-REPORT
+
+Create a new cli tool which takes the report created by sonar_scanner (example in doc/SONAR_REPORT.json),
+analyzes the issues for each component/file and creates a suggestion what to improve (or NONE) including a
+prompt suitable to feed into an AI Coding Agent, so that it can automatically fix the isseus.
+
 ## Overview
 
 The `code_processor` module provides a base class (`CodeProcessor`) that can be extended to create specialized code
@@ -439,16 +447,17 @@ You can run the scripts in two ways:
 
 ## Testing
 
-When writing tests for this project, be aware that the logger name used in the code is "tfc-code-pipeline", not the module name. When using `assertLogs()` in tests, make sure to use the correct logger name:
+When writing tests for this project, be aware that the logger name used in the code is "tfc-code-pipeline", not the
+module name. When using `assertLogs()` in tests, make sure to use the correct logger name:
 
 ```python
 # Incorrect - will fail:
 with self.assertLogs('find_source_files', level='INFO') as cm:
-    # test code
+# test code
 
 # Correct - will pass:
 with self.assertLogs('tfc-code-pipeline', level='INFO') as cm:
-    # test code
+# test code
 ```
 
 ## Integration with Development Workflows

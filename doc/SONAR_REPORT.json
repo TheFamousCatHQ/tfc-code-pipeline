@@ -1,0 +1,5238 @@
+{
+  "project_measures": {
+    "component": {
+      "key": "usual-suspects",
+      "name": "usual-suspects",
+      "qualifier": "TRK",
+      "measures": [
+        {
+          "metric": "coverage",
+          "value": "0.0",
+          "bestValue": false
+        },
+        {
+          "metric": "complexity",
+          "value": "2316"
+        },
+        {
+          "metric": "software_quality_security_remediation_effort",
+          "value": "0",
+          "bestValue": true
+        },
+        {
+          "metric": "software_quality_security_rating",
+          "value": "1.0",
+          "bestValue": true
+        },
+        {
+          "metric": "functions",
+          "value": "841"
+        },
+        {
+          "metric": "security_rating",
+          "value": "1.0",
+          "bestValue": true
+        },
+        {
+          "metric": "classes",
+          "value": "82"
+        },
+        {
+          "metric": "violations",
+          "value": "211",
+          "bestValue": false
+        },
+        {
+          "metric": "software_quality_maintainability_remediation_effort",
+          "value": "1533",
+          "bestValue": false
+        },
+        {
+          "metric": "software_quality_maintainability_debt_ratio",
+          "value": "0.3",
+          "bestValue": false
+        },
+        {
+          "metric": "security_hotspots",
+          "value": "22",
+          "bestValue": false
+        },
+        {
+          "metric": "security_review_rating",
+          "value": "5.0",
+          "bestValue": false
+        },
+        {
+          "metric": "cognitive_complexity",
+          "value": "2001",
+          "bestValue": false
+        },
+        {
+          "metric": "ncloc",
+          "value": "15196"
+        },
+        {
+          "metric": "software_quality_maintainability_issues",
+          "value": "197",
+          "bestValue": false
+        },
+        {
+          "metric": "files",
+          "value": "154"
+        },
+        {
+          "metric": "vulnerabilities",
+          "value": "0",
+          "bestValue": true
+        },
+        {
+          "metric": "software_quality_maintainability_rating",
+          "value": "1.0",
+          "bestValue": true
+        }
+      ]
+    }
+  },
+  "file_measures": {
+    "paging": {
+      "pageIndex": 1,
+      "pageSize": 100,
+      "total": 154
+    },
+    "baseComponent": {
+      "key": "usual-suspects",
+      "name": "usual-suspects",
+      "qualifier": "TRK",
+      "measures": []
+    },
+    "components": [
+      {
+        "key": "usual-suspects:tests/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "tests/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "16"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/cli/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/cli/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "2"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "10"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/score/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/score/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/processor/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/processor/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "5"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "7"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "55"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/company/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/src/company/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "9"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "70"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/__init__.py",
+        "name": "__init__.py",
+        "qualifier": "FIL",
+        "path": "backend/__init__.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/ai.py",
+        "name": "ai.py",
+        "qualifier": "FIL",
+        "path": "backend/src/ai.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "3"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "19",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "145"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "40",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api.py",
+        "name": "api.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/api.py",
+        "name": "api.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/api.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "1"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/services/api.ts",
+        "name": "api.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/services/api.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "47"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "38"
+          },
+          {
+            "metric": "ncloc",
+            "value": "117"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "40",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api_utils.py",
+        "name": "api_utils.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api_utils.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "18",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "10"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "35"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "8",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/app.py",
+        "name": "app.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/app.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "2"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "33"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/App.tsx",
+        "name": "App.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/App.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "28"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Badge.tsx",
+        "name": "Badge.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Badge.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "2"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "26"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/processor/base.py",
+        "name": "base.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/processor/base.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "4"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "9"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "44"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/base.py",
+        "name": "base.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/base.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "12",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "11"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "92"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Breadcrumbs.tsx",
+        "name": "Breadcrumbs.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Breadcrumbs.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "5"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "32"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Button.tsx",
+        "name": "Button.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Button.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "15"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "81"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Card.tsx",
+        "name": "Card.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Card.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "47"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/examples/CardExample.tsx",
+        "name": "CardExample.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/examples/CardExample.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "11"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "9"
+          },
+          {
+            "metric": "ncloc",
+            "value": "192"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Checkbox.tsx",
+        "name": "Checkbox.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/Checkbox.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "9"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "73"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api/companies.py",
+        "name": "companies.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api/companies.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "150",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "108"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "16"
+          },
+          {
+            "metric": "ncloc",
+            "value": "518"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "59",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/companies.py",
+        "name": "companies.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/companies.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "85",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "61"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "23"
+          },
+          {
+            "metric": "ncloc",
+            "value": "243"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "23",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/company_profiles.py",
+        "name": "company_profiles.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/company_profiles.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "8",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "15"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "11"
+          },
+          {
+            "metric": "ncloc",
+            "value": "60"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/CompanyCard.css",
+        "name": "CompanyCard.css",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/CompanyCard.css",
+        "language": "css",
+        "measures": [
+          {
+            "metric": "ncloc",
+            "value": "212"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/CompanyCard.tsx",
+        "name": "CompanyCard.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/CompanyCard.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "14",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "8",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "159"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "70",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/pages/CompanyDetailPage.tsx",
+        "name": "CompanyDetailPage.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/pages/CompanyDetailPage.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "28",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "144",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "285"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "duplicated_lines_density",
+            "value": "2.1",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "131"
+          },
+          {
+            "metric": "ncloc",
+            "value": "1935"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "206",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/pages/CompanyForm.tsx",
+        "name": "CompanyForm.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/pages/CompanyForm.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "30",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "46"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "15"
+          },
+          {
+            "metric": "ncloc",
+            "value": "227"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/CompanyListItem.tsx",
+        "name": "CompanyListItem.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/CompanyListItem.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "11"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "76"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/CompanyPreviewForm.tsx",
+        "name": "CompanyPreviewForm.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/CompanyPreviewForm.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "9",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "19"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "8"
+          },
+          {
+            "metric": "ncloc",
+            "value": "172"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/CompanySelector.tsx",
+        "name": "CompanySelector.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/CompanySelector.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "17"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "10"
+          },
+          {
+            "metric": "ncloc",
+            "value": "110"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/ConfirmDialog.tsx",
+        "name": "ConfirmDialog.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/ConfirmDialog.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "4"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "60"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:tests/conftest.py",
+        "name": "conftest.py",
+        "qualifier": "FIL",
+        "path": "tests/conftest.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "4"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/constants.py",
+        "name": "constants.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/constants.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "4"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "20"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/ContactsTable.tsx",
+        "name": "ContactsTable.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/ContactsTable.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "24",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "37"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "12"
+          },
+          {
+            "metric": "ncloc",
+            "value": "179"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "20",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/core.py",
+        "name": "core.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/core.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "code_smells",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "30",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "20"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "101"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "16",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/core.py",
+        "name": "core.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/core.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "46"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/custom_fields.py",
+        "name": "custom_fields.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/custom_fields.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "10"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "26"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/processor/database.py",
+        "name": "database.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/processor/database.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "7"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "33"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db.py",
+        "name": "db.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "0"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/deals.py",
+        "name": "deals.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/deals.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "8"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "51"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/cli/delete_company.py",
+        "name": "delete_company.py",
+        "qualifier": "FIL",
+        "path": "backend/src/cli/delete_company.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "40",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "3"
+          },
+          {
+            "metric": "ncloc",
+            "value": "78"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "34",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:Dockerfile.backend",
+        "name": "Dockerfile.backend",
+        "qualifier": "FIL",
+        "path": "Dockerfile.backend",
+        "measures": [
+          {
+            "metric": "code_smells",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "ncloc",
+            "value": "22"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "17",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:Dockerfile.frontend",
+        "name": "Dockerfile.frontend",
+        "qualifier": "FIL",
+        "path": "Dockerfile.frontend",
+        "measures": [
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "ncloc",
+            "value": "9"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/processor/enricher.py",
+        "name": "enricher.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/processor/enricher.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "2"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "20",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "19"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "72"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api/error_handlers.py",
+        "name": "error_handlers.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api/error_handlers.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "4"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "11"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/error_handlers.py",
+        "name": "error_handlers.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/error_handlers.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "5"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "31"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/factory.py",
+        "name": "factory.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/factory.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "3"
+          },
+          {
+            "metric": "ncloc",
+            "value": "28"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/FlashMessage.tsx",
+        "name": "FlashMessage.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/FlashMessage.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "14"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "97"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Form.tsx",
+        "name": "Form.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/Form.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "80"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/FormActions.tsx",
+        "name": "FormActions.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/FormActions.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "24"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/examples/FormExample.tsx",
+        "name": "FormExample.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/examples/FormExample.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "22"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "12"
+          },
+          {
+            "metric": "ncloc",
+            "value": "217"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/FormGroup.tsx",
+        "name": "FormGroup.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/FormGroup.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "43"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/utils/helpers.ts",
+        "name": "helpers.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/utils/helpers.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "56",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "55"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "12"
+          },
+          {
+            "metric": "ncloc",
+            "value": "140"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "30",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/pages/HomePage.tsx",
+        "name": "HomePage.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/pages/HomePage.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "20"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "12"
+          },
+          {
+            "metric": "ncloc",
+            "value": "236"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/score/icp.py",
+        "name": "icp.py",
+        "qualifier": "FIL",
+        "path": "backend/src/score/icp.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "2"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "9",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "12"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "122"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "30",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/index.css",
+        "name": "index.css",
+        "qualifier": "FIL",
+        "path": "frontend/src/index.css",
+        "language": "css",
+        "measures": [
+          {
+            "metric": "ncloc",
+            "value": "63"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/index.html",
+        "name": "index.html",
+        "qualifier": "FIL",
+        "path": "frontend/index.html",
+        "language": "web",
+        "measures": [
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "13"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/index.ts",
+        "name": "index.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/index.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "11"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/index.ts",
+        "name": "index.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/index.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "18"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/examples/index.ts",
+        "name": "index.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/examples/index.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "2"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/index.ts",
+        "name": "index.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/index.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "60"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/types/index.ts",
+        "name": "index.ts",
+        "qualifier": "FIL",
+        "path": "frontend/src/types/index.ts",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "51"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Input.tsx",
+        "name": "Input.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/form/Input.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "15"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "duplicated_lines_density",
+            "value": "21.2",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "93"
+          },
+          {
+            "metric": "security_hotspots",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "5.0",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/internet.py",
+        "name": "internet.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/internet.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "12",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "12"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "50"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/job_parser.py",
+        "name": "job_parser.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/job_parser.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "22"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/job_processor.py",
+        "name": "job_processor.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/job_processor.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "14",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "59"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/job_verification.py",
+        "name": "job_verification.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/job_verification.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "3"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "11",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "9"
+          },
+          {
+            "metric": "ncloc",
+            "value": "105"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api/jobs.py",
+        "name": "jobs.py",
+        "qualifier": "FIL",
+        "path": "backend/src/web/api/jobs.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "7"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "46"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/jobs.py",
+        "name": "jobs.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/jobs.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "2"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "37",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "18"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "3"
+          },
+          {
+            "metric": "ncloc",
+            "value": "76"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "20",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/jobs.py",
+        "name": "jobs.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/jobs.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "21",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "29"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "duplicated_lines_density",
+            "value": "15.5",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "16"
+          },
+          {
+            "metric": "ncloc",
+            "value": "214"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "8",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/jobspider.py",
+        "name": "jobspider.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/jobspider.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "5"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "15",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "16"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "8"
+          },
+          {
+            "metric": "ncloc",
+            "value": "117"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:tests/jobspider_test.py",
+        "name": "jobspider_test.py",
+        "qualifier": "FIL",
+        "path": "tests/jobspider_test.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "12",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "7"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "47"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/JobsTable.tsx",
+        "name": "JobsTable.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/JobsTable.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "7",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "16"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "123"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "15",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/cards/KeyDecisionMakersCard.tsx",
+        "name": "KeyDecisionMakersCard.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/cards/KeyDecisionMakersCard.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "12"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "5"
+          },
+          {
+            "metric": "ncloc",
+            "value": "129"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "15",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/db/keywords.py",
+        "name": "keywords.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/db/keywords.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "9"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "39"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Layout.tsx",
+        "name": "Layout.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Layout.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "20"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "18"
+          },
+          {
+            "metric": "ncloc",
+            "value": "101"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "50",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/leads.py",
+        "name": "leads.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/leads.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "code_smells",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "57",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "36"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "165"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "30",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/LoadingSpinner.tsx",
+        "name": "LoadingSpinner.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/LoadingSpinner.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "69"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/log.py",
+        "name": "log.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/log.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "7"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "32"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/main.py",
+        "name": "main.py",
+        "qualifier": "FIL",
+        "path": "backend/src/main.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "3"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "19"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "1",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/main.tsx",
+        "name": "main.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/main.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "12"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/processor/memory.py",
+        "name": "memory.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/processor/memory.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "complexity",
+            "value": "4"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "16"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Modal.tsx",
+        "name": "Modal.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Modal.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "2",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "8",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "16"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "5"
+          },
+          {
+            "metric": "ncloc",
+            "value": "89"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "10",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/model.py",
+        "name": "model.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/model.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "7"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "21",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "21"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "6"
+          },
+          {
+            "metric": "ncloc",
+            "value": "134"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Navbar.tsx",
+        "name": "Navbar.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/Navbar.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "5",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "58"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "25",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/util/normalize.py",
+        "name": "normalize.py",
+        "qualifier": "FIL",
+        "path": "backend/src/util/normalize.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "6",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "73",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "45"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "2"
+          },
+          {
+            "metric": "ncloc",
+            "value": "81"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "86",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/notes.py",
+        "name": "notes.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/notes.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "2"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "21"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/pages/NotFoundPage.tsx",
+        "name": "NotFoundPage.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/pages/NotFoundPage.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "complexity",
+            "value": "1"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "1"
+          },
+          {
+            "metric": "ncloc",
+            "value": "27"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/organizations.py",
+        "name": "organizations.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/organizations.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "23",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "24"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "9"
+          },
+          {
+            "metric": "ncloc",
+            "value": "100"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/PageHeader.tsx",
+        "name": "PageHeader.tsx",
+        "qualifier": "FIL",
+        "path": "frontend/src/components/PageHeader.tsx",
+        "language": "ts",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "0"
+          },
+          {
+            "metric": "code_smells",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "20",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "31"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "7"
+          },
+          {
+            "metric": "ncloc",
+            "value": "121"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_index",
+            "value": "20",
+            "bestValue": false
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/perplexity_jobs.py",
+        "name": "perplexity_jobs.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/perplexity_jobs.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "3",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "6"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "47"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/pipedrive/person_custom_fields.py",
+        "name": "person_custom_fields.py",
+        "qualifier": "FIL",
+        "path": "backend/src/pipedrive/person_custom_fields.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "1"
+          },
+          {
+            "metric": "cognitive_complexity",
+            "value": "4",
+            "bestValue": false
+          },
+          {
+            "metric": "complexity",
+            "value": "8"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "4"
+          },
+          {
+            "metric": "ncloc",
+            "value": "24"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      },
+      {
+        "key": "usual-suspects:backend/src/serp/person_models.py",
+        "name": "person_models.py",
+        "qualifier": "FIL",
+        "path": "backend/src/serp/person_models.py",
+        "language": "py",
+        "measures": [
+          {
+            "metric": "classes",
+            "value": "5"
+          },
+          {
+            "metric": "complexity",
+            "value": "0"
+          },
+          {
+            "metric": "coverage",
+            "value": "0.0",
+            "bestValue": false
+          },
+          {
+            "metric": "functions",
+            "value": "0"
+          },
+          {
+            "metric": "ncloc",
+            "value": "42"
+          },
+          {
+            "metric": "security_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "security_review_rating",
+            "value": "1.0",
+            "bestValue": true
+          },
+          {
+            "metric": "sqale_rating",
+            "value": "1.0",
+            "bestValue": true
+          }
+        ]
+      }
+    ]
+  }
+}
