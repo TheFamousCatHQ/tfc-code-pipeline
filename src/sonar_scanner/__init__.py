@@ -98,6 +98,11 @@ sonar.token={sonar_token}
             action="store_true",
             help="Skip sonar-scanner invocation and just output the measures"
         )
+        parser.add_argument(
+            "--no-verify-ssl",
+            action="store_true",
+            help="Disable SSL certificate verification when connecting to SonarQube (insecure, use only for testing)"
+        )
 
     def get_description(self) -> str:
         """Get the description for the argument parser.
@@ -247,16 +252,41 @@ sonar.token={sonar_token}
         # Get SonarQube token
         token = args.login if hasattr(args, 'login') and args.login else os.environ.get("SONAR_TOKEN", "")
 
+        # Check if SSL verification should be disabled
+        verify_ssl = not (hasattr(args, 'no_verify_ssl') and args.no_verify_ssl)
+
         # Fetch measures and file_measures using SonarQubeClient
         logger.info(f"Fetching measures for project: {project_key} from {host_url}")
-        client = SonarQubeClient(host_url, token)
+        client = SonarQubeClient(host_url, token, verify_ssl=verify_ssl)
 
-        # Fetch project measures
-        measures = client.fetch_measures(project_key)
-        # Fetch file measures
-        file_measures = client.fetch_file_measures(project_key)
-        # Fetch issues
-        issues = client.fetch_issues(project_key)
+        # Initialize variables to store API responses
+        measures = None
+        file_measures = None
+        issues = None
+
+        try:
+            # Fetch project measures
+            measures = client.fetch_measures(project_key)
+            logger.info(f"Successfully fetched project measures for {project_key}")
+        except Exception as e:
+            logger.error(f"Failed to fetch project measures: {e}")
+            measures = {"component": {"key": project_key}, "measures": []}
+
+        try:
+            # Fetch file measures
+            file_measures = client.fetch_file_measures(project_key)
+            logger.info(f"Successfully fetched file measures for {project_key}")
+        except Exception as e:
+            logger.error(f"Failed to fetch file measures: {e}")
+            file_measures = {"paging": {"total": 0}, "baseComponent": {"key": project_key}, "components": []}
+
+        try:
+            # Fetch issues
+            issues = client.fetch_issues(project_key)
+            logger.info(f"Successfully fetched issues for {project_key}")
+        except Exception as e:
+            logger.error(f"Failed to fetch issues: {e}")
+            issues = {"issues": [], "paging": {"total": 0}}
 
         # Merge SONAR_MEASURES.json, SONAR_FILE_MEASURES.json, and issues into one report for STDOUT
         merged_sonar_report = {
