@@ -96,8 +96,12 @@ class SonarAnalyzerProcessor(CodeProcessor):
             help="Path to the output file for the analysis results (default: stdout)",
         )
 
-    def process_files(self, args: argparse.Namespace) -> None:
-        """Process the Sonar scanner report and generate improvement suggestions."""
+    def process_files(self, args: argparse.Namespace) -> List[str]:
+        """Process the Sonar scanner report and generate improvement suggestions.
+
+        Returns:
+            List containing the report file path to indicate successful processing.
+        """
         report_file = args.report_file
         min_severity = args.min_severity
         output_file = args.output_file
@@ -111,7 +115,7 @@ class SonarAnalyzerProcessor(CodeProcessor):
                 report_data = json.load(f)
         except Exception as e:
             logger.error(f"Failed to load Sonar scanner report: {e}")
-            return
+            return []
 
         # Convert min_severity to SeverityLevel enum
         min_severity_level = SeverityLevel.from_string(min_severity)
@@ -132,6 +136,9 @@ class SonarAnalyzerProcessor(CodeProcessor):
         else:
             # Print to stdout
             self._print_suggestions(suggestions)
+
+        # Return the report file to indicate successful processing
+        return [report_file]
 
     def _analyze_report(self, report_data: Dict, min_severity_level: SeverityLevel) -> Dict:
         """
