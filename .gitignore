@@ -42,3 +42,4 @@ htmlcov/
 .aider*
 Dockerfile
 .output.txt
+SUGGESTIONS.json
