@@ -29,13 +29,13 @@ class SonarQubeClient:
 
     def fetch_issues(self, project: str) -> Dict[str, Any]:
         """
-        Fetch issues from SonarQube API.
+        Fetch issues from SonarQube API for a specific project.
 
         Args:
             project (str): Project name or key.
 
         Returns:
-            Dict[str, Any]: JSON response from SonarQube API with all issues.
+            Dict[str, Any]: JSON response from SonarQube API with all issues for the specified project.
 
         Raises:
             urllib.error.URLError: If there's an error with the request.
@@ -49,7 +49,7 @@ class SonarQubeClient:
 
         # Keep fetching pages until we've got all issues
         while total_issues is None or len(all_issues) < total_issues:
-            url = f"{self.host}/api/issues/search?component={project}&p={page}&ps={page_size}"
+            url = f"{self.host}/api/issues/search?componentKeys={project}&projectKeys={project}&p={page}&ps={page_size}"
 
             self.logger.debug(f"Fetching issues page {page} from {url}")
             request = urllib.request.Request(url)
