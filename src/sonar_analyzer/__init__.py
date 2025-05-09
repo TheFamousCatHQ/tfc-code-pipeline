@@ -7,14 +7,13 @@ component/file, and creates suggestions for improvements including prompts suita
 
 import argparse
 import json
-import os
 from collections import defaultdict
 from enum import Enum
-from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List
 
 from code_processor import CodeProcessor
 from logging_utils import get_logger
+from util import lcfirst
 
 # Set up logging
 logger = get_logger()
@@ -232,6 +231,92 @@ class SonarAnalyzerProcessor(CodeProcessor):
             rule_summary = f"Rule: {rule} ({len(rule_issues)} issues)"
             summary.append(rule_summary)
 
+        # Categorize issues into high-level improvement areas based on rule codes and messages
+        has_complexity_issues = False
+        has_duplications = False
+        has_unused_code = False
+        has_security_issues = False
+        has_bugs = False
+        has_code_smells = False
+        has_naming_issues = False
+        has_documentation_issues = False
+        has_coverage_issues = False
+        has_formatting_issues = False
+
+        # Check each issue for specific patterns in rule codes and messages
+        for rule, rule_issues in issues_by_rule.items():
+            rule_code = rule.split(':')[-1] if ':' in rule else rule
+
+            # Get a sample message to understand the issue better
+            sample_message = rule_issues[0].get('message', '').lower()
+
+            # Check for complexity issues
+            if rule_code in ['S3776'] or 'complexity' in sample_message or 'cognitive' in sample_message:
+                has_complexity_issues = True
+            # Check for duplications
+            elif rule_code in ['S1192', 'S1871'] or 'duplicate' in sample_message or 'identical' in sample_message:
+                has_duplications = True
+            # Check for unused code
+            elif rule_code in ['S1172', 'S1144'] or 'unused' in sample_message or 'never used' in sample_message:
+                has_unused_code = True
+            # Check for security issues
+            elif rule_code.startswith('S1') or 'security' in sample_message or 'vulnerability' in sample_message:
+                has_security_issues = True
+            # Check for bugs
+            elif rule_code in ['S112', 'S1313'] or 'bug' in sample_message or 'exception' in sample_message:
+                has_bugs = True
+            # Check for code smells
+            elif 'smell' in sample_message or 'refactor' in sample_message:
+                has_code_smells = True
+            # Check for naming issues
+            elif 'naming' in sample_message or 'name' in sample_message:
+                has_naming_issues = True
+            # Check for documentation issues
+            elif 'documentation' in sample_message or 'comment' in sample_message or 'doc' in sample_message:
+                has_documentation_issues = True
+            # Check for coverage issues
+            elif 'coverage' in sample_message or 'test' in sample_message:
+                has_coverage_issues = True
+            # Check for formatting issues
+            elif 'format' in sample_message or 'spacing' in sample_message or 'indent' in sample_message:
+                has_formatting_issues = True
+
+        # Collect all applicable suggestions based on the categories of issues
+        suggestions_list = []
+
+        if has_complexity_issues:
+            suggestions_list.append("Improve code maintainability by reducing complexity")
+        if has_duplications:
+            suggestions_list.append("Enhance code structure by eliminating duplications")
+        if has_unused_code:
+            suggestions_list.append("Clean up codebase by removing unused elements")
+        if has_security_issues:
+            suggestions_list.append("Strengthen security posture")
+        if has_bugs:
+            suggestions_list.append("Improve code reliability")
+        if has_code_smells:
+            suggestions_list.append("Enhance code quality")
+        if has_naming_issues:
+            suggestions_list.append("Improve code readability")
+        if has_documentation_issues:
+            suggestions_list.append("Enhance code documentation")
+        if has_coverage_issues:
+            suggestions_list.append("Improve test coverage")
+        if has_formatting_issues:
+            suggestions_list.append("Standardize code formatting")
+
+        # Combine suggestions or use default if none apply
+        if suggestions_list:
+            if len(suggestions_list) == 1:
+                suggestion = suggestions_list[0]
+            else:
+                # Combine the first 3 suggestions (if there are more than 3) to keep it concise
+                top_suggestions = suggestions_list[:3]
+                suggestion = self._combine_suggestions(top_suggestions)
+        else:
+            # Default high-level suggestion when no specific issues are detected
+            suggestion = "Refactor code for better maintainability"
+
         # Generate a prompt for an AI Coding Agent
         prompt = self._generate_ai_prompt(component, issues)
 
@@ -239,7 +324,7 @@ class SonarAnalyzerProcessor(CodeProcessor):
             "component": component,
             "issues_count": len(issues),
             "summary": summary,
-            "suggestion": "Fix the issues identified by Sonar scanner",
+            "suggestion": suggestion,
             "prompt": prompt
         }
 
@@ -330,11 +415,13 @@ class SonarAnalyzerProcessor(CodeProcessor):
 
             if complexity and complexity > COMPLEXITY_THRESHOLD:
                 is_complex = True
-                complexity_reasons.append(f"High cyclomatic complexity: {complexity} (threshold: {COMPLEXITY_THRESHOLD})")
+                complexity_reasons.append(
+                    f"High cyclomatic complexity: {complexity} (threshold: {COMPLEXITY_THRESHOLD})")
 
             if cognitive_complexity and cognitive_complexity > COGNITIVE_COMPLEXITY_THRESHOLD:
                 is_complex = True
-                complexity_reasons.append(f"High cognitive complexity: {cognitive_complexity} (threshold: {COGNITIVE_COMPLEXITY_THRESHOLD})")
+                complexity_reasons.append(
+                    f"High cognitive complexity: {cognitive_complexity} (threshold: {COGNITIVE_COMPLEXITY_THRESHOLD})")
 
             if ncloc and ncloc > NCLOC_THRESHOLD:
                 is_complex = True
@@ -346,7 +433,8 @@ class SonarAnalyzerProcessor(CodeProcessor):
                 complexity_per_function = complexity / functions
                 if complexity_per_function > 5:  # Threshold for complexity per function
                     is_complex = True
-                    complexity_reasons.append(f"High average complexity per function: {complexity_per_function:.2f} (threshold: 5)")
+                    complexity_reasons.append(
+                        f"High average complexity per function: {complexity_per_function:.2f} (threshold: 5)")
 
             if is_complex:
                 complex_files[key] = {
@@ -377,6 +465,21 @@ class SonarAnalyzerProcessor(CodeProcessor):
         # Generate a summary
         summary = [f"Complexity issue: {reason}" for reason in reasons]
 
+        # Determine the high-level suggestion based on complexity metrics
+        complexity = complexity_data.get('complexity', 0)
+        cognitive_complexity = complexity_data.get('cognitive_complexity', 0)
+        ncloc = complexity_data.get('ncloc', 0)
+        functions = complexity_data.get('functions', 0)
+
+        if ncloc and ncloc > 500:
+            suggestion = "Split into smaller files"
+        elif functions and functions > 10 and complexity / functions > 5:
+            suggestion = "Simplify function implementations"
+        elif cognitive_complexity and cognitive_complexity > 25:
+            suggestion = "Improve code readability"
+        else:
+            suggestion = "Improve code maintainability"
+
         # Generate a prompt
         prompt = self._generate_complexity_prompt(component, complexity_data)
 
@@ -384,7 +487,7 @@ class SonarAnalyzerProcessor(CodeProcessor):
             "component": component,
             "complexity_data": complexity_data,
             "summary": summary,
-            "suggestion": "Refactor to reduce complexity",
+            "suggestion": suggestion,
             "prompt": prompt,
             "issues_count": 0  # No Sonar issues, only complexity
         }
@@ -436,6 +539,28 @@ class SonarAnalyzerProcessor(CodeProcessor):
         )
 
         return prompt
+
+    def _combine_suggestions(self, suggestions: List[str]) -> str:
+        """
+        Combine multiple suggestions into a single coherent suggestion.
+
+        Args:
+            suggestions: List of suggestions to combine
+
+        Returns:
+            A combined suggestion string
+        """
+        if not suggestions:
+            return "Refactor code for better maintainability"
+
+        if len(suggestions) == 1:
+            return suggestions[0]
+
+        if len(suggestions) == 2:
+            return f"{suggestions[0]} and {lcfirst(suggestions[1])}"
+
+        # For 3 or more suggestions, use comma separation with 'and' before the last item
+        return ", ".join(suggestions[:-1]) + f", and {lcfirst(suggestions[-1])}"
 
     def _combine_prompts(self, issues_prompt: str, complexity_prompt: str) -> str:
         """
