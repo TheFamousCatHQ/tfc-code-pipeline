@@ -122,7 +122,7 @@ class SonarQubeClient:
         # Define metrics for different categories
         security_metrics = "security_rating,security_hotspots,vulnerabilities,security_review_rating,software_quality_security_rating,software_quality_security_remediation_effort"
         complexity_metrics = "complexity,cognitive_complexity"
-        maintainability_metrics = "software_quality_maintainability_issues,software_quality_maintainability_remediation_effort,software_quality_maintainability_debt_ratio,software_quality_maintainability_rating"
+        maintainability_metrics = "software_quality_maintainability_issues,software_quality_maintainability_rating"
         general_metrics = "ncloc,violations,coverage,functions,classes,files"
 
         # Combine all metrics
@@ -149,6 +149,74 @@ class SonarQubeClient:
         except urllib.error.URLError as e:
             self.logger.error(f"URL Error: {e.reason}")
             raise
+
+    def fetch_security_hotspots(self, project: str) -> Dict[str, Any]:
+        """
+        Fetch security hotspots from SonarQube API for a specific project.
+
+        Args:
+            project (str): Project name or key.
+
+        Returns:
+            Dict[str, Any]: JSON response from SonarQube API with all security hotspots for the specified project.
+
+        Raises:
+            urllib.error.URLError: If there's an error with the request.
+            json.JSONDecodeError: If the response is not valid JSON.
+        """
+        # Set a reasonable page size
+        page_size = 500
+        page = 1
+        all_hotspots = []
+        total_hotspots = None
+        response_data = None
+
+        # Keep fetching pages until we've got all hotspots
+        while total_hotspots is None or len(all_hotspots) < total_hotspots:
+            url = f"{self.host}/api/hotspots/search?projectKey={project}&p={page}&ps={page_size}"
+
+            self.logger.debug(f"Fetching security hotspots page {page} from {url}")
+            request = urllib.request.Request(url)
+            if self.token:
+                request.add_header("Authorization", f"Bearer {self.token}")
+
+            try:
+                with urllib.request.urlopen(request, context=self.ssl_context) as response:
+                    response_data = json.loads(response.read().decode('utf-8'))
+
+                    # Get the total number of hotspots if this is the first page
+                    if total_hotspots is None:
+                        total_hotspots = response_data.get('paging', {}).get('total', 0)
+                        self.logger.info(f"Total security hotspots to fetch: {total_hotspots}")
+
+                    # Add hotspots from this page to our collection
+                    hotspots = response_data.get('hotspots', [])
+                    all_hotspots.extend(hotspots)
+                    self.logger.info(f"Fetched {len(hotspots)} security hotspots from page {page}, total so far: {len(all_hotspots)}/{total_hotspots}")
+
+                    # If this page had fewer hotspots than the page size, we're done
+                    if len(hotspots) < page_size:
+                        break
+
+                    # Move to the next page
+                    page += 1
+            except urllib.error.HTTPError as e:
+                if e.code == 401:
+                    self.logger.error("Authentication failed: Invalid or missing token. Please provide a valid SonarQube token.")
+                else:
+                    self.logger.error(f"HTTP Error {e.code}: {e.reason}")
+                raise
+            except urllib.error.URLError as e:
+                self.logger.error(f"URL Error: {e.reason}")
+                raise
+
+        # Return the original response structure but with all hotspots
+        if response_data:
+            response_data['hotspots'] = all_hotspots
+            return response_data
+        else:
+            # Return an empty structure if we couldn't get any data
+            return {"hotspots": [], "paging": {"total": 0}}
 
     def fetch_file_measures(self, project: str) -> Dict[str, Any]:
         """

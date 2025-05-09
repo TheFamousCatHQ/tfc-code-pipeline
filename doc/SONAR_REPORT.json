@@ -43,16 +43,6 @@
           "bestValue": false
         },
         {
-          "metric": "software_quality_maintainability_remediation_effort",
-          "value": "1533",
-          "bestValue": false
-        },
-        {
-          "metric": "software_quality_maintainability_debt_ratio",
-          "value": "0.3",
-          "bestValue": false
-        },
-        {
           "metric": "security_hotspots",
           "value": "22",
           "bestValue": false
@@ -25746,6 +25736,619 @@
       }
     ],
     "facets": []
+  },
+  "security_hotspots": {
+    "paging": {
+      "pageIndex": 1,
+      "pageSize": 500,
+      "total": 22
+    },
+    "hotspots": [
+      {
+        "key": "8d4e318d-d473-4460-8014-563b341d1e64",
+        "component": "usual-suspects:backend/src/cli/delete_company.py",
+        "project": "usual-suspects",
+        "securityCategory": "csrf",
+        "vulnerabilityProbability": "HIGH",
+        "status": "TO_REVIEW",
+        "line": 14,
+        "message": "Make sure disabling CSRF protection is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 14,
+          "endLine": 14,
+          "startOffset": 10,
+          "endOffset": 25
+        },
+        "flows": [],
+        "ruleKey": "python:S4502",
+        "messageFormattings": []
+      },
+      {
+        "key": "cb8c7dae-23fc-4bff-84a9-1d4251dcf682",
+        "component": "usual-suspects:backend/src/web/app.py",
+        "project": "usual-suspects",
+        "securityCategory": "csrf",
+        "vulnerabilityProbability": "HIGH",
+        "status": "TO_REVIEW",
+        "line": 17,
+        "message": "Make sure disabling CSRF protection is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 17,
+          "endLine": 17,
+          "startOffset": 6,
+          "endOffset": 21
+        },
+        "flows": [],
+        "ruleKey": "python:S4502",
+        "messageFormattings": []
+      },
+      {
+        "key": "384987a0-e05a-4b4a-a9f2-73894f0cf570",
+        "component": "usual-suspects:backend/src/ai.py",
+        "project": "usual-suspects",
+        "securityCategory": "dos",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 166,
+        "message": "Make sure the regex used here, which is vulnerable to polynomial runtime due to backtracking, cannot lead to denial of service.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T02:20:32+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 166,
+          "endLine": 166,
+          "startOffset": 37,
+          "endOffset": 63
+        },
+        "flows": [],
+        "ruleKey": "python:S5852",
+        "messageFormattings": []
+      },
+      {
+        "key": "2aedf0a4-e93d-41b3-a958-8e026cd03aac",
+        "component": "usual-suspects:backend/src/ai.py",
+        "project": "usual-suspects",
+        "securityCategory": "dos",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 228,
+        "message": "Make sure the regex used here, which is vulnerable to polynomial runtime due to backtracking, cannot lead to denial of service.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T02:20:32+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 228,
+          "endLine": 228,
+          "startOffset": 37,
+          "endOffset": 63
+        },
+        "flows": [],
+        "ruleKey": "python:S5852",
+        "messageFormattings": []
+      },
+      {
+        "key": "f29c9b46-8fe4-4baf-9609-0b3fbb1521fa",
+        "component": "usual-suspects:frontend/src/utils/helpers.ts",
+        "project": "usual-suspects",
+        "securityCategory": "dos",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 246,
+        "message": "Make sure the regex used here, which is vulnerable to super-linear runtime due to backtracking, cannot lead to denial of service.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T03:18:35+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 246,
+          "endLine": 246,
+          "startOffset": 22,
+          "endOffset": 43
+        },
+        "flows": [],
+        "ruleKey": "typescript:S5852",
+        "messageFormattings": []
+      },
+      {
+        "key": "7a3ca26a-e8aa-4ae6-9634-fc7f51c0d84d",
+        "component": "usual-suspects:Dockerfile.backend",
+        "project": "usual-suspects",
+        "securityCategory": "permission",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 31,
+        "message": "Copying recursively might inadvertently add sensitive data to the container. Make sure it is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T06:57:40+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 31,
+          "endLine": 31,
+          "startOffset": 5,
+          "endOffset": 6
+        },
+        "flows": [],
+        "ruleKey": "docker:S6470",
+        "messageFormattings": []
+      },
+      {
+        "key": "73f0c473-e780-4c47-997b-1db1ba14c2fa",
+        "component": "usual-suspects:Dockerfile.backend",
+        "project": "usual-suspects",
+        "securityCategory": "permission",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 1,
+        "message": "The \"ubuntu\" image runs with \"root\" as the default user. Make sure it is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 1,
+          "endLine": 1,
+          "startOffset": 0,
+          "endOffset": 17
+        },
+        "flows": [],
+        "ruleKey": "docker:S6471",
+        "messageFormattings": []
+      },
+      {
+        "key": "d3b3cb60-7564-4ee9-9e67-c7c82f938c7f",
+        "component": "usual-suspects:Dockerfile.frontend",
+        "project": "usual-suspects",
+        "securityCategory": "permission",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 1,
+        "message": "The \"node\" image runs with \"root\" as the default user. Make sure it is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 1,
+          "endLine": 1,
+          "startOffset": 0,
+          "endOffset": 19
+        },
+        "flows": [],
+        "ruleKey": "docker:S6471",
+        "messageFormattings": []
+      },
+      {
+        "key": "e83c8e86-0fa9-48ba-84b4-85040f6fe70d",
+        "component": "usual-suspects:frontend/src/components/Tabs.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 37,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-05-06T13:11:13+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 37,
+          "endLine": 37,
+          "startOffset": 43,
+          "endOffset": 56
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "44658043-8cfa-4584-a5f3-ddfc6f06543d",
+        "component": "usual-suspects:frontend/src/components/examples/CardExample.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 133,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 133,
+          "endLine": 133,
+          "startOffset": 10,
+          "endOffset": 23
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "b46f0b84-9506-4408-9f7d-dc0f94495265",
+        "component": "usual-suspects:frontend/src/components/form/Checkbox.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 33,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 33,
+          "endLine": 33,
+          "startOffset": 41,
+          "endOffset": 54
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "5d5585ee-97a0-4e56-a22d-c74da7cec3e3",
+        "component": "usual-suspects:frontend/src/components/form/Input.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 39,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 39,
+          "endLine": 39,
+          "startOffset": 35,
+          "endOffset": 48
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "a72cc6e9-9ce7-4b39-9b25-a1070cf88d3f",
+        "component": "usual-suspects:frontend/src/components/form/Radio.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 44,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 44,
+          "endLine": 44,
+          "startOffset": 41,
+          "endOffset": 54
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "ae2715d2-bc46-4c66-9c68-334a2edd9e24",
+        "component": "usual-suspects:frontend/src/components/form/Range.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 46,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 46,
+          "endLine": 46,
+          "startOffset": 35,
+          "endOffset": 48
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "e648fe67-9936-46e3-9ea1-55baef07bbbf",
+        "component": "usual-suspects:frontend/src/components/form/SearchInput.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 108,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 108,
+          "endLine": 108,
+          "startOffset": 34,
+          "endOffset": 47
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "542d7a44-e62f-43f2-a5d1-432d28cb3621",
+        "component": "usual-suspects:frontend/src/components/form/Select.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 45,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 45,
+          "endLine": 45,
+          "startOffset": 37,
+          "endOffset": 50
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "51ce2105-c58f-4316-8e9f-5f328d7d968f",
+        "component": "usual-suspects:frontend/src/components/form/TextArea.tsx",
+        "project": "usual-suspects",
+        "securityCategory": "weak-cryptography",
+        "vulnerabilityProbability": "MEDIUM",
+        "status": "TO_REVIEW",
+        "line": 37,
+        "message": "Make sure that using this pseudorandom number generator is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 37,
+          "endLine": 37,
+          "startOffset": 41,
+          "endOffset": 54
+        },
+        "flows": [],
+        "ruleKey": "typescript:S2245",
+        "messageFormattings": []
+      },
+      {
+        "key": "e95e4c68-d461-4d4b-9d32-f8163e4db418",
+        "component": "usual-suspects:backend/src/web/api/__init__.py",
+        "project": "usual-suspects",
+        "securityCategory": "insecure-conf",
+        "vulnerabilityProbability": "LOW",
+        "status": "TO_REVIEW",
+        "line": 13,
+        "message": "Make sure this permissive CORS policy is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-25T02:21:02+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 13,
+          "endLine": 13,
+          "startOffset": 0,
+          "endOffset": 12
+        },
+        "flows": [],
+        "ruleKey": "python:S5122",
+        "messageFormattings": []
+      },
+      {
+        "key": "ceab2a01-c0bf-4d26-ada8-d5f87124d406",
+        "component": "usual-suspects:backend/src/web/app.py",
+        "project": "usual-suspects",
+        "securityCategory": "insecure-conf",
+        "vulnerabilityProbability": "LOW",
+        "status": "TO_REVIEW",
+        "line": 22,
+        "message": "Make sure this permissive CORS policy is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 22,
+          "endLine": 22,
+          "startOffset": 0,
+          "endOffset": 9
+        },
+        "flows": [],
+        "ruleKey": "python:S5122",
+        "messageFormattings": []
+      },
+      {
+        "key": "0884bd0c-475d-449b-943a-79970d0ef5d6",
+        "component": "usual-suspects:Dockerfile.frontend",
+        "project": "usual-suspects",
+        "securityCategory": "others",
+        "vulnerabilityProbability": "LOW",
+        "status": "TO_REVIEW",
+        "line": 9,
+        "message": "Omitting \"--ignore-scripts\" can lead to the execution of shell scripts. Make sure it is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 9,
+          "endLine": 9,
+          "startOffset": 4,
+          "endOffset": 10
+        },
+        "flows": [],
+        "ruleKey": "docker:S6505",
+        "messageFormattings": []
+      },
+      {
+        "key": "405d704b-0426-4143-9a0f-40e2cf4d5b75",
+        "component": "usual-suspects:Dockerfile.frontend",
+        "project": "usual-suspects",
+        "securityCategory": "others",
+        "vulnerabilityProbability": "LOW",
+        "status": "TO_REVIEW",
+        "line": 18,
+        "message": "Omitting \"--ignore-scripts\" can lead to the execution of shell scripts. Make sure it is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 18,
+          "endLine": 18,
+          "startOffset": 4,
+          "endOffset": 18
+        },
+        "flows": [],
+        "ruleKey": "docker:S6505",
+        "messageFormattings": []
+      },
+      {
+        "key": "537b1183-8eaa-4636-87d1-b2a82bf4e787",
+        "component": "usual-suspects:Dockerfile.backend",
+        "project": "usual-suspects",
+        "securityCategory": "others",
+        "vulnerabilityProbability": "LOW",
+        "status": "TO_REVIEW",
+        "line": 6,
+        "message": "Make sure automatically installing recommended packages is safe here.",
+        "author": "michael.lahr@gmail.com",
+        "creationDate": "2025-04-23T01:10:41+0000",
+        "updateDate": "2025-05-08T06:47:28+0000",
+        "textRange": {
+          "startLine": 6,
+          "endLine": 6,
+          "startOffset": 22,
+          "endOffset": 40
+        },
+        "flows": [],
+        "ruleKey": "docker:S6500",
+        "messageFormattings": []
+      }
+    ],
+    "components": [
+      {
+        "key": "usual-suspects",
+        "qualifier": "TRK",
+        "name": "usual-suspects",
+        "longName": "usual-suspects"
+      },
+      {
+        "key": "usual-suspects:Dockerfile.frontend",
+        "qualifier": "FIL",
+        "name": "Dockerfile.frontend",
+        "longName": "Dockerfile.frontend",
+        "path": "Dockerfile.frontend"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Select.tsx",
+        "qualifier": "FIL",
+        "name": "Select.tsx",
+        "longName": "frontend/src/components/form/Select.tsx",
+        "path": "frontend/src/components/form/Select.tsx"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/TextArea.tsx",
+        "qualifier": "FIL",
+        "name": "TextArea.tsx",
+        "longName": "frontend/src/components/form/TextArea.tsx",
+        "path": "frontend/src/components/form/TextArea.tsx"
+      },
+      {
+        "key": "usual-suspects:backend/src/ai.py",
+        "qualifier": "FIL",
+        "name": "ai.py",
+        "longName": "backend/src/ai.py",
+        "path": "backend/src/ai.py"
+      },
+      {
+        "key": "usual-suspects:Dockerfile.backend",
+        "qualifier": "FIL",
+        "name": "Dockerfile.backend",
+        "longName": "Dockerfile.backend",
+        "path": "Dockerfile.backend"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/examples/CardExample.tsx",
+        "qualifier": "FIL",
+        "name": "CardExample.tsx",
+        "longName": "frontend/src/components/examples/CardExample.tsx",
+        "path": "frontend/src/components/examples/CardExample.tsx"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Range.tsx",
+        "qualifier": "FIL",
+        "name": "Range.tsx",
+        "longName": "frontend/src/components/form/Range.tsx",
+        "path": "frontend/src/components/form/Range.tsx"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Input.tsx",
+        "qualifier": "FIL",
+        "name": "Input.tsx",
+        "longName": "frontend/src/components/form/Input.tsx",
+        "path": "frontend/src/components/form/Input.tsx"
+      },
+      {
+        "key": "usual-suspects:backend/src/web/api/__init__.py",
+        "qualifier": "FIL",
+        "name": "__init__.py",
+        "longName": "backend/src/web/api/__init__.py",
+        "path": "backend/src/web/api/__init__.py"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Checkbox.tsx",
+        "qualifier": "FIL",
+        "name": "Checkbox.tsx",
+        "longName": "frontend/src/components/form/Checkbox.tsx",
+        "path": "frontend/src/components/form/Checkbox.tsx"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/Radio.tsx",
+        "qualifier": "FIL",
+        "name": "Radio.tsx",
+        "longName": "frontend/src/components/form/Radio.tsx",
+        "path": "frontend/src/components/form/Radio.tsx"
+      },
+      {
+        "key": "usual-suspects:backend/src/cli/delete_company.py",
+        "qualifier": "FIL",
+        "name": "delete_company.py",
+        "longName": "backend/src/cli/delete_company.py",
+        "path": "backend/src/cli/delete_company.py"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/Tabs.tsx",
+        "qualifier": "FIL",
+        "name": "Tabs.tsx",
+        "longName": "frontend/src/components/Tabs.tsx",
+        "path": "frontend/src/components/Tabs.tsx"
+      },
+      {
+        "key": "usual-suspects:frontend/src/utils/helpers.ts",
+        "qualifier": "FIL",
+        "name": "helpers.ts",
+        "longName": "frontend/src/utils/helpers.ts",
+        "path": "frontend/src/utils/helpers.ts"
+      },
+      {
+        "key": "usual-suspects:frontend/src/components/form/SearchInput.tsx",
+        "qualifier": "FIL",
+        "name": "SearchInput.tsx",
+        "longName": "frontend/src/components/form/SearchInput.tsx",
+        "path": "frontend/src/components/form/SearchInput.tsx"
+      },
+      {
+        "key": "usual-suspects:backend/src/web/app.py",
+        "qualifier": "FIL",
+        "name": "app.py",
+        "longName": "backend/src/web/app.py",
+        "path": "backend/src/web/app.py"
+      }
+    ]
   },
   "file_component_categories": {
     "tests/__init__.py": "Tests",

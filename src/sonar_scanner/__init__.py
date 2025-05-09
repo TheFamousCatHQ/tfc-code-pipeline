@@ -264,6 +264,7 @@ sonar.token={sonar_token}
         measures = None
         file_measures = None
         issues = None
+        security_hotspots = None
         file_component_categories = None
 
         try:
@@ -308,11 +309,20 @@ sonar.token={sonar_token}
             logger.error(f"Failed to fetch issues: {e}")
             issues = {"issues": [], "paging": {"total": 0}}
 
-        # Merge SONAR_MEASURES.json, SONAR_FILE_MEASURES.json, and issues into one report for STDOUT
+        try:
+            # Fetch security hotspots
+            security_hotspots = client.fetch_security_hotspots(project_key)
+            logger.info(f"Successfully fetched security hotspots for {project_key}")
+        except Exception as e:
+            logger.error(f"Failed to fetch security hotspots: {e}")
+            security_hotspots = {"hotspots": [], "paging": {"total": 0}}
+
+        # Merge SONAR_MEASURES.json, SONAR_FILE_MEASURES.json, issues, and security hotspots into one report for STDOUT
         merged_sonar_report = {
             "project_measures": measures,
             "file_measures": file_measures,
             "issues": issues,
+            "security_hotspots": security_hotspots,
             "file_component_categories": file_component_categories
         }
 
