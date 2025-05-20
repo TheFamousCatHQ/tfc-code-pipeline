@@ -45,7 +45,7 @@ class FileComponentCategory(BaseModel):
     mapping: Dict[str, str]
 
 
-def create_agent(output_type: Type[T], system_prompt: str, model: Optional[str] = None) -> Agent:
+def create_agent(output_type: Type[T], system_prompt: str, model: Optional[str] = None, retries: int = 1, output_retries: Optional[int] = None) -> Agent:
     """
     Create a PydanticAI agent with the specified output type and system prompt using OpenRouter.
 
@@ -53,6 +53,8 @@ def create_agent(output_type: Type[T], system_prompt: str, model: Optional[str] 
         output_type: The Pydantic model to use for output
         system_prompt: The system prompt for the agent
         model: The model to use (default: from environment or anthropic/claude-3.5-sonnet)
+        retries: Number of retries for validation (default: 1)
+        output_retries: Number of retries for output validation (default: None)
 
     Returns:
         A configured PydanticAI agent
@@ -95,6 +97,8 @@ def create_agent(output_type: Type[T], system_prompt: str, model: Optional[str] 
         ),
         output_type=output_type,
         system_prompt=system_prompt,
+        retries=retries,
+        output_retries=output_retries,
     )
 
 

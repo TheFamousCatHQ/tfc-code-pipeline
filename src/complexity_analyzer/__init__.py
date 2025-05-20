@@ -282,7 +282,9 @@ class ComplexityAnalyzerProcessor(CodeProcessor):
             # Create an agent using the ai module
             agent = create_agent(
                 output_type=MasterComplexityReport,
-                system_prompt=system_prompt
+                system_prompt=system_prompt,
+                retries=3,
+                output_retries=3
             )
 
             # Generate the master report

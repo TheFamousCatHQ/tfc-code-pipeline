@@ -24,6 +24,7 @@ PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
     "find_bugs": {"module": "find_bugs", "class": "FindBugsProcessor"},
     "analyze_complexity": {"module": "complexity_analyzer", "class": "ComplexityAnalyzerProcessor"},
     "sonar_scan": {"module": "sonar_scanner", "class": "SonarScannerProcessor"},
+    "bug_analyzer": {"module": "bug_analyzer", "class": "BugAnalyzerProcessor"},
 }
 
 

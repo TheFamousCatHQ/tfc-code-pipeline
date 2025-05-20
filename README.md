@@ -44,6 +44,68 @@ For each component/file, the tool generates:
 - Suggestions for improvement
 - A detailed prompt for an AI Coding Agent to fix the issues and/or refactor complex code
 
+## Bug Analyzer
+
+The `bug-analyzer` tool analyzes code changes in a Git commit to identify potential bugs. It takes the diff of a commit, plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized JSON format.
+
+### Usage
+
+```bash
+poetry run bug-analyzer [--commit COMMIT_ID] [--output OUTPUT_FILE]
+```
+
+### Options
+
+- `--commit`: Commit ID to analyze (default: HEAD)
+- `--output`: Output file path for the bug analysis report (default: bug_analysis_report.json)
+
+### Example
+
+```bash
+# Analyze the latest commit
+poetry run bug-analyzer
+
+# Analyze a specific commit
+poetry run bug-analyzer --commit abc1234
+
+# Specify a custom output file
+poetry run bug-analyzer --commit HEAD --output custom_report.json
+```
+
+This will analyze the specified commit, extract the diff and affected files, send the data to OpenRouter for analysis, and write the results to the specified output file.
+
+### Features
+
+The tool performs the following steps:
+
+1. **Commit Analysis**: Extracts the diff of the specified commit using Git.
+
+2. **File Identification**: Identifies all files affected by the commit.
+
+3. **Content Extraction**: Reads the full content of each affected file.
+
+4. **AI Analysis**: Sends the commit diff and file contents to OpenRouter for analysis.
+
+5. **Report Generation**: Creates a structured JSON report containing:
+   - Commit ID and timestamp
+   - List of affected files
+   - Detailed bug information for each identified issue:
+     - File path and line number
+     - Bug description
+     - Severity (high/medium/low)
+     - Confidence level (high/medium/low)
+     - Suggested fix
+     - Code snippet containing the bug
+   - Summary of the analysis
+
+### Integration with Main CLI
+
+You can also run the bug analyzer through the main CLI:
+
+```bash
+poetry run tfc-code-pipeline --cmd bug_analyzer [--commit COMMIT_ID] [--output OUTPUT_FILE]
+```
+
 ## Overview
 
 The `code_processor` module provides a base class (`CodeProcessor`) that can be extended to create specialized code
@@ -79,6 +141,13 @@ processing them with Aider, etc.) is handled by the base class.
 5. **Reporting**: All processors report which files were processed and any errors encountered.
 
 ## Available Processors
+
+### BugAnalyzerProcessor
+
+- **Script**: `bug-analyzer`
+- **Purpose**: Analyzes bugs in code changes using OpenRouter
+- **Default Message**: "Analyze this code diff and the full source of affected files to identify potential bugs. Focus on bugs introduced by the changes in the diff. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), 5) a suggested fix, and 6) the relevant code snippet."
+- **Output**: Generates a `bug_analysis_report.json` file (or custom filename specified with `--output`)
 
 ### ExplainCodeProcessor
 
@@ -379,7 +448,7 @@ tfc-code-pipeline [--build-only] [--skip-build] [--run] [--src /path/to/source] 
 - `--src`: Directory to mount in the Docker container under /src
 - `--messages`: Custom message to pass to aider (default: "Hello")
 - `--cmd`: Command to run in the Docker container (choices: "explain_code", "write_tests", "find_bugs", "
-  analyze_complexity", or "sonar_scan", default: "explain_code")
+  analyze_complexity", "sonar_scan", or "bug_analyzer", default: "explain_code")
 
 **Example:**
 
@@ -401,6 +470,9 @@ tfc-code-pipeline --run --src /path/to/source --cmd analyze_complexity
 
 # Run sonar-scan in a Docker container
 tfc-code-pipeline --run --src /path/to/source --cmd sonar_scan
+
+# Run bug-analyzer in a Docker container
+tfc-code-pipeline --run --src /path/to/source --cmd bug_analyzer
 
 # Run explain-code in a Docker container, skipping the Docker image build
 tfc-code-pipeline --run --skip-build --src /path/to/source --cmd explain_code
@@ -453,6 +525,7 @@ This project supports loading environment variables from a `.env` file. When usi
 Common environment variables:
 
 - `OPENAI_API_KEY`: API key for OpenAI (used by Aider)
+- `OPENROUTER_API_KEY`: API key for OpenRouter (used by bug-analyzer and other AI-powered processors)
 - `DEBUG`: Enable debug mode (set to "True" to enable)
 - `SONAR_TOKEN`: Authentication token for SonarQube (used by sonar-scanner)
 
@@ -460,6 +533,7 @@ To use environment variables, create a `.env` file in the project root directory
 
 ```
 OPENAI_API_KEY=your-api-key-here
+OPENROUTER_API_KEY=your-openrouter-api-key-here
 DEBUG=False
 SONAR_TOKEN=your-sonar-token-here
 ```
