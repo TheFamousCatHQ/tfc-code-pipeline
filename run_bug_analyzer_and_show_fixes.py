@@ -10,17 +10,19 @@ one-by-one on the command line, pausing for user input between each.
 """
 
 import argparse
+import os
+import re
 import subprocess
 import sys
+import tempfile
+import textwrap
+import threading
+import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, List
-import os
-import threading
-import time
+
 from colorama import init, Fore, Style
-import textwrap
-import re
 
 IMAGE_NAME = "tfccodepipeline/app:latest"
 DEFAULT_ENV_FILE = ".env"
@@ -28,6 +30,7 @@ DEFAULT_ENV_FILE = ".env"
 init(autoreset=True)
 
 SPINNER_CHARS = ["|", "/", "-", "\\"]
+
 
 def read_env_file(env_file: str) -> List[str]:
     """
@@ -45,11 +48,12 @@ def read_env_file(env_file: str) -> List[str]:
                     env_flags.extend(["-e", f"{key}={value}"])
     return env_flags
 
+
 def run_bug_analyzer_docker(
-    commit: Optional[str],
-    working_tree: bool,
-    output: str,
-    env_file: str
+        commit: Optional[str],
+        working_tree: bool,
+        output: str,
+        env_file: str
 ) -> int:
     """
     Run the bug analyzer using the Docker image and write output to the specified file.
@@ -108,6 +112,7 @@ def run_bug_analyzer_docker(
     if retcode != 0:
         print(stderr, file=sys.stderr)
     return retcode
+
 
 def print_bug(idx: int, total: int, bug: ET.Element) -> None:
     """
@@ -176,33 +181,90 @@ def print_bug(idx: int, total: int, bug: ET.Element) -> None:
     # Bottom border
     print(f"{Style.BRIGHT}{Fore.MAGENTA}┗{'━' * (BOX_WIDTH - 2)}┛{Style.RESET_ALL}")
 
-def apply_fix(bug: ET.Element, auto_commit: bool) -> None:
-    """
-    Stub for applying a fix. For now, just print what would happen.
-    """
-    file_path = bug.findtext("file_path", "<unknown>")
-    line_number = bug.findtext("line_number", "<unknown>")
-    print(f"\nWould apply fix to {file_path} (lines {line_number})" + (" with auto-commit." if auto_commit else "."))
-    # TODO: Implement actual fix application logic
 
-def prompt_apply_fix(bug: ET.Element) -> None:
+def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
+    """
+    Create a temporary XML file containing only this bug, in the same format as the main report.
+    Returns the path to the temp file.
+    """
+    # Parse the original XML to get commit_id, timestamp, affected_files, summary
+    tree = ET.parse(original_xml_path)
+    root = tree.getroot()
+    commit_id = root.findtext("commit_id", "HEAD")
+    timestamp = root.findtext("timestamp", "")
+    affected_files_elem = root.find("affected_files")
+    summary = root.findtext("summary", None)
+    # Build new XML
+    bug_report = ET.Element("bug_analysis_report")
+    ET.SubElement(bug_report, "commit_id").text = commit_id
+    ET.SubElement(bug_report, "timestamp").text = timestamp
+    affected_files = ET.SubElement(bug_report, "affected_files")
+    if affected_files_elem is not None:
+        for file_elem in affected_files_elem.findall("file"):
+            ET.SubElement(affected_files, "file").text = file_elem.text
+    bugs_elem = ET.SubElement(bug_report, "bugs")
+    bugs_elem.append(bug)
+    if summary:
+        ET.SubElement(bug_report, "summary").text = summary
+    # Write to temp file
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix="_single_bug.xml", mode="w", encoding="utf-8")
+    tmp.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+    xml_str = ET.tostring(bug_report, encoding="unicode")
+    tmp.write(xml_str)
+    tmp.close()
+    return tmp.name
+
+
+def apply_fix(bug: ET.Element, auto_commit: bool, original_xml_path: str, env_file: str) -> None:
+    """
+    Call fix_bugs in Docker with --single-bug-xml SINGLE_BUG_XML.
+    If auto_commit is True, also pass --auto-commit.
+    """
+    single_bug_xml = create_single_bug_xml(bug, original_xml_path)
+    src_dir = os.getcwd()
+    env_flags = read_env_file(env_file)
+    env_flags.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={os.path.basename(src_dir)}"])
+    cmd = [
+        "docker", "run", "--rm", "-i",
+        *env_flags,
+        "-v", f"{src_dir}:/src",
+        "--entrypoint", "fix-bugs",
+        IMAGE_NAME,
+        "--single-bug-xml", single_bug_xml
+    ]
+    if auto_commit:
+        cmd.append("--auto-commit")
+    print(f"\n{Fore.CYAN}Applying fix using fix_bugs...{Style.RESET_ALL}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    print(result.stdout)
+    if result.returncode != 0:
+        print(result.stderr, file=sys.stderr)
+    # Optionally, remove the temp file
+    try:
+        os.unlink(single_bug_xml)
+    except Exception:
+        pass
+
+
+def prompt_apply_fix(bug: ET.Element, original_xml_path: str, env_file: str) -> None:
     """
     Prompt the user whether to apply the fix, with Y/n/a options.
     """
     while True:
         answer = input(f"{Style.BRIGHT}{Fore.YELLOW}Apply this fix? [Y/n/a]: {Style.RESET_ALL}").strip().lower()
         if answer == "" or answer == "y":
-            apply_fix(bug, auto_commit=False)
+            apply_fix(bug, auto_commit=False, original_xml_path=original_xml_path, env_file=env_file)
             break
         elif answer == "n":
             break
         elif answer == "a":
-            apply_fix(bug, auto_commit=True)
+            apply_fix(bug, auto_commit=True, original_xml_path=original_xml_path, env_file=env_file)
             break
         else:
             print(f"{Fore.RED}Please answer 'Y' (yes), 'n' (no), or 'a' (yes-with-auto-commit).{Style.RESET_ALL}")
 
-def parse_and_show_fixes(xml_path: str) -> None:
+
+def parse_and_show_fixes(xml_path: str, env_file: str) -> None:
     """
     Parse the bug analysis XML and show each bug fix suggestion interactively.
     """
@@ -219,7 +281,8 @@ def parse_and_show_fixes(xml_path: str) -> None:
     print(f"{Fore.GREEN}Found {len(bugs)} bug(s) in the analysis report.\n{Style.RESET_ALL}")
     for idx, bug in enumerate(bugs, 1):
         print_bug(idx, len(bugs), bug)
-        prompt_apply_fix(bug)
+        prompt_apply_fix(bug, xml_path, env_file)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -257,7 +320,8 @@ def main() -> None:
         sys.exit(ret)
 
     # Parse and show bug fixes
-    parse_and_show_fixes(args.output)
+    parse_and_show_fixes(args.output, args.env_file)
+
 
 if __name__ == "__main__":
-    main() 
+    main()
