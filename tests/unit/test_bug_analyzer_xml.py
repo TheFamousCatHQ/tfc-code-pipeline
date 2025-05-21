@@ -5,7 +5,6 @@ which converts a BugAnalysisReport object to an XML element.
 """
 
 import unittest
-import xml.etree.ElementTree as ET
 from datetime import datetime
 
 from bug_analyzer import BugAnalysis, BugAnalysisReport
