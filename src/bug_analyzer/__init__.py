@@ -27,6 +27,16 @@ from logging_utils import get_logger
 # Set up logging
 logger = get_logger("tfc-code-pipeline.bug_analyzer")
 
+def force_debug_logging(logger):
+    logger.setLevel('DEBUG')
+    # Set all handlers for this logger and its parents to DEBUG
+    current = logger
+    while current:
+        for handler in current.handlers:
+            handler.setLevel('DEBUG')
+        if not getattr(current, 'propagate', True):
+            break
+        current = getattr(current, 'parent', None)
 
 class BugAnalysis(BaseModel):
     """Model for bug analysis results."""
@@ -170,26 +180,31 @@ class BugAnalyzerProcessor(CodeProcessor):
         """
         try:
             if working_tree:
-                # Get diff between working tree and HEAD
+                git_cmd = ["git", "diff", "HEAD"]
+                logger.debug(f"Running git diff for working tree: {' '.join(git_cmd)}")
                 result = subprocess.run(
-                    ["git", "diff", "HEAD"],
+                    git_cmd,
                     check=True,
                     text=True,
                     capture_output=True
                 )
+                logger.debug(f"git diff output (working tree):\n{result.stdout}")
             else:
                 if not commit_id:
                     raise ValueError("commit_id must be provided when working_tree is False")
-                # Get diff of a specific commit
+                git_cmd = ["git", "show", commit_id]
+                logger.debug(f"Running git show for commit: {' '.join(git_cmd)}")
                 result = subprocess.run(
-                    ["git", "show", commit_id],
+                    git_cmd,
                     check=True,
                     text=True,
                     capture_output=True
                 )
+                logger.debug(f"git show output (commit {commit_id}):\n{result.stdout}")
             return result.stdout
         except subprocess.CalledProcessError as e:
             logger.error(f"Error getting diff: {e}")
+            logger.debug(f"git command failed: {e.cmd}\nstdout: {e.stdout}\nstderr: {e.stderr}")
             return ""
 
     def count_lines_in_file(self, file_path: str) -> int:
@@ -290,6 +305,10 @@ class BugAnalyzerProcessor(CodeProcessor):
         output_file = args.output
         working_tree = args.working_tree
 
+        # Set logger to debug level if --debug is passed
+        if getattr(args, 'debug', False):
+            force_debug_logging(logger)
+
         # Determine the mode of operation
         mode_desc = "working tree changes" if working_tree else f"commit {commit_id}"
 
@@ -298,7 +317,9 @@ class BugAnalyzerProcessor(CodeProcessor):
 
         # Get the diff
         logger.info(f"Getting diff for {mode_desc}")
+        logger.debug(f"About to gather diff for {mode_desc} (commit_id={commit_id}, working_tree={working_tree})")
         commit_diff = self.get_commit_diff(commit_id, working_tree)
+        logger.debug(f"Diff gathered for {mode_desc}:\n{commit_diff}")
         if not commit_diff:
             logger.error(f"Failed to get diff for {mode_desc}")
             # Write minimal XML report for empty diff

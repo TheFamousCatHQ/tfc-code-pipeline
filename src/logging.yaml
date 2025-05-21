@@ -21,7 +21,7 @@ handlers:
 
 loggers:
   tfc-code-pipeline:
-    level: INFO
+    level: DEBUG
     handlers: [ console, file ]
     propagate: no
   tfc-code-pipeline.bug_analyzer:

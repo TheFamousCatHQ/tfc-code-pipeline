@@ -213,6 +213,60 @@ ENTRYPOINT ["/bin/bash"]
                     read_env_file(env_file)
 
             logger.info("Build only complete.")
+            # Print the docker run command for the user
+            # Prepare Docker run command as in the run block
+            docker_cmd: List[str] = ["docker", "run", "--rm", "-it"]
+            # Add environment variables
+            env_file = Path(".env")
+            if env_file.exists():
+                env_vars: Dict[str, str] = read_env_file(env_file)
+                for key, value in env_vars.items():
+                    docker_cmd.extend(["-e", f"{key}={value}"])
+            src_path = Path(src).resolve() if src else Path(".").resolve()
+            src_dir_name = os.path.basename(src_path)
+            docker_cmd.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={src_dir_name}"])
+            docker_cmd.extend(["-v", f"{src_path}:/src"])
+            # Output directory logic
+            processor_args_list = reconstruct_processor_args(args)
+            output_mount_needed = False
+            docker_output_dir = "/output"
+            host_output_dir = None
+            output_arg_index = -1
+            docker_output_path = ""
+            try:
+                output_arg_index = processor_args_list.index("-o")
+            except ValueError:
+                try:
+                    output_arg_index = processor_args_list.index("--output")
+                except ValueError:
+                    output_arg_index = -1
+            if output_arg_index != -1 and output_arg_index + 1 < len(processor_args_list):
+                host_output_path = Path(processor_args_list[output_arg_index + 1]).resolve()
+                host_output_dir = host_output_path.parent
+                output_filename = host_output_path.name
+                docker_output_path = f"{docker_output_dir}/{output_filename}"
+                host_output_dir.mkdir(parents=True, exist_ok=True)
+                output_mount_needed = True
+            if output_mount_needed and host_output_dir:
+                docker_cmd.extend(["-v", f"{host_output_dir}:{docker_output_dir}"])
+            # Entrypoint logic
+            entrypoint = cmd.replace("_", "-") if cmd else ""
+            if cmd == "fix_bugs":
+                entrypoint = "fix-bugs"
+            docker_cmd.extend(["--entrypoint", entrypoint, IMAGE_NAME])
+            # Only add --directory /src for processors that need it
+            if cmd not in ("fix_bugs",):
+                docker_cmd.extend(["--directory", "/src"])
+            # Add the reconstructed processor-specific arguments
+            if output_arg_index != -1:
+                docker_cmd.extend(processor_args_list[:output_arg_index + 1])
+                docker_cmd.append(docker_output_path)
+                docker_cmd.extend(processor_args_list[output_arg_index + 2:])
+            else:
+                docker_cmd.extend(processor_args_list)
+            # Print the command for the user
+            print("\nTo run the built image, use:")
+            print(" ", " ".join(str(x) for x in docker_cmd))
             return 0  # Success for build-only
 
         # --- Run Logic --- (Only if run is True)

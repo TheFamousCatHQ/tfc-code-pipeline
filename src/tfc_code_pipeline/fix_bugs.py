@@ -43,6 +43,11 @@ class FixBugsProcessor(CodeProcessor):
             action="store_true",
             help="Analyze diff between working tree and HEAD (default: False)"
         )
+        parser.add_argument(
+            "--commit",
+            type=str,
+            help="Commit ID to analyze (optional, overrides working tree if provided)"
+        )
 
     def parse_args(self, args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         parser = argparse.ArgumentParser(description=self.get_description())
@@ -62,6 +67,11 @@ class FixBugsProcessor(CodeProcessor):
             action="store_true",
             help="Analyze diff between working tree and HEAD (default: False)"
         )
+        parser.add_argument(
+            "--commit",
+            type=str,
+            help="Commit ID to analyze (optional, overrides working tree if provided)"
+        )
         return parser.parse_args(args)
 
     def run(self) -> int:
@@ -69,6 +79,7 @@ class FixBugsProcessor(CodeProcessor):
         output_file = args.output
         debug = getattr(args, 'debug', False)
         working_tree = getattr(args, 'working_tree', False)
+        commit = getattr(args, 'commit', None)
 
         # Step 1: Run bug_analyzer on working tree or commit
         logger.info("Running bug_analyzer...")
@@ -76,11 +87,28 @@ class FixBugsProcessor(CodeProcessor):
             "bug-analyzer",
             "--directory", "."
         ]
-        if working_tree:
+        if commit:
+            bug_analyzer_cmd.extend(["--commit", commit])
+        elif working_tree:
             bug_analyzer_cmd.append("--working-tree")
+        if debug:
+            bug_analyzer_cmd.append("--debug")
         bug_analyzer_cmd.extend(["--output", output_file])
         try:
             result = subprocess.run(bug_analyzer_cmd, capture_output=True, text=True)
+            # Log bug_analyzer output with debug awareness
+            for line in result.stdout.splitlines():
+                line_stripped = line.strip()
+                if 'DEBUG' in line_stripped:
+                    logger.debug(f"[bug_analyzer debug] {line_stripped}")
+                else:
+                    logger.info(f"[bug_analyzer] {line_stripped}")
+            for line in result.stderr.splitlines():
+                line_stripped = line.strip()
+                if 'DEBUG' in line_stripped:
+                    logger.debug(f"[bug_analyzer debug] {line_stripped}")
+                else:
+                    logger.error(f"[bug_analyzer stderr] {line_stripped}")
             if result.returncode != 0:
                 logger.error(f"bug_analyzer failed: {result.stderr}")
                 return 1
@@ -110,10 +138,18 @@ class FixBugsProcessor(CodeProcessor):
             process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             if process.stdout:
                 for line in iter(process.stdout.readline, ''):
-                    logger.info(f"[aider] {line.strip()}")
+                    line_stripped = line.strip()
+                    if 'DEBUG' in line_stripped:
+                        logger.debug(f"[aider debug] {line_stripped}")
+                    else:
+                        logger.info(f"[aider] {line_stripped}")
             if process.stderr:
                 for line in iter(process.stderr.readline, ''):
-                    logger.error(f"[aider stderr] {line.strip()}")
+                    line_stripped = line.strip()
+                    if 'DEBUG' in line_stripped:
+                        logger.debug(f"[aider debug] {line_stripped}")
+                    else:
+                        logger.error(f"[aider stderr] {line_stripped}")
             process.wait()
             if process.returncode == 0:
                 logger.info("Aider completed successfully.")
