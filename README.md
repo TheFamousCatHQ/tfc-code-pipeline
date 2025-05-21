@@ -46,7 +46,7 @@ For each component/file, the tool generates:
 
 ## Bug Analyzer
 
-The `bug-analyzer` tool analyzes code changes in a Git commit to identify potential bugs. It takes the diff of a commit, plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized JSON format.
+The `bug-analyzer` tool analyzes code changes in a Git commit to identify potential bugs. It takes the diff of a commit, plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized XML format.
 
 ### Usage
 
@@ -57,7 +57,7 @@ poetry run bug-analyzer [--commit COMMIT_ID] [--output OUTPUT_FILE]
 ### Options
 
 - `--commit`: Commit ID to analyze (default: HEAD)
-- `--output`: Output file path for the bug analysis report (default: bug_analysis_report.json)
+- `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 
 ### Example
 
@@ -69,7 +69,7 @@ poetry run bug-analyzer
 poetry run bug-analyzer --commit abc1234
 
 # Specify a custom output file
-poetry run bug-analyzer --commit HEAD --output custom_report.json
+poetry run bug-analyzer --commit HEAD --output custom_report.xml
 ```
 
 This will analyze the specified commit, extract the diff and affected files, send the data to OpenRouter for analysis, and write the results to the specified output file.
@@ -86,7 +86,7 @@ The tool performs the following steps:
 
 4. **AI Analysis**: Sends the commit diff and file contents to OpenRouter for analysis.
 
-5. **Report Generation**: Creates a structured JSON report containing:
+5. **Report Generation**: Creates a structured XML report containing:
    - Commit ID and timestamp
    - List of affected files
    - Detailed bug information for each identified issue:
@@ -147,7 +147,7 @@ processing them with Aider, etc.) is handled by the base class.
 - **Script**: `bug-analyzer`
 - **Purpose**: Analyzes bugs in code changes using OpenRouter
 - **Default Message**: "Analyze this code diff and the full source of affected files to identify potential bugs. Focus on bugs introduced by the changes in the diff. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), 5) a suggested fix, and 6) the relevant code snippet."
-- **Output**: Generates a `bug_analysis_report.json` file (or custom filename specified with `--output`)
+- **Output**: Generates a `bug_analysis_report.xml` file (or custom filename specified with `--output`)
 
 ### ExplainCodeProcessor
 
