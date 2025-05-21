@@ -97,6 +97,23 @@ class TestBugAnalysisReportXML(unittest.TestCase):
         bug_elems = bugs_elem.findall("bug")
         self.assertEqual(len(bug_elems), 0)
 
+    def test_to_xml_no_summary(self):
+        """Test that to_xml handles a report with no summary correctly."""
+        # Create a BugAnalysisReport object with no summary
+        report = BugAnalysisReport(
+            commit_id="abc123",
+            timestamp=datetime.now().isoformat(),
+            affected_files=["src/example.py"],
+            bugs=[]
+        )
+
+        # Convert to XML
+        root = report.to_xml()
+
+        # Check that the summary element doesn't exist
+        summary_elem = root.find("summary")
+        self.assertIsNone(summary_elem)
+
 
 if __name__ == "__main__":
     unittest.main()

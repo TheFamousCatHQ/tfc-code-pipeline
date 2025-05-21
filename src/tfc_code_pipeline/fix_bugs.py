@@ -101,12 +101,24 @@ class FixBugsProcessor(CodeProcessor):
                 line_stripped = line.strip()
                 if 'DEBUG' in line_stripped:
                     logger.debug(f"[bug_analyzer debug] {line_stripped}")
+                elif 'INFO' in line_stripped:
+                    logger.info(f"[bug_analyzer info] {line_stripped}")
+                elif 'WARNING' in line_stripped or 'WARN' in line_stripped:
+                    logger.warning(f"[bug_analyzer warning] {line_stripped}")
+                elif 'ERROR' in line_stripped:
+                    logger.error(f"[bug_analyzer error] {line_stripped}")
                 else:
                     logger.info(f"[bug_analyzer] {line_stripped}")
             for line in result.stderr.splitlines():
                 line_stripped = line.strip()
                 if 'DEBUG' in line_stripped:
                     logger.debug(f"[bug_analyzer debug] {line_stripped}")
+                elif 'INFO' in line_stripped:
+                    logger.info(f"[bug_analyzer info] {line_stripped}")
+                elif 'WARNING' in line_stripped or 'WARN' in line_stripped:
+                    logger.warning(f"[bug_analyzer warning] {line_stripped}")
+                elif 'ERROR' in line_stripped:
+                    logger.error(f"[bug_analyzer error] {line_stripped}")
                 else:
                     logger.error(f"[bug_analyzer stderr] {line_stripped}")
             if result.returncode != 0:

@@ -56,7 +56,7 @@ class BugAnalysisReport(BaseModel):
     timestamp: str = Field(..., description="Timestamp of the analysis")
     affected_files: List[str] = Field(..., description="List of files affected by the commit")
     bugs: List[BugAnalysis] = Field(default_factory=list, description="List of bugs found in the code")
-    summary: str = Field(..., description="Summary of the bug analysis")
+    summary: Optional[str] = Field(None, description="Summary of the bug analysis")
 
     def to_xml(self) -> ET.Element:
         """Convert the bug analysis report to an XML element.
@@ -107,9 +107,10 @@ class BugAnalysisReport(BaseModel):
             code_snippet_elem = ET.SubElement(bug_elem, "code_snippet")
             code_snippet_elem.text = bug.code_snippet
 
-        # Add summary
-        summary_elem = ET.SubElement(root, "summary")
-        summary_elem.text = self.summary
+        # Add summary if it exists
+        if self.summary is not None:
+            summary_elem = ET.SubElement(root, "summary")
+            summary_elem.text = self.summary
 
         return root
 
