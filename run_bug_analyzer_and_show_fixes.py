@@ -206,8 +206,9 @@ def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
     bugs_elem.append(bug)
     if summary:
         ET.SubElement(bug_report, "summary").text = summary
-    # Write to temp file
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix="_single_bug.xml", mode="w", encoding="utf-8")
+    # Write to temp file in the current working directory so Docker can see it
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix="_single_bug.xml", mode="w", encoding="utf-8",
+                                      dir=os.getcwd())
     tmp.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     xml_str = ET.tostring(bug_report, encoding="unicode")
     tmp.write(xml_str)
@@ -217,10 +218,12 @@ def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
 
 def apply_fix(bug: ET.Element, auto_commit: bool, original_xml_path: str, env_file: str) -> None:
     """
-    Call fix_bugs in Docker with --single-bug-xml SINGLE_BUG_XML.
+    Call fix_bugs in Docker with --single-bug-xml /src/<filename>.
     If auto_commit is True, also pass --auto-commit.
     """
     single_bug_xml = create_single_bug_xml(bug, original_xml_path)
+    single_bug_xml_name = os.path.basename(single_bug_xml)
+    container_xml_path = f"/src/{single_bug_xml_name}"
     src_dir = os.getcwd()
     env_flags = read_env_file(env_file)
     env_flags.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={os.path.basename(src_dir)}"])
@@ -230,7 +233,7 @@ def apply_fix(bug: ET.Element, auto_commit: bool, original_xml_path: str, env_fi
         "-v", f"{src_dir}:/src",
         "--entrypoint", "fix-bugs",
         IMAGE_NAME,
-        "--single-bug-xml", single_bug_xml
+        "--single-bug-xml", container_xml_path
     ]
     if auto_commit:
         cmd.append("--auto-commit")
