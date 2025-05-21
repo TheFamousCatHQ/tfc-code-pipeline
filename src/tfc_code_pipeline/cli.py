@@ -25,6 +25,7 @@ PROCESSOR_MAP: Dict[str, Dict[str, str]] = {
     "analyze_complexity": {"module": "complexity_analyzer", "class": "ComplexityAnalyzerProcessor"},
     "sonar_scan": {"module": "sonar_scanner", "class": "SonarScannerProcessor"},
     "bug_analyzer": {"module": "bug_analyzer", "class": "BugAnalyzerProcessor"},
+    "fix_bugs": {"module": "tfc_code_pipeline.fix_bugs", "class": "FixBugsProcessor"},
 }
 
 
@@ -107,7 +108,7 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         type=str,
         choices=list(PROCESSOR_MAP.keys()),
         required=True,  # Make cmd required
-        help="Command (processor) to run."
+        help="Command (processor) to run. Available: explain_code, write_tests, find_bugs, analyze_complexity, sonar_scan, bug_analyzer, fix_bugs (run bug_analyzer, then feed XML to aider to fix bugs)."
     )
     # Add a group for processor-specific arguments for clarity in help message
     processor_group = parser.add_argument_group(f'{cmd} arguments' if processor else 'processor arguments')

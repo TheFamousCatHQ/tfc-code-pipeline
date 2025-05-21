@@ -15,7 +15,8 @@ packages = [
     {include = "validate_complexity_report", from = "src"},
     {include = "sonar_scanner", from = "src"},
     {include = "sonar_analyzer", from = "src"},
-    {include = "bug_analyzer", from = "src"}
+    {include = "bug_analyzer", from = "src"},
+    {include = "tfc_code_pipeline.fix_bugs", from = "src"}
 ]
 
 [tool.poetry.dependencies]
