@@ -356,6 +356,15 @@ def main() -> None:
     # Parse and show bug fixes
     parse_and_show_fixes(args.output, args.env_file, debug=args.debug)
 
+    # Delete the bug analysis report file if it exists
+    try:
+        if os.path.exists(args.output):
+            os.remove(args.output)
+            if args.debug:
+                print(f"[DEBUG] Deleted bug analysis report: {args.output}")
+    except Exception as e:
+        print(f"[DEBUG] Error deleting bug analysis report: {e}")
+
 
 if __name__ == "__main__":
     main()

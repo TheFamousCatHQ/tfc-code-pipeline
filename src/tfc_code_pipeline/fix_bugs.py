@@ -114,6 +114,12 @@ class FixBugsProcessor(CodeProcessor):
             help="Skip running bug_analyzer and use the provided --output XML file directly."
         )
         parser.add_argument(
+            "--auto-commmit",
+            action="store_true",
+            default=False,
+            help="Automatically commit the aider changes after fixing the bugs."
+        )
+        parser.add_argument(
             "--single-bug-xml",
             type=str,
             help="Path to a file containing a single <bug> element. Wraps it in a minimal bug_analysis_report and uses it as the XML input. Mutually exclusive with --skip-bug-analyzer."
@@ -155,6 +161,7 @@ class FixBugsProcessor(CodeProcessor):
         commit = getattr(args, 'commit', None)
         skip_bug_analyzer = getattr(args, 'skip_bug_analyzer', False)
         single_bug_xml = getattr(args, 'single_bug_xml', None)
+        auto_commit = getattr(args, 'auto_commit', False)
 
         # Step 0: If --single-bug-xml is provided, wrap it and use as XML input
         if single_bug_xml:
@@ -228,12 +235,14 @@ class FixBugsProcessor(CodeProcessor):
             logger.warning("No file paths found in the bug analysis report")
 
         logger.info(f"Feeding bug analysis report {output_file} to aider...")
-        aider_cmd = ["aider", "--yes", str(xml_path)]
-        aider_cmd.extend(file_paths)
-        aider_cmd.extend(["--message", self.get_default_message()])
-
+        aider_cmd = ["aider", "--yes", "--yes-always"]
+        if not auto_commit:
+            aider_cmd.append("--no-auto-commits")
         if debug:
             aider_cmd.extend(["--pretty", "--stream"])
+        aider_cmd.extend(["--read", str(xml_path)])
+        aider_cmd.extend(["--message", self.get_default_message()])
+        aider_cmd.extend(file_paths)
         try:
             logger.info(f"Running aider with command: {' '.join(aider_cmd)}")
             process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
