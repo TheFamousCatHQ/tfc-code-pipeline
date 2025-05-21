@@ -4,24 +4,27 @@ Script to analyze bugs in code changes using OpenRouter.
 
 This script takes the diff of a commit, plus the full source of all affected files,
 feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized
-JSON format.
+XML format.
 """
 
 import argparse
 import asyncio
 import json
+import os
 import subprocess
+import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Dict, List, Any
 
+import httpx
 from pydantic import BaseModel, Field
 
-from ai import create_agent
+from ai import xml_from_string
 from code_processor import CodeProcessor
 from logging_utils import get_logger
 
 # Set up logging
-logger = get_logger()
+logger = get_logger("tfc-code-pipeline.bug_analyzer")
 
 
 class BugAnalysis(BaseModel):
@@ -62,7 +65,29 @@ class BugAnalyzerProcessor(CodeProcessor):
             "3) severity (high/medium/low), "
             "4) confidence level (high/medium/low), "
             "5) a suggested fix, and "
-            "6) the relevant code snippet."
+            "6) the relevant code snippet. "
+            "Return the results in XML format using the following structure:\n"
+            "<bug_analysis_report>\n"
+            "  <commit_id>ID of the analyzed commit</commit_id>\n"
+            "  <timestamp>Timestamp of the analysis</timestamp>\n"
+            "  <affected_files>\n"
+            "    <file>path/to/file1.py</file>\n"
+            "    <file>path/to/file2.py</file>\n"
+            "  </affected_files>\n"
+            "  <bugs>\n"
+            "    <bug>\n"
+            "      <file_path>path/to/file.py</file_path>\n"
+            "      <line_number>42</line_number>\n"
+            "      <bug_description>Description of the bug</bug_description>\n"
+            "      <severity>high|medium|low</severity>\n"
+            "      <confidence>high|medium|low</confidence>\n"
+            "      <suggested_fix><![CDATA[code to fix the bug]]></suggested_fix>\n"
+            "      <code_snippet><![CDATA[code containing the bug]]></code_snippet>\n"
+            "    </bug>\n"
+            "  </bugs>\n"
+            "  <summary>Overall summary of the bug analysis</summary>\n"
+            "</bug_analysis_report>\n"
+            "Only return the XML, nothing else."
         )
 
     def get_description(self) -> str:
@@ -71,7 +96,7 @@ class BugAnalyzerProcessor(CodeProcessor):
         Returns:
             Description string.
         """
-        return "Analyze bugs in code changes using OpenRouter and output results as JSON"
+        return "Analyze bugs in code changes using OpenRouter and output results as XML"
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         """Add processor-specific arguments to the parser.
@@ -89,8 +114,8 @@ class BugAnalyzerProcessor(CodeProcessor):
         parser.add_argument(
             "--output",
             type=str,
-            default="bug_analysis_report.json",
-            help="Output file path for the bug analysis report (default: bug_analysis_report.json)"
+            default="bug_analysis_report.xml",
+            help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
         )
 
     def get_commit_diff(self, commit_id: str) -> str:
@@ -196,33 +221,122 @@ class BugAnalyzerProcessor(CodeProcessor):
             "timestamp": timestamp
         }
 
-        # Create an agent using the ai module
-        logger.info("Creating OpenRouter agent for bug analysis")
-        agent = create_agent(
-            output_type=BugAnalysisReport,
-            system_prompt=self.get_default_message(),
-            retries=3,
-            output_retries=3
-        )
+        # Set up OpenRouter API call
+        logger.info("Setting up direct OpenRouter API call for bug analysis")
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        model = os.getenv("DEFAULT_MODEL", "openai/gpt-4.1-mini")
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": os.getenv("OPENROUTER_HTTP_REFERER", "https://www.thefamouscat.com"),
+            "X-Title": os.getenv("OPENROUTER_X_TITLE", "CodePipeline"),
+            "Content-Type": "application/json"
+        }
+
+        # Prepare the data payload
+        data = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": self.get_default_message()},
+                {"role": "user", "content": json.dumps(input_data, indent=2)}
+            ],
+            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", "1024")),
+            "temperature": float(os.getenv("DEFAULT_TEMPERATURE", "0"))
+        }
 
         # Generate the bug analysis report
         try:
-            logger.info("Generating bug analysis report using OpenRouter")
-            # Await the asynchronous run method
-            bug_analysis_report = await agent.run(input_data)
-            logger.info("Successfully generated bug analysis report")
+            logger.info(f"Calling OpenRouter API directly with model {model}")
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{base_url}/chat/completions",
+                    headers=headers,
+                    json=data,
+                    timeout=60
+                )
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
 
-            # Convert to dict and write to file
-            report_dict = bug_analysis_report.model_dump()
+            logger.info("Successfully received response from OpenRouter")
+            logger.debug(f"Raw response content: {content}")
+
+            # Parse the response content as XML
+            # Try to extract XML from the response
+            try:
+                root = xml_from_string(content)
+                logger.info("Successfully parsed response as XML")
+            except Exception as e:
+                logger.error(f"Failed to parse response as XML: {e}")
+                logger.debug(f"Response content: {content}")
+                return {}
+
+            # Extract data from XML to create a BugAnalysisReport object
+            commit_id = root.findtext("commit_id", "")
+            timestamp = root.findtext("timestamp", "")
+            summary = root.findtext("summary", "")
+
+            # Extract affected files
+            affected_files = []
+            affected_files_elem = root.find("affected_files")
+            if affected_files_elem is not None:
+                for file_elem in affected_files_elem.findall("file"):
+                    if file_elem.text:
+                        affected_files.append(file_elem.text)
+
+            # Extract bugs
+            bugs = []
+            bugs_elem = root.find("bugs")
+            if bugs_elem is not None:
+                for bug_elem in bugs_elem.findall("bug"):
+                    file_path = bug_elem.findtext("file_path", "")
+                    line_number_text = bug_elem.findtext("line_number", "0")
+                    try:
+                        line_number = int(line_number_text)
+                    except ValueError:
+                        line_number = 0
+                    bug_description = bug_elem.findtext("bug_description", "")
+                    severity = bug_elem.findtext("severity", "")
+                    confidence = bug_elem.findtext("confidence", "")
+                    suggested_fix = bug_elem.findtext("suggested_fix", "")
+                    code_snippet = bug_elem.findtext("code_snippet", "")
+
+                    bug = BugAnalysis(
+                        file_path=file_path,
+                        line_number=line_number,
+                        bug_description=bug_description,
+                        severity=severity,
+                        confidence=confidence,
+                        suggested_fix=suggested_fix,
+                        code_snippet=code_snippet
+                    )
+                    bugs.append(bug)
+
+            # Create a BugAnalysisReport object
+            bug_analysis_report = BugAnalysisReport(
+                commit_id=commit_id,
+                timestamp=timestamp,
+                affected_files=affected_files,
+                bugs=bugs,
+                summary=summary
+            )
+            logger.info("Successfully created BugAnalysisReport from XML")
+
+            # Write the parsed XML to file
             with open(output_file, 'w') as f:
-                json.dump(report_dict, f, indent=2)
+                f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+                # Convert the parsed XML structure to a string and write it to the file
+                xml_string = ET.tostring(root, encoding='unicode')
+                f.write(xml_string)
 
             logger.info(f"Bug analysis report created at {output_file}")
-            return report_dict
+
+            # For compatibility with existing code, also return as dict
+            return bug_analysis_report.model_dump()
 
         except Exception as e:
-            logger.error(f"Error generating bug analysis report: {e}")
-            logger.debug("Exception details:", exc_info=True)
+            logger.error(f"Failed to process XML response: {e}")
+            logger.debug(f"Response content: {content}")
             return {}
 
     def run(self) -> None:

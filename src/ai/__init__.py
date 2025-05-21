@@ -29,7 +29,7 @@ DEFAULT_MAX_TOKENS = int(os.getenv("DEFAULT_MAX_TOKENS", "1024"))
 DEFAULT_TEMPERATURE = float(os.getenv("DEFAULT_TEMPERATURE", "0"))
 
 # OpenRouter Configuration
-OPENROUTER_X_TITLE = os.getenv("OPENROUTER_X_TITLE", "UsualSuspects")
+OPENROUTER_X_TITLE = os.getenv("OPENROUTER_X_TITLE", "CodePipeline")
 OPENROUTER_HTTP_REFERER = os.getenv("OPENROUTER_HTTP_REFERER", "https://www.thefamouscat.com")
 
 # Define a generic type for the output model
@@ -238,7 +238,7 @@ def categorize_files_openrouter_xml(file_paths: list[str], model: str = "google/
     headers = {
         "Authorization": f"Bearer {api_key}",
         "HTTP-Referer": os.getenv("OPENROUTER_HTTP_REFERER", "https://www.thefamouscat.com"),
-        "X-Title": os.getenv("OPENROUTER_X_TITLE", "UsualSuspects"),
+        "X-Title": os.getenv("OPENROUTER_X_TITLE", "CodePipeline"),
         "Content-Type": "application/json"
     }
 
