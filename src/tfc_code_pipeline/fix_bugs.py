@@ -13,6 +13,7 @@ from logging_utils import get_logger
 
 logger = get_logger("tfc-code-pipeline.fix_bugs")
 
+
 class FixBugsProcessor(CodeProcessor):
     """Processor to run bug_analyzer and then feed its XML output to aider to fix the bugs."""
 
@@ -227,10 +228,13 @@ class FixBugsProcessor(CodeProcessor):
             logger.error(f"Error running aider: {e}")
             return 1
 
+
 def main() -> int:
     processor = FixBugsProcessor()
     return processor.run()
 
+
 if __name__ == "__main__":
     import sys
-    sys.exit(main()) 
+
+    sys.exit(main())
