@@ -76,7 +76,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfc-code-pipeline:python3.12", build_cmd)
+            self.assertIn("tfccodepipeline/app:latest", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -143,7 +143,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfc-code-pipeline:python3.12", build_cmd)
+            self.assertIn("tfccodepipeline/app:latest", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -196,7 +196,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(docker_cmd[0], "docker")
         self.assertEqual(docker_cmd[1], "build")
         self.assertIn("-t", docker_cmd)
-        self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
+        self.assertIn("tfccodepipeline/app:latest", docker_cmd)
 
         # Verify that the temporary Dockerfile was removed
         mock_unlink.assert_called_once()
