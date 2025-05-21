@@ -29,38 +29,25 @@ class FixBugsProcessor(CodeProcessor):
         return "Run bug_analyzer, then feed its XML output to aider to fix the bugs, or use a pre-produced bug analysis report."
 
     def extract_file_paths(self, xml_path: Path) -> List[str]:
-        """Extract file paths from the bug analysis report XML.
-
-        Args:
-            xml_path: Path to the bug analysis report XML file.
-
-        Returns:
-            List of file paths mentioned in the report.
-        """
+        """Extract file paths from any XML element whose tag contains 'file' or 'path' (case-insensitive), with debug output. Avoid duplicates. Handles fuzzy and new XML structures."""
+        logger.info(f"[extract_file_paths] Parsing XML file: {xml_path}")
         try:
             tree = ET.parse(xml_path)
             root = tree.getroot()
 
-            file_paths = []
+            file_paths = set()
 
-            # Extract files from affected_files element
-            affected_files_elem = root.find("affected_files")
-            if affected_files_elem is not None:
-                for file_elem in affected_files_elem.findall("file"):
-                    if file_elem.text and file_elem.text.strip():
-                        file_paths.append(file_elem.text.strip())
+            # Fuzzy search for any tag containing 'file' or 'path' (case-insensitive)
+            for elem in root.iter():
+                tag_lower = elem.tag.lower()
+                if ("file" in tag_lower or "path" in tag_lower) and elem.text and elem.text.strip():
+                    path = elem.text.strip()
+                    logger.info(f"[extract_file_paths] Found in <{elem.tag}>: {path}")
+                    file_paths.add(path)
 
-            # Extract files from bugs element
-            bugs_elem = root.find("bugs")
-            if bugs_elem is not None:
-                for bug_elem in bugs_elem.findall("bug"):
-                    file_path_elem = bug_elem.find("file_path")
-                    if file_path_elem is not None and file_path_elem.text and file_path_elem.text.strip():
-                        file_path = file_path_elem.text.strip()
-                        if file_path not in file_paths:
-                            file_paths.append(file_path)
-
-            return file_paths
+            file_paths_list = list(file_paths)
+            logger.info(f"[extract_file_paths] Final file_paths: {file_paths_list}")
+            return file_paths_list
         except Exception as e:
             logger.error(f"Error extracting file paths from XML: {e}")
             return []
@@ -172,10 +159,7 @@ class FixBugsProcessor(CodeProcessor):
         # Step 0: If --single-bug-xml is provided, wrap it and use as XML input
         if single_bug_xml:
             logger.info(f"Wrapping single bug XML from {single_bug_xml} into {output_file}")
-            try:
-                self.wrap_single_bug_xml(single_bug_xml, output_file)
-            except Exception:
-                return 1
+            self.wrap_single_bug_xml(single_bug_xml, output_file)
         # Step 1: Run bug_analyzer on working tree or commit, unless skipping or using single bug
         elif not skip_bug_analyzer:
             logger.info("Running bug_analyzer...")
@@ -244,20 +228,14 @@ class FixBugsProcessor(CodeProcessor):
             logger.warning("No file paths found in the bug analysis report")
 
         logger.info(f"Feeding bug analysis report {output_file} to aider...")
-        aider_cmd = [
-            "aider",
-            "--yes",
-            "--message", self.get_default_message(),
-            str(xml_path)
-        ]
-
-        # Add files to aider with --add flag
-        for file_path in file_paths:
-            aider_cmd.extend(["--add", file_path])
+        aider_cmd = ["aider", "--yes", str(xml_path)]
+        aider_cmd.extend(file_paths)
+        aider_cmd.extend(["--message", self.get_default_message()])
 
         if debug:
             aider_cmd.extend(["--pretty", "--stream"])
         try:
+            logger.info(f"Running aider with command: {' '.join(aider_cmd)}")
             process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             if process.stdout:
                 for line in iter(process.stdout.readline, ''):
