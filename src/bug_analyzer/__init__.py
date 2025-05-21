@@ -13,16 +13,14 @@ The output is in a standardized XML format.
 import argparse
 import asyncio
 import json
-import os
 import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 
-import httpx
+import schema_cat
 from pydantic import BaseModel, Field
 
-from ai import xml_from_string
 from code_processor import CodeProcessor
 from logging_utils import get_logger
 
@@ -33,8 +31,8 @@ logger = get_logger("tfc-code-pipeline.bug_analyzer")
 class BugAnalysis(BaseModel):
     """Model for bug analysis results."""
     file_path: str = Field(..., description="Path to the file containing the bug")
-    line_number: int = Field(..., description="Line number where the bug is located")
-    bug_description: str = Field(..., description="Description of the bug")
+    line_number: str = Field(..., description="Line number where the bug is located")
+    description: str = Field(..., description="Description of the bug")
     severity: str = Field(..., description="Severity of the bug (high, medium, low)")
     confidence: str = Field(..., description="Confidence level of the analysis (high, medium, low)")
     suggested_fix: str = Field(..., description="Suggested fix for the bug")
@@ -48,6 +46,61 @@ class BugAnalysisReport(BaseModel):
     affected_files: List[str] = Field(..., description="List of files affected by the commit")
     bugs: List[BugAnalysis] = Field(default_factory=list, description="List of bugs found in the code")
     summary: str = Field(..., description="Summary of the bug analysis")
+
+    def to_xml(self) -> ET.Element:
+        """Convert the bug analysis report to an XML element.
+
+        Returns:
+            An XML element representing the bug analysis report.
+        """
+        # Create the root element
+        root = ET.Element("bug_analysis_report")
+
+        # Add commit_id
+        commit_id_elem = ET.SubElement(root, "commit_id")
+        commit_id_elem.text = self.commit_id
+
+        # Add timestamp
+        timestamp_elem = ET.SubElement(root, "timestamp")
+        timestamp_elem.text = self.timestamp
+
+        # Add affected_files
+        affected_files_elem = ET.SubElement(root, "affected_files")
+        for file_path in self.affected_files:
+            file_elem = ET.SubElement(affected_files_elem, "file")
+            file_elem.text = file_path
+
+        # Add bugs
+        bugs_elem = ET.SubElement(root, "bugs")
+        for bug in self.bugs:
+            bug_elem = ET.SubElement(bugs_elem, "bug")
+
+            file_path_elem = ET.SubElement(bug_elem, "file_path")
+            file_path_elem.text = bug.file_path
+
+            line_number_elem = ET.SubElement(bug_elem, "line_number")
+            line_number_elem.text = str(bug.line_number)
+
+            description_elem = ET.SubElement(bug_elem, "description")
+            description_elem.text = bug.description
+
+            severity_elem = ET.SubElement(bug_elem, "severity")
+            severity_elem.text = bug.severity
+
+            confidence_elem = ET.SubElement(bug_elem, "confidence")
+            confidence_elem.text = bug.confidence
+
+            suggested_fix_elem = ET.SubElement(bug_elem, "suggested_fix")
+            suggested_fix_elem.text = bug.suggested_fix
+
+            code_snippet_elem = ET.SubElement(bug_elem, "code_snippet")
+            code_snippet_elem.text = bug.code_snippet
+
+        # Add summary
+        summary_elem = ET.SubElement(root, "summary")
+        summary_elem.text = self.summary
+
+        return root
 
 
 class BugAnalyzerProcessor(CodeProcessor):
@@ -69,28 +122,6 @@ class BugAnalyzerProcessor(CodeProcessor):
             "4) confidence level (high/medium/low), "
             "5) a suggested fix, and "
             "6) the relevant code snippet. "
-            "Return the results in XML format using the following structure:\n"
-            "<bug_analysis_report>\n"
-            "  <commit_id>ID of the analyzed commit</commit_id>\n"
-            "  <timestamp>Timestamp of the analysis</timestamp>\n"
-            "  <affected_files>\n"
-            "    <file>path/to/file1.py</file>\n"
-            "    <file>path/to/file2.py</file>\n"
-            "  </affected_files>\n"
-            "  <bugs>\n"
-            "    <bug>\n"
-            "      <file_path>path/to/file.py</file_path>\n"
-            "      <line_number>42</line_number>\n"
-            "      <bug_description>Description of the bug</bug_description>\n"
-            "      <severity>high|medium|low</severity>\n"
-            "      <confidence>high|medium|low</confidence>\n"
-            "      <suggested_fix><![CDATA[code to fix the bug]]></suggested_fix>\n"
-            "      <code_snippet><![CDATA[code containing the bug]]></code_snippet>\n"
-            "    </bug>\n"
-            "  </bugs>\n"
-            "  <summary>Overall summary of the bug analysis</summary>\n"
-            "</bug_analysis_report>\n"
-            "Only return the XML, nothing else."
         )
 
     def get_description(self) -> str:
@@ -160,6 +191,22 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.error(f"Error getting diff: {e}")
             return ""
 
+    def count_lines_in_file(self, file_path: str) -> int:
+        """Count the number of lines in a file.
+
+        Args:
+            file_path: Path to the file.
+
+        Returns:
+            Number of lines in the file.
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return sum(1 for _ in f)
+        except Exception as e:
+            logger.warning(f"Error counting lines in file {file_path}: {e}")
+            return 0
+
     def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False) -> List[str]:
         """Get the list of files affected by a commit or working tree changes.
 
@@ -189,7 +236,26 @@ class BugAnalyzerProcessor(CodeProcessor):
                     text=True,
                     capture_output=True
                 )
-            return [file.strip() for file in result.stdout.splitlines() if file.strip()]
+
+            # Get all affected files
+            all_files = [file.strip() for file in result.stdout.splitlines() if file.strip()]
+
+            # Filter out files with more than 1000 lines
+            filtered_files = []
+            for file_path in all_files:
+                if not file_path:
+                    continue
+
+                try:
+                    line_count = self.count_lines_in_file(file_path)
+                    if line_count <= 1000:
+                        filtered_files.append(file_path)
+                    else:
+                        logger.info(f"Skipping file {file_path} with {line_count} lines (over 1000 lines limit)")
+                except Exception as e:
+                    logger.warning(f"Error processing file {file_path}: {e}")
+
+            return filtered_files
         except subprocess.CalledProcessError as e:
             logger.error(f"Error getting affected files: {e}")
             return []
@@ -207,7 +273,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             with open(file_path, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
-            logger.error(f"Error reading file {file_path}: {e}")
+            logger.warning(f"Error reading file {file_path}: {e}")
             return ""
 
     async def process_files(self, args: argparse.Namespace) -> Dict[str, Any]:
@@ -228,7 +294,7 @@ class BugAnalyzerProcessor(CodeProcessor):
 
         # Create timestamp for the report
         timestamp = datetime.now().isoformat()
-        
+
         # Get the diff
         logger.info(f"Getting diff for {mode_desc}")
         commit_diff = self.get_commit_diff(commit_id, working_tree)
@@ -285,124 +351,24 @@ class BugAnalyzerProcessor(CodeProcessor):
             "timestamp": timestamp
         }
         # logger.debug(f"input_data: {input_data}")
+        bug_analysis_report: BugAnalysisReport = await schema_cat.prompt_with_schema(json.dumps(input_data, indent=2),
+                                                                                     BugAnalysisReport,
+                                                                                     "openai/gpt-4.1-mini",
+                                                                                     schema_cat.Provider.OPENROUTER,
+                                                                                     sys_prompt=self.get_default_message())
 
-        # Set up OpenRouter API call
-        logger.info("Setting up direct OpenRouter API call for bug analysis")
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
-        model = os.getenv("DEFAULT_MODEL", "openai/gpt-4.1-mini")
+        # Write the parsed XML to file
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+            # Convert the bug analysis report to XML and write it to the file
+            root = bug_analysis_report.to_xml()
+            xml_string = ET.tostring(root, encoding='unicode')
+            f.write(xml_string)
 
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "HTTP-Referer": os.getenv("OPENROUTER_HTTP_REFERER", "https://www.thefamouscat.com"),
-            "X-Title": os.getenv("OPENROUTER_X_TITLE", "CodePipeline"),
-            "Content-Type": "application/json"
-        }
+        logger.info(f"Bug analysis report created at {output_file}")
 
-        # Prepare the data payload
-        data = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": self.get_default_message()},
-                {"role": "user", "content": json.dumps(input_data, indent=2)}
-            ],
-            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", "16384")),
-            "temperature": float(os.getenv("DEFAULT_TEMPERATURE", "0"))
-        }
-
-        # Generate the bug analysis report
-        try:
-            logger.info(f"Calling OpenRouter API directly with model {model}")
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"{base_url}/chat/completions",
-                    headers=headers,
-                    json=data,
-                    timeout=60
-                )
-                response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"].strip()
-
-            logger.info("Successfully received response from OpenRouter")
-            logger.debug(f"Raw response content: {content}")
-
-            # Parse the response content as XML
-            # Try to extract XML from the response
-            try:
-                root = xml_from_string(content)
-                logger.info("Successfully parsed response as XML")
-            except Exception as e:
-                logger.error(f"Failed to parse response as XML: {e}")
-                logger.debug(f"Response content: {content}")
-                return {}
-
-            # Extract data from XML to create a BugAnalysisReport object
-            commit_id = root.findtext("commit_id", "")
-            timestamp = root.findtext("timestamp", "")
-            summary = root.findtext("summary", "")
-
-            # Extract affected files
-            affected_files = []
-            affected_files_elem = root.find("affected_files")
-            if affected_files_elem is not None:
-                for file_elem in affected_files_elem.findall("file"):
-                    if file_elem.text:
-                        affected_files.append(file_elem.text)
-
-            # Extract bugs
-            bugs = []
-            bugs_elem = root.find("bugs")
-            if bugs_elem is not None:
-                for bug_elem in bugs_elem.findall("bug"):
-                    file_path = bug_elem.findtext("file_path", "")
-                    line_number_text = bug_elem.findtext("line_number", "0")
-                    try:
-                        line_number = int(line_number_text)
-                    except ValueError:
-                        line_number = 0
-                    bug_description = bug_elem.findtext("bug_description", "")
-                    severity = bug_elem.findtext("severity", "")
-                    confidence = bug_elem.findtext("confidence", "")
-                    suggested_fix = bug_elem.findtext("suggested_fix", "")
-                    code_snippet = bug_elem.findtext("code_snippet", "")
-
-                    bug = BugAnalysis(
-                        file_path=file_path,
-                        line_number=line_number,
-                        bug_description=bug_description,
-                        severity=severity,
-                        confidence=confidence,
-                        suggested_fix=suggested_fix,
-                        code_snippet=code_snippet
-                    )
-                    bugs.append(bug)
-
-            # Create a BugAnalysisReport object
-            bug_analysis_report = BugAnalysisReport(
-                commit_id=commit_id,
-                timestamp=timestamp,
-                affected_files=affected_files,
-                bugs=bugs,
-                summary=summary
-            )
-            logger.info("Successfully created BugAnalysisReport from XML")
-
-            # Write the parsed XML to file
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-                # Convert the parsed XML structure to a string and write it to the file
-                xml_string = ET.tostring(root, encoding='unicode')
-                f.write(xml_string)
-
-            logger.info(f"Bug analysis report created at {output_file}")
-
-            # For compatibility with existing code, also return as dict
-            return bug_analysis_report.model_dump()
-
-        except Exception as e:
-            logger.error(f"Failed to process XML response: {e}")
-            logger.debug(f"Response content: {content}")
-            return {}
+        # For compatibility with existing code, also return as dict
+        return bug_analysis_report.model_dump()
 
     def run(self) -> None:
         """Run the bug analyzer processor."""

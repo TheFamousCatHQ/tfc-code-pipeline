@@ -2043,14 +2043,14 @@ crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
 
 [[package]]
 name = "schema-cat"
-version = "0.1.1"
+version = "0.1.5"
 description = "A Python library for typed prompts"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
 files = [
-    {file = "schema_cat-0.1.1-py3-none-any.whl", hash = "sha256:49769bef1da0a47cef564d1951d42616d743600b72adcc7b51b35bf670f68baf"},
-    {file = "schema_cat-0.1.1.tar.gz", hash = "sha256:691be65a313355cd176870c064b0288b8f349c710211e115ad9626cb1cbf4592"},
+    {file = "schema_cat-0.1.5-py3-none-any.whl", hash = "sha256:11371b5d7a8aacf80613340d2532b28af0d740965379aa7f2d4110015cc6da5f"},
+    {file = "schema_cat-0.1.5.tar.gz", hash = "sha256:1abe8e35c8b42d50d124b2aa4956d8a1ea4c6dabe630c3de9f1dfd40e9eebd4d"},
 ]
 
 [package.dependencies]
@@ -2534,4 +2534,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "296b3d6a4ebe17b36d858bb53e01e439ad2a69e15c96e9d787f9464b7a71795d"
+content-hash = "2123880c1b5d0c18f6d5556762cabac96a53a35455a079357e8665a58f0347d3"

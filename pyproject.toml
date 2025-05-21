@@ -30,7 +30,7 @@ openai = "^1.76.2"
 bs4 = "^0.0.2"
 lxml = "^5.4.0"
 httpx = "^0.28.1"
-schema-cat = "0.1.1"
+schema-cat = "0.1.5"
 
 [tool.poetry.scripts]
 tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
