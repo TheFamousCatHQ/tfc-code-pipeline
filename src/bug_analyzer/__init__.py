@@ -226,6 +226,9 @@ class BugAnalyzerProcessor(CodeProcessor):
         # Determine the mode of operation
         mode_desc = "working tree changes" if working_tree else f"commit {commit_id}"
 
+        # Create timestamp for the report
+        timestamp = datetime.now().isoformat()
+        
         # Get the diff
         logger.info(f"Getting diff for {mode_desc}")
         commit_diff = self.get_commit_diff(commit_id, working_tree)
@@ -272,8 +275,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             if content:
                 file_contents[file_path] = content
 
-        # Prepare the input for OpenRouter
-        timestamp = datetime.now().isoformat()
+        # Timestamp already created at the beginning of the method
 
         input_data = {
             "commit_id": commit_id,
