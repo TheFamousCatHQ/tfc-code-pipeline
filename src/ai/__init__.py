@@ -204,7 +204,7 @@ def fix_cdata_sections(xml_string: str) -> str:
         return f'<![CDATA[{content}]]>'
 
     # Use a more precise regex pattern that correctly matches CDATA sections
-    pattern = r'<!\[CDATA\[(.*?)(?:\]\]>)'
+    pattern = r'<!\[CDATA\[(.*?)(?:\]\]>)?'
     fixed_xml = re.sub(pattern, replace_cdata, xml_string, flags=re.DOTALL)
     return fixed_xml
 
