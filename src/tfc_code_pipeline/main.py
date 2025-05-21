@@ -123,7 +123,7 @@ def main(args: argparse.Namespace) -> int:
     cmd = args.cmd
 
     # Define constants
-    IMAGE_NAME = "tfc-code-pipeline:python3.12"
+    IMAGE_NAME = "tfccodepipeline/app:latest"
     DOCKERFILE_CONTENT = """\
 FROM python:3.12-slim
 
