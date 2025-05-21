@@ -122,6 +122,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             "4) confidence level (high/medium/low), "
             "5) a suggested fix, and "
             "6) the relevant code snippet. "
+            "DON'T mention bugs where no actual fix is need."
         )
 
     def get_description(self) -> str:
