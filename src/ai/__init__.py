@@ -199,13 +199,12 @@ def categorize_files_openai_json(file_paths: list[str], prompt: str, model: str 
 def fix_cdata_sections(xml_string: str) -> str:
     def replace_cdata(match):
         content = match.group(1)
-        if content.endswith(']]') or content.endswith(']>'):
-            content = content[:-2]
-        elif content.endswith(']'):
-            content = content[:-1]
+        # Don't trim valid content - instead properly handle CDATA sections
+        # by ensuring they have the correct format
         return f'<![CDATA[{content}]]>'
 
-    pattern = r'<!\[CDATA\[(.*?)(?:\]\]*>)'
+    # Use a more precise regex pattern that correctly matches CDATA sections
+    pattern = r'<!\[CDATA\[(.*?)(?:\]\]>)'
     fixed_xml = re.sub(pattern, replace_cdata, xml_string, flags=re.DOTALL)
     return fixed_xml
 
