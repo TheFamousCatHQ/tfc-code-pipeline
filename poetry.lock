@@ -14,14 +14,14 @@ files = [
 
 [[package]]
 name = "anthropic"
-version = "0.50.0"
+version = "0.51.0"
 description = "The official Python library for the anthropic API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "anthropic-0.50.0-py3-none-any.whl", hash = "sha256:defbd79327ca2fa61fd7b9eb2f1627dfb1f69c25d49288c52e167ddb84574f80"},
-    {file = "anthropic-0.50.0.tar.gz", hash = "sha256:42175ec04ce4ff2fa37cd436710206aadff546ee99d70d974699f59b49adc66f"},
+    {file = "anthropic-0.51.0-py3-none-any.whl", hash = "sha256:b8b47d482c9aa1f81b923555cebb687c2730309a20d01be554730c8302e0f62a"},
+    {file = "anthropic-0.51.0.tar.gz", hash = "sha256:6f824451277992af079554430d5b2c8ff5bc059cc2c968cdc3f06824437da201"},
 ]
 
 [package.dependencies]
@@ -1210,14 +1210,14 @@ gcp = ["google-auth (>=2.27.0)", "requests (>=2.32.3)"]
 
 [[package]]
 name = "openai"
-version = "1.76.2"
+version = "1.79.0"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "openai-1.76.2-py3-none-any.whl", hash = "sha256:9c1d9ad59e6e3bea7205eedc9ca66eeebae18d47b527e505a2b0d2fb1538e26e"},
-    {file = "openai-1.76.2.tar.gz", hash = "sha256:f430c8b848775907405c6eff54621254c96f6444c593c097e0cc3a9f8fdda96f"},
+    {file = "openai-1.79.0-py3-none-any.whl", hash = "sha256:d5050b92d5ef83f869cb8dcd0aca0b2291c3413412500eec40c66981b3966992"},
+    {file = "openai-1.79.0.tar.gz", hash = "sha256:e3b627aa82858d3e42d16616edc22aa9f7477ee5eb3e6819e9f44a961d899a4c"},
 ]
 
 [package.dependencies]
@@ -2042,6 +2042,26 @@ botocore = ">=1.37.4,<2.0a.0"
 crt = ["botocore[crt] (>=1.37.4,<2.0a.0)"]
 
 [[package]]
+name = "schema-cat"
+version = "0.1.1"
+description = "A Python library for typed prompts"
+optional = false
+python-versions = ">=3.11"
+groups = ["main"]
+files = [
+    {file = "schema_cat-0.1.1-py3-none-any.whl", hash = "sha256:49769bef1da0a47cef564d1951d42616d743600b72adcc7b51b35bf670f68baf"},
+    {file = "schema_cat-0.1.1.tar.gz", hash = "sha256:691be65a313355cd176870c064b0288b8f349c710211e115ad9626cb1cbf4592"},
+]
+
+[package.dependencies]
+anthropic = ">=0.51.0,<0.52.0"
+bs4 = ">=0.0.2,<0.0.3"
+lxml = ">=5.4.0,<6.0.0"
+openai = ">=1.79.0,<2.0.0"
+pydantic = ">=2.11.4,<3.0.0"
+python-dotenv = ">=1.1.0,<2.0.0"
+
+[[package]]
 name = "six"
 version = "1.17.0"
 description = "Python 2 and 3 compatibility utilities"
@@ -2514,4 +2534,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "a0d6f9707b841d19dedf8fa5e4ca14bc9343e77170f61377b819e7fcf6e70414"
+content-hash = "296b3d6a4ebe17b36d858bb53e01e439ad2a69e15c96e9d787f9464b7a71795d"
