@@ -1,0 +1,82 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+    # Publish semver tags as releases
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  # Use github.repository as the name of the image
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Login to GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Extract metadata for Docker
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
+            latest
+
+      # Create Dockerfile from the template in main.py
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile << 'EOF'
+          FROM python:3.12-slim
+
+          # Install system dependencies including Node.js and npm
+          RUN apt-get update && apt-get install -y \
+              nodejs \
+              npm \
+              && apt-get clean \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Install sonar scan globally
+          RUN npm install -g @sonar/scan
+
+          # Install aider-chat and our package
+          RUN pip install --no-cache-dir aider-chat
+          COPY . /app
+          WORKDIR /app
+          RUN pip install --no-cache-dir -e .
+
+          # Entrypoint will be set when running the container
+          ENTRYPOINT ["/bin/bash"]
+          EOF
+
+      # Build and push Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          file: Dockerfile

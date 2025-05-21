@@ -661,6 +661,37 @@ A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
 - Pushes the image to DockerHub
 - Provides usage examples for the published image
 
+### GitHub Actions Workflow
+
+This repository includes a GitHub Actions workflow that automatically builds and publishes the Docker image to GitHub Container Registry (ghcr.io) when changes are pushed to the main branch or when a new tag is created.
+
+**Workflow File:** `.github/workflows/docker-publish.yml`
+
+**Triggers:**
+- Push to the `main` branch
+- Push of tags matching the pattern `v*.*.*` (e.g., v1.0.0)
+- Pull requests to the `main` branch (builds but doesn't publish)
+
+**Features:**
+- Automatically builds the Docker image
+- Publishes the image to GitHub Container Registry (ghcr.io)
+- Tags the image with:
+  - Semantic version tags (for tag pushes)
+  - Branch name (for branch pushes)
+  - Short SHA (for all pushes)
+  - `latest` tag (for main branch pushes)
+
+**Using the GitHub Container Registry Image:**
+```bash
+# Pull the image from GitHub Container Registry
+docker pull ghcr.io/your-username/tfc-code-pipeline:latest
+
+# Run a command using the image
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/your-username/tfc-code-pipeline:latest find-bugs --directory /src
+```
+
+Replace `your-username` with your GitHub username or organization name.
+
 ### Poetry Scripts (Docker Entrypoint Commands)
 
 These scripts can be run using Poetry or as Docker entrypoint commands.
