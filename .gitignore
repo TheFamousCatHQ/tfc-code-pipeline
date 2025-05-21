@@ -43,3 +43,4 @@ htmlcov/
 Dockerfile
 .output.txt
 SUGGESTIONS.json
+bug_analysis_report.xml

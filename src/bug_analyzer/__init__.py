@@ -2,9 +2,12 @@
 """
 Script to analyze bugs in code changes using OpenRouter.
 
-This script takes the diff of a commit, plus the full source of all affected files,
-feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized
-XML format.
+This script can operate in two modes:
+1. Commit mode: Takes the diff of a commit, plus the full source of all affected files.
+2. Working tree mode: Takes the diff between the working tree and HEAD, plus the full source of all affected files.
+
+It feeds the diff and file contents to OpenRouter and asks for a bug analysis. 
+The output is in a standardized XML format.
 """
 
 import argparse
@@ -112,49 +115,76 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Commit ID to analyze (default: HEAD)"
         )
         parser.add_argument(
+            "--working-tree",
+            action="store_true",
+            help="Analyze diff between working tree and HEAD instead of a specific commit"
+        )
+        parser.add_argument(
             "--output",
             type=str,
             default="bug_analysis_report.xml",
             help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
         )
 
-    def get_commit_diff(self, commit_id: str) -> str:
-        """Get the diff of a commit.
+    def get_commit_diff(self, commit_id: str, working_tree: bool = False) -> str:
+        """Get the diff of a commit or working tree changes.
 
         Args:
-            commit_id: The ID of the commit to get the diff for.
+            commit_id: The ID of the commit to get the diff for (used if working_tree is False).
+            working_tree: If True, get the diff between working tree and HEAD.
 
         Returns:
-            The diff of the commit.
+            The diff of the commit or working tree changes.
         """
         try:
-            result = subprocess.run(
-                ["git", "show", commit_id],
-                check=True,
-                text=True,
-                capture_output=True
-            )
+            if working_tree:
+                # Get diff between working tree and HEAD
+                result = subprocess.run(
+                    ["git", "diff", "HEAD"],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+            else:
+                # Get diff of a specific commit
+                result = subprocess.run(
+                    ["git", "show", commit_id],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
             return result.stdout
         except subprocess.CalledProcessError as e:
-            logger.error(f"Error getting commit diff: {e}")
+            logger.error(f"Error getting diff: {e}")
             return ""
 
-    def get_affected_files(self, commit_id: str) -> List[str]:
-        """Get the list of files affected by a commit.
+    def get_affected_files(self, commit_id: str, working_tree: bool = False) -> List[str]:
+        """Get the list of files affected by a commit or working tree changes.
 
         Args:
-            commit_id: The ID of the commit to get affected files for.
+            commit_id: The ID of the commit to get affected files for (used if working_tree is False).
+            working_tree: If True, get files changed in the working tree compared to HEAD.
 
         Returns:
             List of affected file paths.
         """
         try:
-            result = subprocess.run(
-                ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
-                check=True,
-                text=True,
-                capture_output=True
-            )
+            if working_tree:
+                # Get files changed in the working tree compared to HEAD
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", "HEAD"],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+            else:
+                # Get files affected by a specific commit
+                result = subprocess.run(
+                    ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
             return [file.strip() for file in result.stdout.splitlines() if file.strip()]
         except subprocess.CalledProcessError as e:
             logger.error(f"Error getting affected files: {e}")
@@ -187,19 +217,23 @@ class BugAnalyzerProcessor(CodeProcessor):
         """
         commit_id = args.commit
         output_file = args.output
+        working_tree = args.working_tree
 
-        # Get the commit diff
-        logger.info(f"Getting diff for commit {commit_id}")
-        commit_diff = self.get_commit_diff(commit_id)
+        # Determine the mode of operation
+        mode_desc = "working tree changes" if working_tree else f"commit {commit_id}"
+
+        # Get the diff
+        logger.info(f"Getting diff for {mode_desc}")
+        commit_diff = self.get_commit_diff(commit_id, working_tree)
         if not commit_diff:
-            logger.error(f"Failed to get diff for commit {commit_id}")
+            logger.error(f"Failed to get diff for {mode_desc}")
             return {}
 
         # Get the list of affected files
-        logger.info(f"Getting affected files for commit {commit_id}")
-        affected_files = self.get_affected_files(commit_id)
+        logger.info(f"Getting affected files for {mode_desc}")
+        affected_files = self.get_affected_files(commit_id, working_tree)
         if not affected_files:
-            logger.warning(f"No affected files found for commit {commit_id}")
+            logger.warning(f"No affected files found for {mode_desc}")
             return {}
 
         # Get the content of each affected file
@@ -220,6 +254,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             "file_contents": file_contents,
             "timestamp": timestamp
         }
+        # logger.debug(f"input_data: {input_data}")
 
         # Set up OpenRouter API call
         logger.info("Setting up direct OpenRouter API call for bug analysis")
@@ -241,7 +276,7 @@ class BugAnalyzerProcessor(CodeProcessor):
                 {"role": "system", "content": self.get_default_message()},
                 {"role": "user", "content": json.dumps(input_data, indent=2)}
             ],
-            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", "1024")),
+            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", 1024 * 16)),
             "temperature": float(os.getenv("DEFAULT_TEMPERATURE", "0"))
         }
 

@@ -46,17 +46,22 @@ For each component/file, the tool generates:
 
 ## Bug Analyzer
 
-The `bug-analyzer` tool analyzes code changes in a Git commit to identify potential bugs. It takes the diff of a commit, plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized XML format.
+The `bug-analyzer` tool analyzes code changes to identify potential bugs. It can operate in two modes:
+1. **Commit mode**: Analyzes the diff of a specific commit
+2. **Working tree mode**: Analyzes the diff between the working tree and HEAD
+
+In both modes, it takes the diff plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized XML format.
 
 ### Usage
 
 ```bash
-poetry run bug-analyzer [--commit COMMIT_ID] [--output OUTPUT_FILE]
+poetry run bug-analyzer [--commit COMMIT_ID] [--working-tree] [--output OUTPUT_FILE]
 ```
 
 ### Options
 
-- `--commit`: Commit ID to analyze (default: HEAD)
+- `--commit`: Commit ID to analyze (default: HEAD, used only if --working-tree is not specified)
+- `--working-tree`: Analyze diff between working tree and HEAD instead of a specific commit
 - `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 
 ### Example
@@ -68,17 +73,20 @@ poetry run bug-analyzer
 # Analyze a specific commit
 poetry run bug-analyzer --commit abc1234
 
+# Analyze working tree changes compared to HEAD
+poetry run bug-analyzer --working-tree
+
 # Specify a custom output file
-poetry run bug-analyzer --commit HEAD --output custom_report.xml
+poetry run bug-analyzer --working-tree --output custom_report.xml
 ```
 
-This will analyze the specified commit, extract the diff and affected files, send the data to OpenRouter for analysis, and write the results to the specified output file.
+This will analyze the specified commit or working tree changes, extract the diff and affected files, send the data to OpenRouter for analysis, and write the results to the specified output file.
 
 ### Features
 
 The tool performs the following steps:
 
-1. **Commit Analysis**: Extracts the diff of the specified commit using Git.
+1. **Change Analysis**: Extracts the diff of the specified commit or working tree changes using Git.
 
 2. **File Identification**: Identifies all files affected by the commit.
 
@@ -103,7 +111,7 @@ The tool performs the following steps:
 You can also run the bug analyzer through the main CLI:
 
 ```bash
-poetry run tfc-code-pipeline --cmd bug_analyzer [--commit COMMIT_ID] [--output OUTPUT_FILE]
+poetry run tfc-code-pipeline --cmd bug_analyzer [--commit COMMIT_ID] [--working-tree] [--output OUTPUT_FILE]
 ```
 
 ## Overview
@@ -145,7 +153,10 @@ processing them with Aider, etc.) is handled by the base class.
 ### BugAnalyzerProcessor
 
 - **Script**: `bug-analyzer`
-- **Purpose**: Analyzes bugs in code changes using OpenRouter
+- **Purpose**: Analyzes bugs in code changes using OpenRouter (can analyze either a commit diff or working tree changes)
+- **Modes**: 
+  - Commit mode: Analyzes the diff of a specific commit
+  - Working tree mode: Analyzes the diff between the working tree and HEAD
 - **Default Message**: "Analyze this code diff and the full source of affected files to identify potential bugs. Focus on bugs introduced by the changes in the diff. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), 5) a suggested fix, and 6) the relevant code snippet."
 - **Output**: Generates a `bug_analysis_report.xml` file (or custom filename specified with `--output`)
 
