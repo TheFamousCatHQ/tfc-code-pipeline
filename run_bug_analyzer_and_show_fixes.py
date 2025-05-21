@@ -248,6 +248,7 @@ def apply_fix(bug: ET.Element, auto_commit: bool, original_xml_path: str, env_fi
         "docker", "run", "--rm", "-i",
         *env_flags,
         "-v", f"{src_dir}:/src",
+        "-w", "/src",  # Ensure working directory is /src for git
         "--entrypoint", "fix-bugs",
         IMAGE_NAME,
         "--single-bug-xml", container_xml_path
