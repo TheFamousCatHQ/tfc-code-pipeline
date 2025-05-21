@@ -576,6 +576,249 @@ DEBUG=False
 SONAR_TOKEN=your-sonar-token-here
 ```
 
+## Scripts and Docker Entrypoint Commands
+
+This section provides comprehensive documentation for all scripts and Docker entrypoint commands available in the repository.
+
+### Shell Scripts
+
+#### run-tfc-pipeline.sh
+
+A wrapper script for running TFC Code Pipeline commands in Docker.
+
+**Usage:**
+```bash
+./run-tfc-pipeline.sh [command] [args...]
+```
+
+**Example:**
+```bash
+./run-tfc-pipeline.sh bug-analyzer --working-tree
+```
+
+**Features:**
+- Automatically checks for Docker installation
+- Handles .env file for environment variables
+- Mounts the current directory as /src in the container
+- Supports all available commands (find-source-files, explain-code, write-tests, find-bugs, analyze-complexity, sonar-scan, sonar-analyze, bug-analyzer, fix-bugs)
+
+#### run_fix_bugs.sh
+
+A wrapper script specifically for running the fix-bugs command in Docker.
+
+**Usage:**
+```bash
+./run_fix_bugs.sh [--env-file ENVFILE] [--debug] [--working-tree] [--commit COMMIT_HASH]
+```
+
+**Example:**
+```bash
+./run_fix_bugs.sh --working-tree
+```
+
+**Features:**
+- Allows specifying a custom .env file
+- Passes all other arguments to the fix-bugs command
+- Sets the ORIGINAL_SRC_DIR_NAME environment variable automatically
+
+#### run_bug_analyzer_and_show_fixes.py
+
+A Python script that runs the bug analyzer in Docker and then displays and optionally applies fixes for the bugs found.
+
+**Usage:**
+```bash
+python run_bug_analyzer_and_show_fixes.py [--commit COMMIT] [--working-tree] [--output OUTPUT] [--env-file ENV_FILE] [--debug] [--auto-apply-fixes]
+```
+
+**Example:**
+```bash
+python run_bug_analyzer_and_show_fixes.py --working-tree
+```
+
+**Features:**
+- Runs bug-analyzer in Docker with a nice spinner animation
+- Parses the XML output and displays bugs in a user-friendly format
+- Allows interactive application of fixes for each bug
+- Can automatically apply all fixes with --auto-apply-fixes
+
+#### publish_docker.sh
+
+A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
+
+**Usage:**
+```bash
+./publish_docker.sh [tag]
+```
+
+**Example:**
+```bash
+./publish_docker.sh v1.0.0
+```
+
+**Features:**
+- Builds the Docker image with the specified tag (defaults to "latest")
+- Checks if Docker is installed and if the user is logged in to DockerHub
+- Pushes the image to DockerHub
+- Provides usage examples for the published image
+
+### Poetry Scripts (Docker Entrypoint Commands)
+
+These scripts can be run using Poetry or as Docker entrypoint commands.
+
+#### tfc-code-pipeline
+
+The main CLI interface for the TFC Code Pipeline.
+
+**Usage with Poetry:**
+```bash
+poetry run tfc-code-pipeline [--build-only] [--skip-build] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan|bug_analyzer]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest tfc-code-pipeline [options]
+```
+
+#### find-source-files
+
+Finds source files in a directory, excluding dependencies, tests, and other non-core files.
+
+**Usage with Poetry:**
+```bash
+poetry run find-source-files --directory /path/to/source
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-source-files --directory /src
+```
+
+#### explain-code
+
+Explains code in source files using aider.
+
+**Usage with Poetry:**
+```bash
+poetry run explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest explain-code --directory /src [options]
+```
+
+#### write-tests
+
+Writes unit tests for source files using aider.
+
+**Usage with Poetry:**
+```bash
+poetry run write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest write-tests --directory /src [options]
+```
+
+#### find-bugs
+
+Finds potential bugs in source files and outputs results as JSON.
+
+**Usage with Poetry:**
+```bash
+poetry run find-bugs --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-bugs --directory /src [options]
+```
+
+#### analyze-complexity
+
+Analyzes code complexity using an LLM via aider.
+
+**Usage with Poetry:**
+```bash
+poetry run analyze-complexity --directory /path/to/source [--file /path/to/specific/file.py] [--message "custom analysis prompt"]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest analyze-complexity --directory /src [options]
+```
+
+#### validate-complexity-report
+
+Validates a complexity report against a JSON schema.
+
+**Usage with Poetry:**
+```bash
+poetry run validate-complexity-report --report-file /path/to/report.json
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest validate-complexity-report --report-file /src/report.json
+```
+
+#### sonar-scan
+
+Runs sonar-scanner on the entire codebase.
+
+**Usage with Poetry:**
+```bash
+poetry run sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url "http://sonarqube-server:9000"] [--login "auth-token"]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest sonar-scan --directory /src [options]
+```
+
+#### sonar-analyze
+
+Analyzes Sonar scanner reports and generates improvement suggestions.
+
+**Usage with Poetry:**
+```bash
+poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity SEVERITY] [--output-file path/to/output.json]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest sonar-analyze --report-file /src/report.json [options]
+```
+
+#### bug-analyzer
+
+Analyzes code changes to identify potential bugs.
+
+**Usage with Poetry:**
+```bash
+poetry run bug-analyzer [--commit COMMIT_ID] [--working-tree] [--output OUTPUT_FILE]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest bug-analyzer [options]
+```
+
+#### fix-bugs
+
+Fixes bugs identified by bug-analyzer.
+
+**Usage with Poetry:**
+```bash
+poetry run fix-bugs [--report-file REPORT_FILE] [--working-tree] [--commit COMMIT_ID]
+```
+
+**Usage with Docker:**
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest fix-bugs [options]
+```
+
 ## Running Scripts
 
 You can run the scripts in two ways:
