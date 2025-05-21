@@ -17,7 +17,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import httpx
 from pydantic import BaseModel, Field
@@ -126,7 +126,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
         )
 
-    def get_commit_diff(self, commit_id: str, working_tree: bool = False) -> str:
+    def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False) -> str:
         """Get the diff of a commit or working tree changes.
 
         Args:
@@ -146,6 +146,8 @@ class BugAnalyzerProcessor(CodeProcessor):
                     capture_output=True
                 )
             else:
+                if not commit_id:
+                    raise ValueError("commit_id must be provided when working_tree is False")
                 # Get diff of a specific commit
                 result = subprocess.run(
                     ["git", "show", commit_id],
@@ -158,7 +160,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.error(f"Error getting diff: {e}")
             return ""
 
-    def get_affected_files(self, commit_id: str, working_tree: bool = False) -> List[str]:
+    def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False) -> List[str]:
         """Get the list of files affected by a commit or working tree changes.
 
         Args:
@@ -178,6 +180,8 @@ class BugAnalyzerProcessor(CodeProcessor):
                     capture_output=True
                 )
             else:
+                if not commit_id:
+                    raise ValueError("commit_id must be provided when working_tree is False")
                 # Get files affected by a specific commit
                 result = subprocess.run(
                     ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
@@ -200,7 +204,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             Content of the file.
         """
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
             logger.error(f"Error reading file {file_path}: {e}")
@@ -227,6 +231,18 @@ class BugAnalyzerProcessor(CodeProcessor):
         commit_diff = self.get_commit_diff(commit_id, working_tree)
         if not commit_diff:
             logger.error(f"Failed to get diff for {mode_desc}")
+            # Write minimal XML report for empty diff
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+<bug_analysis_report>
+  <commit_id>{commit_id}</commit_id>
+  <timestamp>{timestamp}</timestamp>
+  <affected_files></affected_files>
+  <bugs></bugs>
+  <summary>No diff found for {mode_desc}.</summary>
+</bug_analysis_report>
+''')
+            logger.info(f"Empty bug analysis report created at {output_file}")
             return {}
 
         # Get the list of affected files
@@ -234,6 +250,18 @@ class BugAnalyzerProcessor(CodeProcessor):
         affected_files = self.get_affected_files(commit_id, working_tree)
         if not affected_files:
             logger.warning(f"No affected files found for {mode_desc}")
+            # Write minimal XML report with no bugs
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+<bug_analysis_report>
+  <commit_id>{commit_id}</commit_id>
+  <timestamp>{timestamp}</timestamp>
+  <affected_files></affected_files>
+  <bugs></bugs>
+  <summary>No affected files found.</summary>
+</bug_analysis_report>
+''')
+            logger.info(f"Empty bug analysis report created at {output_file}")
             return {}
 
         # Get the content of each affected file
@@ -276,7 +304,7 @@ class BugAnalyzerProcessor(CodeProcessor):
                 {"role": "system", "content": self.get_default_message()},
                 {"role": "user", "content": json.dumps(input_data, indent=2)}
             ],
-            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", 1024 * 16)),
+            "max_tokens": int(os.getenv("DEFAULT_MAX_TOKENS", "16384")),
             "temperature": float(os.getenv("DEFAULT_TEMPERATURE", "0"))
         }
 
@@ -358,7 +386,7 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.info("Successfully created BugAnalysisReport from XML")
 
             # Write the parsed XML to file
-            with open(output_file, 'w') as f:
+            with open(output_file, 'w', encoding='utf-8') as f:
                 f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
                 # Convert the parsed XML structure to a string and write it to the file
                 xml_string = ET.tostring(root, encoding='unicode')
