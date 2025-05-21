@@ -265,6 +265,8 @@ if __name__ == "__main__":
 
 ## Installation
 
+### Using Poetry (Local Development)
+
 This project uses Poetry for dependency management. To install and use the commands:
 
 1. Clone the repository:
@@ -284,6 +286,31 @@ This project uses Poetry for dependency management. To install and use the comma
    ```
 
 After installation, all commands will be available in your PATH when the Poetry environment is active.
+
+### Using Docker (Recommended for Users)
+
+For the simplest setup, you can use the pre-built Docker image:
+
+1. Pull the Docker image:
+   ```bash
+   docker pull yourusername/tfc-code-pipeline:latest
+   ```
+
+2. Run a command using the provided wrapper script:
+   ```bash
+   # Make the script executable
+   chmod +x run-tfc-pipeline.sh
+
+   # Run a command (e.g., bug-analyzer)
+   ./run-tfc-pipeline.sh bug-analyzer --working-tree
+   ```
+
+Alternatively, you can run commands directly with Docker:
+```bash
+docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-bugs --directory /src
+```
+
+For detailed Docker usage instructions, see [DOCKER.md](DOCKER.md).
 
 ## Poetry Scripts
 

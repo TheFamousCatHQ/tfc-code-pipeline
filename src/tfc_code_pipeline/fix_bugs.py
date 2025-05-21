@@ -73,7 +73,8 @@ class FixBugsProcessor(CodeProcessor):
         # Step 1: Run bug_analyzer on working tree or commit
         logger.info("Running bug_analyzer...")
         bug_analyzer_cmd = [
-            "python", "-m", "bug_analyzer"
+            "bug-analyzer",
+            "--directory", "."
         ]
         if working_tree:
             bug_analyzer_cmd.append("--working-tree")

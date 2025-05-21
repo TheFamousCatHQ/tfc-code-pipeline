@@ -287,15 +287,19 @@ ENTRYPOINT ["/bin/bash"]
             if output_mount_needed and host_output_dir:
                 docker_cmd.extend(["-v", f"{host_output_dir}:{docker_output_dir}"])
 
-            # Add image name and entrypoint
+            # Use the correct entrypoint for fix_bugs (the poetry script 'fix-bugs')
+            entrypoint = cmd.replace("_", "-")
+            if cmd == "fix_bugs":
+                entrypoint = "fix-bugs"
             docker_cmd.extend([
-                "--entrypoint", cmd.replace("_", "-"),  # Use the validated cmd
+                "--entrypoint", entrypoint,
                 IMAGE_NAME
             ])
 
             # Add script arguments (processor args)
-            # Base arguments for most processors
-            docker_cmd.extend(["--directory", "/src"])  # Always run relative to /src in container
+            # Only add --directory /src for processors that need it
+            if cmd not in ("fix_bugs",):
+                docker_cmd.extend(["--directory", "/src"])
 
             # Add the reconstructed processor-specific arguments
             if output_arg_index != -1:

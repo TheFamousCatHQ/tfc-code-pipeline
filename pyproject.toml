@@ -15,8 +15,7 @@ packages = [
     {include = "validate_complexity_report", from = "src"},
     {include = "sonar_scanner", from = "src"},
     {include = "sonar_analyzer", from = "src"},
-    {include = "bug_analyzer", from = "src"},
-    {include = "tfc_code_pipeline.fix_bugs", from = "src"}
+    {include = "bug_analyzer", from = "src"}
 ]
 
 [tool.poetry.dependencies]
@@ -44,6 +43,7 @@ validate-complexity-report = "validate_complexity_report:main"
 sonar-scan = "sonar_scanner:main"
 sonar-analyze = "sonar_analyzer:main"
 bug-analyzer = "bug_analyzer:main"
+fix-bugs = "tfc_code_pipeline.fix_bugs:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

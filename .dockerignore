@@ -1,1 +1,13 @@
 .aider-context
+.env
+.env.*
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.git/
+.github/
+.idea/
+.vscode/
