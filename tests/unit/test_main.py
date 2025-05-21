@@ -153,7 +153,7 @@ class TestMain(unittest.TestCase):
             docker_cmd = run_args[0]
 
             # Check that we're using the custom image
-            self.assertIn("tfc-code-pipeline:python3.12", docker_cmd)
+            self.assertIn("tfccodepipeline/app:latest", docker_cmd)
 
             # Check that no environment variables are passed to Docker when .env file doesn't exist
             # Convert docker_cmd to string for easier checking
