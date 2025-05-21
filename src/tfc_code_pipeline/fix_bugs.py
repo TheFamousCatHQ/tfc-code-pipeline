@@ -4,8 +4,9 @@ Processor to run bug_analyzer and then feed its XML output to aider to fix the b
 
 import argparse
 import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 from code_processor import CodeProcessor
 from logging_utils import get_logger
@@ -25,6 +26,43 @@ class FixBugsProcessor(CodeProcessor):
 
     def get_description(self) -> str:
         return "Run bug_analyzer, then feed its XML output to aider to fix the bugs."
+
+    def extract_file_paths(self, xml_path: Path) -> List[str]:
+        """Extract file paths from the bug analysis report XML.
+
+        Args:
+            xml_path: Path to the bug analysis report XML file.
+
+        Returns:
+            List of file paths mentioned in the report.
+        """
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+
+            file_paths = []
+
+            # Extract files from affected_files element
+            affected_files_elem = root.find("affected_files")
+            if affected_files_elem is not None:
+                for file_elem in affected_files_elem.findall("file"):
+                    if file_elem.text and file_elem.text.strip():
+                        file_paths.append(file_elem.text.strip())
+
+            # Extract files from bugs element
+            bugs_elem = root.find("bugs")
+            if bugs_elem is not None:
+                for bug_elem in bugs_elem.findall("bug"):
+                    file_path_elem = bug_elem.find("file_path")
+                    if file_path_elem is not None and file_path_elem.text and file_path_elem.text.strip():
+                        file_path = file_path_elem.text.strip()
+                        if file_path not in file_paths:
+                            file_paths.append(file_path)
+
+            return file_paths
+        except Exception as e:
+            logger.error(f"Error extracting file paths from XML: {e}")
+            return []
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
@@ -137,6 +175,14 @@ class FixBugsProcessor(CodeProcessor):
         if not xml_path.exists():
             logger.error(f"Bug analysis report not found at {output_file}")
             return 1
+
+        # Extract file paths from the XML report
+        file_paths = self.extract_file_paths(xml_path)
+        if file_paths:
+            logger.info(f"Found {len(file_paths)} file(s) in the bug analysis report: {', '.join(file_paths)}")
+        else:
+            logger.warning("No file paths found in the bug analysis report")
+
         logger.info(f"Feeding bug analysis report {output_file} to aider...")
         aider_cmd = [
             "aider",
@@ -144,6 +190,11 @@ class FixBugsProcessor(CodeProcessor):
             "--message", self.get_default_message(),
             str(xml_path)
         ]
+
+        # Add files to aider with --add flag
+        for file_path in file_paths:
+            aider_cmd.extend(["--add", file_path])
+
         if debug:
             aider_cmd.extend(["--pretty", "--stream"])
         try:
