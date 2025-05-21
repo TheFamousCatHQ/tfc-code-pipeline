@@ -21,11 +21,11 @@ handlers:
 
 loggers:
   tfc-code-pipeline:
-    level: DEBUG
+    level: INFO
     handlers: [ console, file ]
     propagate: no
   tfc-code-pipeline.bug_analyzer:
-    level: DEBUG
+    level: INFO
     handlers: [ console, file ]
     propagate: no
 

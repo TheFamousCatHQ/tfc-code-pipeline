@@ -13,6 +13,7 @@ The output is in a standardized XML format.
 import argparse
 import asyncio
 import json
+import os
 import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -168,6 +169,43 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
         )
 
+    def change_working_directory(self, directory: str) -> bool:
+        """Change the working directory to the specified directory.
+
+        Args:
+            directory: The directory to change to.
+
+        Returns:
+            True if the directory was changed successfully, False otherwise.
+        """
+        try:
+            logger.info(f"Changing working directory to: {directory}")
+            os.chdir(directory)
+            return True
+        except Exception as e:
+            logger.error(f"Error changing working directory to {directory}: {e}")
+            return False
+
+    def is_git_repository(self) -> bool:
+        """Check if the current directory is a git repository.
+
+        Returns:
+            True if the current directory is a git repository, False otherwise.
+        """
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--is-inside-work-tree"],
+                check=True,
+                text=True,
+                capture_output=True
+            )
+            return result.stdout.strip() == "true"
+        except subprocess.CalledProcessError:
+            return False
+        except Exception as e:
+            logger.warning(f"Error checking if directory is a git repository: {e}")
+            return False
+
     def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False) -> str:
         """Get the diff of a commit or working tree changes.
 
@@ -178,6 +216,11 @@ class BugAnalyzerProcessor(CodeProcessor):
         Returns:
             The diff of the commit or working tree changes.
         """
+        # Check if the current directory is a git repository
+        if not self.is_git_repository():
+            logger.error("Not a git repository. Cannot get diff.")
+            return ""
+
         try:
             if working_tree:
                 git_cmd = ["git", "diff", "HEAD"]
@@ -233,6 +276,11 @@ class BugAnalyzerProcessor(CodeProcessor):
         Returns:
             List of affected file paths.
         """
+        # Check if the current directory is a git repository
+        if not self.is_git_repository():
+            logger.error("Not a git repository. Cannot get affected files.")
+            return []
+
         try:
             if working_tree:
                 # Get files changed in the working tree compared to HEAD
@@ -304,10 +352,49 @@ class BugAnalyzerProcessor(CodeProcessor):
         commit_id = args.commit
         output_file = args.output
         working_tree = args.working_tree
+        directory = args.directory
 
         # Set logger to debug level if --debug is passed
         if getattr(args, 'debug', False):
             force_debug_logging(logger)
+
+        # Change to the specified directory
+        if not self.change_working_directory(directory):
+            logger.error(f"Failed to change to directory: {directory}")
+            # Create timestamp for the report
+            timestamp = datetime.now().isoformat()
+            # Write minimal XML report for directory change failure
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+<bug_analysis_report>
+  <commit_id>{commit_id}</commit_id>
+  <timestamp>{timestamp}</timestamp>
+  <affected_files></affected_files>
+  <bugs></bugs>
+  <summary>Failed to change to directory: {directory}</summary>
+</bug_analysis_report>
+''')
+            logger.info(f"Empty bug analysis report created at {output_file}")
+            return {}
+
+        # Check if the current directory is a git repository
+        if not self.is_git_repository():
+            logger.error("Not a git repository. Cannot analyze code.")
+            # Create timestamp for the report
+            timestamp = datetime.now().isoformat()
+            # Write minimal XML report for non-git directory
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+<bug_analysis_report>
+  <commit_id>{commit_id}</commit_id>
+  <timestamp>{timestamp}</timestamp>
+  <affected_files></affected_files>
+  <bugs></bugs>
+  <summary>The specified directory is not a git repository. Cannot analyze code.</summary>
+</bug_analysis_report>
+''')
+            logger.info(f"Empty bug analysis report created at {output_file}")
+            return {}
 
         # Determine the mode of operation
         mode_desc = "working tree changes" if working_tree else f"commit {commit_id}"

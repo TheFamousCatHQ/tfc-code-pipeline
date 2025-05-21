@@ -85,7 +85,7 @@ class FixBugsProcessor(CodeProcessor):
         logger.info("Running bug_analyzer...")
         bug_analyzer_cmd = [
             "bug-analyzer",
-            "--directory", "."
+            "--directory", "/src"
         ]
         if commit:
             bug_analyzer_cmd.extend(["--commit", commit])
