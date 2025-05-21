@@ -216,6 +216,7 @@ def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
     tmp.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     xml_str = ET.tostring(bug_report, encoding="unicode")
     tmp.write(xml_str)
+    tmp.close()
     return tmp.name
 
 
