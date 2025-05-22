@@ -10,7 +10,7 @@ The easiest way to use TFC Code Pipeline is with the pre-built Docker image.
 
 ```bash
 # Run the bug-analyzer tool with your API key
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 ### Available Tools
@@ -40,7 +40,7 @@ The following environment variables can be passed to the Docker container:
 You can pass environment variables directly using the `-e` flag:
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY=your_key -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY=your_key -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 Alternatively, you can use an environment file with the `--env-file` flag:
@@ -52,7 +52,7 @@ echo "ANTHROPIC_API_KEY=your_anthropic_key" >> .env
 echo "OPENROUTER_API_KEY=your_openrouter_key" >> .env
 
 # Run with the environment file
-docker run -it --env-file .env -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it --env-file .env -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 The framework will automatically look for a `.env` file in the current directory when running outside of Docker.
@@ -62,7 +62,7 @@ The framework will automatically look for a `.env` file in the current directory
 Mount your source code directory to `/src` in the container:
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v /path/to/your/code:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v /path/to/your/code:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 ### Examples
@@ -76,31 +76,31 @@ docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io
 #### Find bugs in source files
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 #### Explain code in source files
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint explain-code ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint explain-code ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 #### Write tests for source files
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint write-tests ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint write-tests ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 #### Analyze code complexity
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint analyze-complexity ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint analyze-complexity ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 #### Run Sonar scanner
 
 ```bash
-docker run -it -e SONAR_TOKEN -v .:/src --entrypoint sonar-scan ghcr.io/thefamouscathq/tfc-code-pipeline --directory /src
+docker run -it -e SONAR_TOKEN -v .:/src --entrypoint sonar-scan ghcr.io/thefamouscathq/tfc-code-pipeline
 ```
 
 ## Tool Documentation
@@ -165,10 +165,17 @@ docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint fix-bugs ghcr.io/thefamo
 
 The `find-bugs-and-fix` tool combines bug analysis and fixing in an interactive workflow. It runs the bug analyzer, displays each bug with details, and prompts you to apply fixes one by one.
 
-#### Usage
+#### Usage with Docker
 
 ```bash
 docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--directory /src] [--output /src/bug_analysis_report.xml]
+```
+
+#### Usage with Poetry
+
+```bash
+# Run from the project root directory
+poetry run find-bugs-and-fix [--commit COMMIT_ID] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
 ```
 
 #### Options
@@ -178,6 +185,15 @@ docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.i
 - `--directory`: Directory to analyze (default: /src)
 - `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 - `--debug`: Enable debug mode with additional output
+- `--no-interactive`: Run in non-interactive mode (skip all prompts)
+- `--auto-apply`: In non-interactive mode, automatically apply each fix (equivalent to always answering 'y')
+- `--auto-skip`: In non-interactive mode, automatically skip each fix (equivalent to always answering 'n')
+- `--auto-commit`: In non-interactive mode, automatically apply and auto-commit each fix (equivalent to always answering 'a')
+
+When running interactively, the tool will display each bug with details and prompt you with the following options:
+- `Y` (or Enter): Apply the fix without committing
+- `n`: Skip this fix
+- `a`: Apply the fix and automatically commit the changes
 
 ## Development
 
