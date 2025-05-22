@@ -20,6 +20,7 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Optional, List
+import logging
 
 from colorama import init, Fore, Style
 
@@ -272,23 +273,40 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Run the bug analyzer natively
-    ret = run_bug_analyzer_local(args.commit, args.working_tree, args.output, args.directory, debug=args.debug)
-    if ret != 0:
-        print("Bug analyzer failed. Exiting.", file=sys.stderr)
-        sys.exit(ret)
+    # Set logging level based on --debug
+    if args.debug:
+        logging.basicConfig(level=logging.INFO)
+    else:
+        logging.basicConfig(level=logging.CRITICAL)
+        # Silence noisy loggers from dependencies
+        for noisy_logger in [
+            "root", "tfc-code-pipeline", "tfc-code-pipeline.bug_analyzer", "schema_cat", "httpx", "urllib3", "asyncio", "openai", "pydantic", "requests"
+        ]:
+            logging.getLogger(noisy_logger).setLevel(logging.CRITICAL)
 
-    # Parse and show bug fixes
-    parse_and_show_fixes(args.output, debug=args.debug)
-
-    # Delete the bug analysis report file if it exists
     try:
-        if os.path.exists(args.output):
-            os.remove(args.output)
-            if args.debug:
-                print(f"[DEBUG] Deleted bug analysis report: {args.output}")
-    except Exception as e:
-        print(f"[DEBUG] Error deleting bug analysis report: {e}")
+        # Run the bug analyzer natively
+        ret = run_bug_analyzer_local(args.commit, args.working_tree, args.output, args.directory, debug=args.debug)
+        if ret != 0:
+            print("Bug analyzer failed. Exiting.", file=sys.stderr)
+            sys.exit(ret)
+
+        # Parse and show bug fixes
+        parse_and_show_fixes(args.output, debug=args.debug)
+
+        # Delete the bug analysis report file if it exists
+        try:
+            if os.path.exists(args.output):
+                os.remove(args.output)
+                if args.debug:
+                    print(f"[DEBUG] Deleted bug analysis report: {args.output}")
+        except Exception as e:
+            print(f"[DEBUG] Error deleting bug analysis report: {e}")
+    except KeyboardInterrupt:
+        print("Exiting....")
+        if args.debug:
+            print("KeyboardInterrupt: Exiting on user request.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":

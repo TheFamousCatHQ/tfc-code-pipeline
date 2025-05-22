@@ -28,7 +28,6 @@ def init_logging() -> None:
         with open(logging_config_path, 'rt') as f:
             config = yaml.safe_load(f.read())
         logging.config.dictConfig(config)
-        logging.info("Initialized logging")
     except Exception as e:
         # Fallback to basic configuration if YAML loading fails
         logging.basicConfig(
