@@ -207,7 +207,23 @@ def apply_fix_local(bug: ET.Element, auto_commit: bool, original_xml_path: str, 
             pass
 
 
-def prompt_apply_fix(bug: ET.Element, original_xml_path: str, debug: bool = False) -> None:
+def prompt_apply_fix(bug: ET.Element, original_xml_path: str, debug: bool = False, args=None) -> None:
+    # Non-interactive mode detection
+    non_interactive = args.no_interactive or not sys.stdin.isatty()
+    if non_interactive:
+        if args.auto_apply:
+            print("[Non-interactive] Automatically applying fix.")
+            apply_fix_local(bug, auto_commit=False, original_xml_path=original_xml_path, debug=debug)
+        elif args.auto_commit:
+            print("[Non-interactive] Automatically applying fix with auto-commit.")
+            apply_fix_local(bug, auto_commit=True, original_xml_path=original_xml_path, debug=debug)
+        elif args.auto_skip:
+            print("[Non-interactive] Automatically skipping fix.")
+            return
+        else:
+            print("[Non-interactive] No action specified, skipping fix.")
+            return
+        return
     while True:
         answer = input(f"{Style.BRIGHT}{Fore.YELLOW}Apply this fix? [Y/n/a]: {Style.RESET_ALL}").strip().lower()
         if answer == "" or answer == "y":
@@ -222,7 +238,7 @@ def prompt_apply_fix(bug: ET.Element, original_xml_path: str, debug: bool = Fals
             print(f"{Fore.RED}Please answer 'Y' (yes), 'n' (no), or 'a' (yes-with-auto-commit).{Style.RESET_ALL}")
 
 
-def parse_and_show_fixes(xml_path: str, debug: bool = False) -> None:
+def parse_and_show_fixes(xml_path: str, debug: bool = False, args=None) -> None:
     if not Path(xml_path).exists():
         print(f"Bug analysis report not found: {xml_path}", file=sys.stderr)
         sys.exit(1)
@@ -236,7 +252,7 @@ def parse_and_show_fixes(xml_path: str, debug: bool = False) -> None:
     print(f"{Fore.GREEN}Found {len(bugs)} bug(s) in the analysis report.\n{Style.RESET_ALL}")
     for idx, bug in enumerate(bugs, 1):
         print_bug(idx, len(bugs), bug)
-        prompt_apply_fix(bug, xml_path, debug=debug)
+        prompt_apply_fix(bug, xml_path, debug=debug, args=args)
 
 
 def main() -> None:
@@ -271,7 +287,33 @@ def main() -> None:
         action="store_true",
         help="Pass --debug to all processors and print debug info"
     )
+    parser.add_argument(
+        "--no-interactive",
+        action="store_true",
+        help="Run in non-interactive mode (skip all prompts)"
+    )
+    parser.add_argument(
+        "--auto-apply",
+        action="store_true",
+        help="In non-interactive mode, automatically apply each fix (equivalent to always answering 'y')"
+    )
+    parser.add_argument(
+        "--auto-skip",
+        action="store_true",
+        help="In non-interactive mode, automatically skip each fix (equivalent to always answering 'n')"
+    )
+    parser.add_argument(
+        "--auto-commit",
+        action="store_true",
+        help="In non-interactive mode, automatically apply and auto-commit each fix (equivalent to always answering 'a')"
+    )
     args = parser.parse_args()
+
+    # Validate mutually exclusive auto flags
+    auto_flags = [args.auto_apply, args.auto_skip, args.auto_commit]
+    if sum(auto_flags) > 1:
+        print("Only one of --auto-apply, --auto-skip, or --auto-commit can be set.", file=sys.stderr)
+        sys.exit(2)
 
     # Set logging level based on --debug
     if args.debug:
@@ -292,7 +334,7 @@ def main() -> None:
             sys.exit(ret)
 
         # Parse and show bug fixes
-        parse_and_show_fixes(args.output, debug=args.debug)
+        parse_and_show_fixes(args.output, debug=args.debug, args=args)
 
         # Delete the bug analysis report file if it exists
         try:
