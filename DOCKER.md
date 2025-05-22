@@ -73,13 +73,13 @@ To publish the image to DockerHub, you can use the provided script:
 
 ```bash
 # Make the script executable (if not already)
-chmod +x publish_docker.sh
+chmod +x publish-docker.sh
 
 # Publish with default tag (latest)
-./publish_docker.sh
+./publish-docker.sh
 
 # Or specify a custom tag
-./publish_docker.sh v1.0.0
+./publish-docker.sh v1.0.0
 ```
 
 The script will:

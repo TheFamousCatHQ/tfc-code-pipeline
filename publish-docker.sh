@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to build and publish the TFC Code Pipeline Docker image to DockerHub
-# Usage: ./publish_docker.sh [tag]
+# Usage: ./publish-docker.sh [tag]
 # If no tag is provided, "latest" will be used
 
 # Exit on any error

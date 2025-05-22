@@ -617,20 +617,20 @@ A wrapper script for running TFC Code Pipeline commands in Docker.
 - Supports all available commands (find-source-files, explain-code, write-tests, find-bugs, analyze-complexity,
   sonar-scan, sonar-analyze, bug-analyzer, fix-bugs)
 
-#### publish_docker.sh
+#### publish-docker.sh
 
 A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
 
 **Usage:**
 
 ```bash
-./publish_docker.sh [tag]
+./publish-docker.sh [tag]
 ```
 
 **Example:**
 
 ```bash
-./publish_docker.sh v1.0.0
+./publish-docker.sh v1.0.0
 ```
 
 **Features:**

@@ -45,38 +45,35 @@ jobs:
             type=sha,format=short
             latest
 
-      # Create Dockerfile from the template in main.py
-      - name: Create Dockerfile
-        run: |
-          cat > Dockerfile << 'EOF'
-          FROM python:3.12-slim
-
-          # Install system dependencies including Node.js and npm
-          RUN apt-get update && apt-get install -y \
-              nodejs \
-              npm \
-              && apt-get clean \
-              && rm -rf /var/lib/apt/lists/*
-
-          # Install sonar scan globally
-          RUN npm install -g @sonar/scan
-
-          # Install aider-chat and our package
-          RUN pip install --no-cache-dir aider-chat
-          COPY . /app
-          WORKDIR /app
-          RUN pip install --no-cache-dir -e .
-
-          # Entrypoint will be set when running the container
-          ENTRYPOINT ["/bin/bash"]
-          EOF
-
-      # Build and push Docker image
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      # Use the build-docker.sh script to create the Dockerfile and build the image
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          file: Dockerfile
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Run build-docker script
+        run: |
+          chmod +x ./build-docker.sh
+          ./build-docker.sh
+
+      # Tag and push Docker image
+      - name: Tag and push Docker image
+        run: |
+          # Tag the image built by build-docker.sh with all the tags from metadata
+          for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '); do
+            echo "Tagging tfc-code-pipeline:latest as $tag"
+            docker tag tfc-code-pipeline:latest $tag
+          done
+
+          # Push all tags if not a pull request
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '); do
+              echo "Pushing $tag"
+              docker push $tag
+            done
+          fi
