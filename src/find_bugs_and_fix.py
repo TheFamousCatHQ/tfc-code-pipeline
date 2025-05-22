@@ -34,7 +34,7 @@ init(autoreset=True)
 SPINNER_CHARS = ["|", "/", "-", "\\"]
 
 
-def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: str, directory: str = os.getcwd(), debug: bool = False) -> int:
+def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: str, directory: str = "/src", debug: bool = False) -> int:
     """
     Run the bug analyzer using the local Python module and write output to the specified file.
     Show a spinner while waiting.
@@ -43,7 +43,7 @@ def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: st
         commit: Commit ID to analyze
         working_tree: Whether to analyze working tree changes
         output: Output file path
-        directory: Directory to analyze (default: current working directory)
+        directory: Directory to analyze (default: /src)
         debug: Whether to enable debug mode
     """
     spinner_running = True
@@ -256,8 +256,8 @@ def main() -> None:
     parser.add_argument(
         "--directory",
         type=str,
-        default=os.getcwd(),
-        help="Directory to analyze (default: current working directory)"
+        default="/src",
+        help="Directory to analyze (default: /src)"
     )
     parser.add_argument(
         "--output",

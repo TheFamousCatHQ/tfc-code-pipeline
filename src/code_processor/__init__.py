@@ -310,16 +310,15 @@ class CodeProcessor(ABC):
         try:
             # Run aider command
             process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-            # Log aider output in real-time
-            if process.stdout:
-                for line in iter(process.stdout.readline, ''):
-                    logger.info(f"[aider] {line.strip()}")
-            if process.stderr:
-                for line in iter(process.stderr.readline, ''):
-                    logger.error(f"[aider stderr] {line.strip()}")
-
-            process.wait()
+            
+            # Use communicate() to avoid deadlocks when reading stdout and stderr
+            stdout, stderr = process.communicate()
+            
+            # Log the output after it's all collected
+            for line in stdout.splitlines():
+                logger.info(f"[aider] {line.strip()}")
+            for line in stderr.splitlines():
+                logger.error(f"[aider stderr] {line.strip()}")
 
             if process.returncode == 0:
                 logger.info(f"Aider processing completed successfully for {len(valid_files)} files.")
@@ -350,6 +349,10 @@ class CodeProcessor(ABC):
             source_files = [args.file]
             logger.info(f"Processing specific file: {args.file}")
         else:
+            # Validate directory before calling find_files
+            if not args.directory or not Path(args.directory).is_dir():
+                logger.error(f"Invalid directory: {args.directory}")
+                return []
             source_files = find_files(args.directory)
             if not source_files:
                 logger.warning(f"No source files found in directory: {args.directory}")
@@ -419,6 +422,10 @@ class CodeProcessor(ABC):
                     source_files = [args.file]
                     logger.warning(f"Using specific file: {args.file}")
                 else:
+                    # Validate directory before calling find_files
+                    if not args.directory or not Path(args.directory).is_dir():
+                        logger.error(f"Invalid directory: {args.directory}")
+                        return 1
                     source_files = find_files(args.directory)
 
                 if not source_files:

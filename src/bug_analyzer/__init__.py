@@ -173,15 +173,8 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
         )
 
-    def change_working_directory(self, directory: str) -> bool:
-        """Change the working directory to the specified directory.
-
-        Args:
-            directory: The directory to change to.
-
-        Returns:
-            True if the directory was changed successfully, False otherwise.
-        """
+    def change_working_directory(self, directory: str = "/src") -> bool:
+        """Change the working directory to the specified directory (default: /src)."""
         try:
             logger.info(f"Changing working directory to: {directory}")
             os.chdir(directory)
@@ -356,7 +349,7 @@ class BugAnalyzerProcessor(CodeProcessor):
         commit_id = args.commit
         output_file = args.output
         working_tree = args.working_tree
-        directory = args.directory
+        directory = getattr(args, 'directory', '/src') or '/src'
 
         # Set logger to debug level if --debug is passed
         if getattr(args, 'debug', False):
