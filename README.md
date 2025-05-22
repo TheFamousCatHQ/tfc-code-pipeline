@@ -20,6 +20,8 @@ The Docker image includes several tools:
 - `bug-analyzer`: Analyzes code changes to identify potential bugs
 - `fix-bugs`: Fixes bugs identified by bug-analyzer
 - `find-bugs`: Finds potential bugs in source files
+- `find-bugs-and-fix`: Finds bugs and interactively fixes them
+- `find-bugs-and-report`: Finds bugs and reports them on a single line with threshold support
 - `explain-code`: Explains code in source files
 - `write-tests`: Writes unit tests for source files
 - `analyze-complexity`: Analyzes code complexity
@@ -150,11 +152,25 @@ This tool combines `bug-analyzer` and `fix-bugs` in an interactive workflow:
 docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.io/thefamouscathq/tfc-code-pipeline --working-tree
 ```
 
+#### find-bugs-and-report
+
+This tool combines `bug-analyzer` with a simplified reporting mechanism:
+- Runs the bug analyzer on specified code changes
+- Displays each bug on a single line with color-coded severity and confidence levels
+- Supports thresholds for severity and confidence
+- Can break the build if issues with severity at or below the specified threshold and confidence at or above the specified threshold are found
+
+```bash
+# Example: Find and report bugs in working tree changes
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-report ghcr.io/thefamouscathq/tfc-code-pipeline --working-tree
+```
+
 #### When to Use Each Tool
 
 - Use **find-bugs** when you want to analyze entire files or a codebase without Git integration
 - Use **bug-analyzer** when you want to analyze specific changes in a Git repository
 - Use **find-bugs-and-fix** when you want an interactive workflow to find and fix bugs in Git changes
+- Use **find-bugs-and-report** when you want a simple report of bugs with threshold support for CI/CD pipelines
 
 ### Sonar Analyzer
 
@@ -245,6 +261,35 @@ When running interactively, the tool will display each bug with details and prom
 - `Y` (or Enter): Apply the fix without committing
 - `n`: Skip this fix
 - `a`: Apply the fix and automatically commit the changes
+
+### Find Bugs and Report
+
+The `find-bugs-and-report` tool runs the bug analyzer and displays each issue on a single line. It supports thresholds for severity and confidence, above which it will break the build (return a non-zero exit code).
+
+#### Usage with Docker
+
+```bash
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-report ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--directory /src] [--output /src/bug_analysis_report.xml] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
+```
+
+#### Usage with Poetry
+
+```bash
+# Run from the project root directory
+poetry run find-bugs-and-report [--commit COMMIT_ID] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
+```
+
+#### Options
+
+- `--commit`: Commit ID to analyze (default: HEAD)
+- `--working-tree`: Analyze diff between working tree and HEAD instead of a specific commit
+- `--directory`: Directory to analyze (default: /src)
+- `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
+- `--severity-threshold`: Severity threshold at or above which to break the build (default: high)
+- `--confidence-threshold`: Confidence threshold at or above which to break the build (default: high)
+- `--debug`: Enable debug mode with additional output
+
+The tool will display each bug on a single line with color-coded severity and confidence levels. If any issues have severity at or above the specified threshold and confidence at or above the specified threshold, the tool will return a non-zero exit code, making it suitable for use in CI/CD pipelines.
 
 ## Development
 

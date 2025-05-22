@@ -43,8 +43,10 @@ validate-complexity-report = "validate_complexity_report:main"
 sonar-scan = "sonar_scanner:main"
 sonar-analyze = "sonar_analyzer:main"
 bug-analyzer = "bug_analyzer:main"
+bug-hunter = "bug_analyzer:main"
 fix-bugs = "tfc_code_pipeline.fix_bugs:main"
 find-bugs-and-fix = "find_bugs_and_fix:main"
+find-bugs-and-report = "find_bugs_and_report:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

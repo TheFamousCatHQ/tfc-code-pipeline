@@ -209,20 +209,25 @@ def apply_fix_local(bug: ET.Element, auto_commit: bool, original_xml_path: str, 
 
 def prompt_apply_fix(bug: ET.Element, original_xml_path: str, debug: bool = False, args=None) -> None:
     # Non-interactive mode detection
-    non_interactive = args.no_interactive or not sys.stdin.isatty()
+    if args is None:
+        non_interactive = not sys.stdin.isatty()
+    else:
+        non_interactive = args.no_interactive or not sys.stdin.isatty()
     if non_interactive:
-        if args.auto_apply:
-            print("[Non-interactive] Automatically applying fix.")
-            apply_fix_local(bug, auto_commit=False, original_xml_path=original_xml_path, debug=debug)
-        elif args.auto_commit:
-            print("[Non-interactive] Automatically applying fix with auto-commit.")
-            apply_fix_local(bug, auto_commit=True, original_xml_path=original_xml_path, debug=debug)
-        elif args.auto_skip:
-            print("[Non-interactive] Automatically skipping fix.")
-            return
-        else:
-            print("[Non-interactive] No action specified, skipping fix.")
-            return
+        if args is not None:
+            if args.auto_apply:
+                print("[Non-interactive] Automatically applying fix.")
+                apply_fix_local(bug, auto_commit=False, original_xml_path=original_xml_path, debug=debug)
+                return
+            elif args.auto_commit:
+                print("[Non-interactive] Automatically applying fix with auto-commit.")
+                apply_fix_local(bug, auto_commit=True, original_xml_path=original_xml_path, debug=debug)
+                return
+            elif args.auto_skip:
+                print("[Non-interactive] Automatically skipping fix.")
+                return
+        # Default behavior for non-interactive mode (or when args is None)
+        print("[Non-interactive] No action specified, skipping fix.")
         return
     while True:
         answer = input(f"{Style.BRIGHT}{Fore.YELLOW}Apply this fix? [Y/n/a]: {Style.RESET_ALL}").strip().lower()
