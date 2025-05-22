@@ -617,29 +617,6 @@ A wrapper script for running TFC Code Pipeline commands in Docker.
 - Supports all available commands (find-source-files, explain-code, write-tests, find-bugs, analyze-complexity,
   sonar-scan, sonar-analyze, bug-analyzer, fix-bugs)
 
-#### run_bug_analyzer_and_show_fixes.py
-
-A Python script that runs the bug analyzer in Docker and then displays and optionally applies fixes for the bugs found.
-
-**Usage:**
-
-```bash
-python run_bug_analyzer_and_show_fixes.py [--commit COMMIT] [--working-tree] [--output OUTPUT] [--env-file ENV_FILE] [--debug] [--auto-apply-fixes]
-```
-
-**Example:**
-
-```bash
-python run_bug_analyzer_and_show_fixes.py --working-tree
-```
-
-**Features:**
-
-- Runs bug-analyzer in Docker with a nice spinner animation
-- Parses the XML output and displays bugs in a user-friendly format
-- Allows interactive application of fixes for each bug
-- Can automatically apply all fixes with --auto-apply-fixes
-
 #### publish_docker.sh
 
 A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
