@@ -105,6 +105,57 @@ docker run -it -e SONAR_TOKEN -v .:/src --entrypoint sonar-scan ghcr.io/thefamou
 
 ## Tool Documentation
 
+### Bug Analysis Tools
+
+The TFC Code Pipeline includes three complementary bug analysis tools that serve different purposes:
+
+#### find-bugs
+
+- **Purpose**: Analyzes entire source files to identify potential bugs
+- **Input**: Individual source files or directories containing source files
+- **Process**: Uses the external "aider" tool to analyze code
+- **Output**: Generates a JSON report (`bugs_report.json`)
+- **Scope**: Examines complete files regardless of version control status
+- **Usage**: Best for analyzing existing code bases or specific files
+
+```bash
+# Example: Find bugs in all source files in the current directory
+docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint find-bugs ghcr.io/thefamouscathq/tfc-code-pipeline
+```
+
+#### bug-analyzer
+
+- **Purpose**: Analyzes code changes (diffs) to identify potential bugs
+- **Input**: Git diffs (either from a specific commit or working tree changes)
+- **Process**: Uses OpenRouter API with schema_cat to analyze code changes
+- **Output**: Generates an XML report (`bug_analysis_report.xml`)
+- **Scope**: Focuses only on changed portions of code
+- **Usage**: Best for analyzing recent changes or specific commits
+- **Integration**: Tightly integrated with other tools like `fix-bugs` and `find-bugs-and-fix`
+
+```bash
+# Example: Analyze bugs in working tree changes
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline --working-tree
+```
+
+#### find-bugs-and-fix
+
+This tool combines `bug-analyzer` and `fix-bugs` in an interactive workflow:
+- Runs the bug analyzer on specified code changes
+- Displays each bug with details
+- Prompts you to apply fixes one by one
+
+```bash
+# Example: Find and fix bugs in working tree changes
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.io/thefamouscathq/tfc-code-pipeline --working-tree
+```
+
+#### When to Use Each Tool
+
+- Use **find-bugs** when you want to analyze entire files or a codebase without Git integration
+- Use **bug-analyzer** when you want to analyze specific changes in a Git repository
+- Use **find-bugs-and-fix** when you want an interactive workflow to find and fix bugs in Git changes
+
 ### Sonar Analyzer
 
 The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file,
