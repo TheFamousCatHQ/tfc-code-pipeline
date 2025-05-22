@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """
-Executable script to run the bug analyzer (via Docker) and interactively display suggested bug fixes.
+Executable script to run the bug analyzer (natively, not via Docker) and interactively display suggested bug fixes.
 
 Usage:
-    python run_bug_analyzer_and_show_fixes.py [--commit COMMIT] [--working-tree] [--output OUTPUT_FILE]
+    poetry run run-bug-analyzer-and-show-fixes-local [--commit COMMIT] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
 
-This script runs the bug analyzer using the Docker image, parses the output XML, and shows each bug fix suggestion
+This script runs the bug analyzer using the local Python modules, parses the output XML, and shows each bug fix suggestion
 one-by-one on the command line, pausing for user input between each.
 """
 
 import argparse
 import os
 import re
-import subprocess
 import sys
 import tempfile
 import textwrap
@@ -24,7 +23,10 @@ from typing import Optional, List
 
 from colorama import init, Fore, Style
 
-IMAGE_NAME = "tfc-code-pipeline:latest"
+# Import the processors directly
+from bug_analyzer import BugAnalyzerProcessor
+from tfc_code_pipeline.fix_bugs import FixBugsProcessor
+
 DEFAULT_ENV_FILE = ".env"
 
 init(autoreset=True)
@@ -32,55 +34,18 @@ init(autoreset=True)
 SPINNER_CHARS = ["|", "/", "-", "\\"]
 
 
-def read_env_file(env_file: str) -> List[str]:
+def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: str, directory: str = os.getcwd(), debug: bool = False) -> int:
     """
-    Read environment variables from a .env file and return as a list of '-e KEY=VALUE' flags for Docker.
-    """
-    env_flags = []
-    if os.path.isfile(env_file):
-        with open(env_file, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if "=" in line:
-                    key, value = line.split("=", 1)
-                    env_flags.extend(["-e", f"{key}={value}"])
-    return env_flags
-
-
-def run_bug_analyzer_docker(
-        commit: Optional[str],
-        working_tree: bool,
-        output: str,
-        env_file: str,
-        debug: bool = False
-) -> int:
-    """
-    Run the bug analyzer using the Docker image and write output to the specified file.
-    Suppress all logging output from the container.
+    Run the bug analyzer using the local Python module and write output to the specified file.
     Show a spinner while waiting.
-    """
-    src_dir = os.getcwd()
-    env_flags = read_env_file(env_file)
-    env_flags.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={os.path.basename(src_dir)}"])
-    cmd = [
-        "docker", "run", "--rm", "-i",  # no -t to avoid color issues in logs
-        *env_flags,
-        "-v", f"{src_dir}:/src",
-        "--entrypoint", "bug-analyzer",
-        IMAGE_NAME,
-        "--directory", "/src",
-        "--output", output
-    ]
-    if commit:
-        cmd.extend(["--commit", commit])
-    if working_tree:
-        cmd.append("--working-tree")
-    if debug:
-        cmd.append("--debug")
-        print(f"[DEBUG] Running Docker command: {' '.join(cmd)}")
 
+    Args:
+        commit: Commit ID to analyze
+        working_tree: Whether to analyze working tree changes
+        output: Output file path
+        directory: Directory to analyze (default: current working directory)
+        debug: Whether to enable debug mode
+    """
     spinner_running = True
     spinner_done = False
     spinner_exception = [None]
@@ -99,29 +64,37 @@ def run_bug_analyzer_docker(
     t = threading.Thread(target=spinner)
     t.start()
     try:
-        # Use Popen and poll so spinner can update
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        while process.poll() is None:
-            time.sleep(0.1)
-        stdout, stderr = process.communicate()
-        retcode = process.returncode
+        # Prepare args for BugAnalyzerProcessor
+        args = [
+            "--directory", directory,
+            "--output", output
+        ]
+        if commit:
+            args.extend(["--commit", commit])
+        if working_tree:
+            args.append("--working-tree")
+        if debug:
+            args.append("--debug")
+        processor = BugAnalyzerProcessor()
+        # Patch sys.argv for argparse in processor
+        sys_argv_backup = sys.argv
+        sys.argv = ["bug_analyzer"] + args
+        try:
+            processor.run()
+            retcode = 0
+        finally:
+            sys.argv = sys_argv_backup
     except Exception as e:
         spinner_exception[0] = e
         retcode = 1
-        stdout, stderr = '', str(e)
     finally:
         spinner_running = False
         spinner_done = True
         t.join()
-    if retcode != 0:
-        print(stderr, file=sys.stderr)
     return retcode
 
 
 def print_bug(idx: int, total: int, bug: ET.Element) -> None:
-    """
-    Pretty-print a bug with colors and bold labels, with a perfectly aligned and wrapped box.
-    """
     BOX_WIDTH = 66
     INNER_WIDTH = BOX_WIDTH - 2
     LABEL = Style.BRIGHT + Fore.YELLOW
@@ -154,7 +127,6 @@ def print_bug(idx: int, total: int, bug: ET.Element) -> None:
         return f"{Style.BRIGHT}{Fore.MAGENTA}┃{Style.RESET_ALL}{color}{content}{' ' * pad_len}{Style.RESET_ALL}{Style.BRIGHT}{Fore.MAGENTA}┃{Style.RESET_ALL}"
 
     def box_wrap(label: str, value: str, color: str = "", label_color: str = LABEL, value_color: str = VALUE) -> None:
-        # Only show the label on the first line, indent wrapped lines to align after the label
         label_str = f"{label_color}{label}{value_color}"
         label_len = len(_strip_ansi(label))
         wrap_width = INNER_WIDTH - label_len
@@ -166,7 +138,6 @@ def print_bug(idx: int, total: int, bug: ET.Element) -> None:
         for line in wrapped[1:]:
             print(box_line(' ' * label_len + line, color))
 
-    # Top border
     print(f"{Style.BRIGHT}{Fore.MAGENTA}┏{'━' * (BOX_WIDTH - 2)}┓{Style.RESET_ALL}")
     bug_num = f"  Bug {idx}/{total}"
     print(box_line(bug_num, Style.BRIGHT + Fore.CYAN))
@@ -182,23 +153,16 @@ def print_bug(idx: int, total: int, bug: ET.Element) -> None:
         for line in code_snippet.splitlines():
             for wrapped in textwrap.wrap(line, width=INNER_WIDTH):
                 print(box_line(f"{Fore.BLUE}{wrapped}{Style.RESET_ALL}"))
-    # Bottom border
     print(f"{Style.BRIGHT}{Fore.MAGENTA}┗{'━' * (BOX_WIDTH - 2)}┛{Style.RESET_ALL}")
 
 
 def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
-    """
-    Create a temporary XML file containing only this bug, in the same format as the main report.
-    Returns the path to the temp file.
-    """
-    # Parse the original XML to get commit_id, timestamp, affected_files, summary
     tree = ET.parse(original_xml_path)
     root = tree.getroot()
     commit_id = root.findtext("commit_id", "HEAD")
     timestamp = root.findtext("timestamp", "")
     affected_files_elem = root.find("affected_files")
     summary = root.findtext("summary", None)
-    # Build new XML
     bug_report = ET.Element("bug_analysis_report")
     ET.SubElement(bug_report, "commit_id").text = commit_id
     ET.SubElement(bug_report, "timestamp").text = timestamp
@@ -210,9 +174,7 @@ def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
     bugs_elem.append(bug)
     if summary:
         ET.SubElement(bug_report, "summary").text = summary
-    # Write to temp file in the current working directory so Docker can see it
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix="_single_bug.xml", mode="w", encoding="utf-8",
-                                      dir=os.getcwd())
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix="_single_bug.xml", mode="w", encoding="utf-8", dir=os.getcwd())
     tmp.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     xml_str = ET.tostring(bug_report, encoding="unicode")
     tmp.write(xml_str)
@@ -220,83 +182,46 @@ def create_single_bug_xml(bug: ET.Element, original_xml_path: str) -> str:
     return tmp.name
 
 
-def apply_fix(bug: ET.Element, auto_commit: bool, original_xml_path: str, env_file: str, debug: bool = False) -> None:
-    """
-    Call fix_bugs in Docker with --single-bug-xml /src/<filename>.
-    If auto_commit is True, also pass --auto-commit.
-    Print debug info about what is executed and file handling.
-    """
+def apply_fix_local(bug: ET.Element, auto_commit: bool, original_xml_path: str, debug: bool = False) -> None:
     single_bug_xml = create_single_bug_xml(bug, original_xml_path)
-    single_bug_xml_name = os.path.basename(single_bug_xml)
-    container_xml_path = f"/src/{single_bug_xml_name}"
-    print(f"[DEBUG] Created single bug XML: {single_bug_xml} (container path: {container_xml_path})")
-    if debug:
-        print(f"[DEBUG] Content of {single_bug_xml}:")
-        try:
-            with open(single_bug_xml, "r", encoding="utf-8") as f:
-                print(f.read())
-        except Exception as e:
-            print(f"[DEBUG] Error reading {single_bug_xml}: {e}")
-        print(f"[DEBUG] End of {single_bug_xml}")
-    src_dir = os.getcwd()
-    env_flags = read_env_file(env_file)
-    env_flags.extend(["-e", f"ORIGINAL_SRC_DIR_NAME={os.path.basename(src_dir)}"])
-    # Print all AIDER_ environment variables
-    for k, v in os.environ.items():
-        if k.startswith("AIDER_"):
-            print(f"[DEBUG] {k}: {v}")
-    cmd = [
-        "docker", "run", "--rm", "-i",
-        *env_flags,
-        "-v", f"{src_dir}:/src",
-        "-w", "/src",  # Ensure working directory is /src for git
-        "--entrypoint", "fix-bugs",
-        IMAGE_NAME,
-        "--single-bug-xml", container_xml_path
-    ]
-    if auto_commit:
-        cmd.append("--auto-commit")
-    if debug:
-        cmd.append("--debug")
-        print(f"[DEBUG] Running Docker command: {' '.join(cmd)}")
-    print(f"\n{Fore.CYAN}Applying fix using fix_bugs...{Style.RESET_ALL}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    print(f"[DEBUG] Docker return code: {result.returncode}")
-    print(f"[DEBUG] Docker stdout:\n{result.stdout}")
-    if result.stderr:
-        print(f"[DEBUG] Docker stderr:\n{result.stderr}")
-    if result.returncode != 0:
-        print(result.stderr, file=sys.stderr)
-    # Optionally, remove the temp file
     try:
-        os.unlink(single_bug_xml)
-        print(f"[DEBUG] Deleted temp file: {single_bug_xml}")
-    except Exception as e:
-        print(f"[DEBUG] Error deleting temp file: {e}")
+        args = [
+            "--single-bug-xml", single_bug_xml
+        ]
+        if auto_commit:
+            args.append("--auto-commit")
+        if debug:
+            args.append("--debug")
+        processor = FixBugsProcessor()
+        sys_argv_backup = sys.argv
+        sys.argv = ["fix_bugs"] + args
+        try:
+            processor.run()
+        finally:
+            sys.argv = sys_argv_backup
+    finally:
+        try:
+            os.unlink(single_bug_xml)
+        except Exception:
+            pass
 
 
-def prompt_apply_fix(bug: ET.Element, original_xml_path: str, env_file: str, debug: bool = False) -> None:
-    """
-    Prompt the user whether to apply the fix, with Y/n/a options.
-    """
+def prompt_apply_fix(bug: ET.Element, original_xml_path: str, debug: bool = False) -> None:
     while True:
         answer = input(f"{Style.BRIGHT}{Fore.YELLOW}Apply this fix? [Y/n/a]: {Style.RESET_ALL}").strip().lower()
         if answer == "" or answer == "y":
-            apply_fix(bug, auto_commit=False, original_xml_path=original_xml_path, env_file=env_file, debug=debug)
+            apply_fix_local(bug, auto_commit=False, original_xml_path=original_xml_path, debug=debug)
             break
         elif answer == "n":
             break
         elif answer == "a":
-            apply_fix(bug, auto_commit=True, original_xml_path=original_xml_path, env_file=env_file, debug=debug)
+            apply_fix_local(bug, auto_commit=True, original_xml_path=original_xml_path, debug=debug)
             break
         else:
             print(f"{Fore.RED}Please answer 'Y' (yes), 'n' (no), or 'a' (yes-with-auto-commit).{Style.RESET_ALL}")
 
 
-def parse_and_show_fixes(xml_path: str, env_file: str, debug: bool = False) -> None:
-    """
-    Parse the bug analysis XML and show each bug fix suggestion interactively.
-    """
+def parse_and_show_fixes(xml_path: str, debug: bool = False) -> None:
     if not Path(xml_path).exists():
         print(f"Bug analysis report not found: {xml_path}", file=sys.stderr)
         sys.exit(1)
@@ -310,12 +235,12 @@ def parse_and_show_fixes(xml_path: str, env_file: str, debug: bool = False) -> N
     print(f"{Fore.GREEN}Found {len(bugs)} bug(s) in the analysis report.\n{Style.RESET_ALL}")
     for idx, bug in enumerate(bugs, 1):
         print_bug(idx, len(bugs), bug)
-        prompt_apply_fix(bug, xml_path, env_file, debug=debug)
+        prompt_apply_fix(bug, xml_path, debug=debug)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Run the bug analyzer (via Docker) and interactively show suggested bug fixes."
+        description="Run the bug analyzer (natively) and interactively show suggested bug fixes."
     )
     parser.add_argument(
         "--commit",
@@ -329,32 +254,32 @@ def main() -> None:
         help="Analyze diff between working tree and HEAD instead of a specific commit"
     )
     parser.add_argument(
+        "--directory",
+        type=str,
+        default=os.getcwd(),
+        help="Directory to analyze (default: current working directory)"
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default="bug_analysis_report.xml",
         help="Output file path for the bug analysis report (default: bug_analysis_report.xml)"
     )
     parser.add_argument(
-        "--env-file",
-        type=str,
-        default=DEFAULT_ENV_FILE,
-        help="Path to .env file to load environment variables (default: .env)"
-    )
-    parser.add_argument(
         "--debug",
         action="store_true",
-        help="Pass --debug to all Docker commands and print debug info"
+        help="Pass --debug to all processors and print debug info"
     )
     args = parser.parse_args()
 
-    # Run the bug analyzer in Docker
-    ret = run_bug_analyzer_docker(args.commit, args.working_tree, args.output, args.env_file, debug=args.debug)
+    # Run the bug analyzer natively
+    ret = run_bug_analyzer_local(args.commit, args.working_tree, args.output, args.directory, debug=args.debug)
     if ret != 0:
         print("Bug analyzer failed. Exiting.", file=sys.stderr)
         sys.exit(ret)
 
     # Parse and show bug fixes
-    parse_and_show_fixes(args.output, args.env_file, debug=args.debug)
+    parse_and_show_fixes(args.output, debug=args.debug)
 
     # Delete the bug analysis report file if it exists
     try:
@@ -367,4 +292,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main() 

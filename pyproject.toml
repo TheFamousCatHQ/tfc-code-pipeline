@@ -44,6 +44,7 @@ sonar-scan = "sonar_scanner:main"
 sonar-analyze = "sonar_analyzer:main"
 bug-analyzer = "bug_analyzer:main"
 fix-bugs = "tfc_code_pipeline.fix_bugs:main"
+run-bug-analyzer-and-show-fixes-local = "run_bug_analyzer_and_show_fixes_local:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

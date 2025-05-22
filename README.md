@@ -4,7 +4,8 @@ This framework provides a common base class for processing code files using Aide
 
 ## Sonar Analyzer
 
-The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file, including prompts suitable for AI Coding Agents. It processes both issues and file complexity measures.
+The `sonar-analyze` tool analyzes Sonar scanner reports and generates improvement suggestions for each component/file,
+including prompts suitable for AI Coding Agents. It processes both issues and file complexity measures.
 
 ### Usage
 
@@ -16,7 +17,7 @@ poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity
 
 - `--report-file`: Path to the Sonar scanner report JSON file (required)
 - `--min-severity`: Minimum severity level to include in the analysis (default: MEDIUM)
-  - Available options: LOW, INFO, MEDIUM, HIGH, BLOCKER
+    - Available options: LOW, INFO, MEDIUM, HIGH, BLOCKER
 - `--output-file`: Path to the output file for the analysis results (default: stdout)
 
 ### Example
@@ -25,7 +26,8 @@ poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity
 poetry run sonar-analyze --report-file doc/SONAR_REPORT.json --min-severity HIGH --output-file sonar_suggestions.json
 ```
 
-This will analyze the Sonar scanner report, filter out issues below the HIGH severity level, identify overly complex files, and write the suggestions to sonar_suggestions.json.
+This will analyze the Sonar scanner report, filter out issues below the HIGH severity level, identify overly complex
+files, and write the suggestions to sonar_suggestions.json.
 
 ### Features
 
@@ -34,12 +36,13 @@ The tool provides two types of analysis:
 1. **Issue Analysis**: Identifies and categorizes issues reported by Sonar scanner based on severity level.
 
 2. **Complexity Analysis**: Identifies overly complex files based on the following metrics:
-   - Cyclomatic complexity (threshold: 30)
-   - Cognitive complexity (threshold: 25)
-   - Lines of code (threshold: 500)
-   - Complexity per function (threshold: 5)
+    - Cyclomatic complexity (threshold: 30)
+    - Cognitive complexity (threshold: 25)
+    - Lines of code (threshold: 500)
+    - Complexity per function (threshold: 5)
 
 For each component/file, the tool generates:
+
 - A summary of issues and/or complexity problems
 - Suggestions for improvement
 - A detailed prompt for an AI Coding Agent to fix the issues and/or refactor complex code
@@ -47,10 +50,12 @@ For each component/file, the tool generates:
 ## Bug Analyzer
 
 The `bug-analyzer` tool analyzes code changes to identify potential bugs. It can operate in two modes:
+
 1. **Commit mode**: Analyzes the diff of a specific commit
 2. **Working tree mode**: Analyzes the diff between the working tree and HEAD
 
-In both modes, it takes the diff plus the full source of all affected files, feeds that to OpenRouter, and asks for a bug analysis. The output is in a standardized XML format.
+In both modes, it takes the diff plus the full source of all affected files, feeds that to OpenRouter, and asks for a
+bug analysis. The output is in a standardized XML format.
 
 ### Usage
 
@@ -80,7 +85,8 @@ poetry run bug-analyzer --working-tree
 poetry run bug-analyzer --working-tree --output custom_report.xml
 ```
 
-This will analyze the specified commit or working tree changes, extract the diff and affected files, send the data to OpenRouter for analysis, and write the results to the specified output file.
+This will analyze the specified commit or working tree changes, extract the diff and affected files, send the data to
+OpenRouter for analysis, and write the results to the specified output file.
 
 ### Features
 
@@ -95,16 +101,16 @@ The tool performs the following steps:
 4. **AI Analysis**: Sends the commit diff and file contents to OpenRouter for analysis.
 
 5. **Report Generation**: Creates a structured XML report containing:
-   - Commit ID and timestamp
-   - List of affected files
-   - Detailed bug information for each identified issue:
-     - File path and line number
-     - Bug description
-     - Severity (high/medium/low)
-     - Confidence level (high/medium/low)
-     - Suggested fix
-     - Code snippet containing the bug
-   - Summary of the analysis
+    - Commit ID and timestamp
+    - List of affected files
+    - Detailed bug information for each identified issue:
+        - File path and line number
+        - Bug description
+        - Severity (high/medium/low)
+        - Confidence level (high/medium/low)
+        - Suggested fix
+        - Code snippet containing the bug
+    - Summary of the analysis
 
 ### Integration with Main CLI
 
@@ -154,10 +160,13 @@ processing them with Aider, etc.) is handled by the base class.
 
 - **Script**: `bug-analyzer`
 - **Purpose**: Analyzes bugs in code changes using OpenRouter (can analyze either a commit diff or working tree changes)
-- **Modes**: 
-  - Commit mode: Analyzes the diff of a specific commit
-  - Working tree mode: Analyzes the diff between the working tree and HEAD
-- **Default Message**: "Analyze this code diff and the full source of affected files to identify potential bugs. Focus on bugs introduced by the changes in the diff. For each issue found, provide: 1) a brief description, 2) the line number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), 5) a suggested fix, and 6) the relevant code snippet."
+- **Modes**:
+    - Commit mode: Analyzes the diff of a specific commit
+    - Working tree mode: Analyzes the diff between the working tree and HEAD
+- **Default Message**: "Analyze this code diff and the full source of affected files to identify potential bugs. Focus
+  on bugs introduced by the changes in the diff. For each issue found, provide: 1) a brief description, 2) the line
+  number(s), 3) severity (high/medium/low), 4) confidence level (high/medium/low), 5) a suggested fix, and 6) the
+  relevant code snippet."
 - **Output**: Generates a `bug_analysis_report.xml` file (or custom filename specified with `--output`)
 
 ### ExplainCodeProcessor
@@ -306,6 +315,7 @@ For the simplest setup, you can use the pre-built Docker image:
    ```
 
 Alternatively, you can run commands directly with Docker:
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-bugs --directory /src
 ```
@@ -578,7 +588,8 @@ SONAR_TOKEN=your-sonar-token-here
 
 ## Scripts and Docker Entrypoint Commands
 
-This section provides comprehensive documentation for all scripts and Docker entrypoint commands available in the repository.
+This section provides comprehensive documentation for all scripts and Docker entrypoint commands available in the
+repository.
 
 ### Shell Scripts
 
@@ -587,55 +598,43 @@ This section provides comprehensive documentation for all scripts and Docker ent
 A wrapper script for running TFC Code Pipeline commands in Docker.
 
 **Usage:**
+
 ```bash
 ./run-tfc-pipeline.sh [command] [args...]
 ```
 
 **Example:**
+
 ```bash
 ./run-tfc-pipeline.sh bug-analyzer --working-tree
 ```
 
 **Features:**
+
 - Automatically checks for Docker installation
 - Handles .env file for environment variables
 - Mounts the current directory as /src in the container
-- Supports all available commands (find-source-files, explain-code, write-tests, find-bugs, analyze-complexity, sonar-scan, sonar-analyze, bug-analyzer, fix-bugs)
-
-#### run_fix_bugs.sh
-
-A wrapper script specifically for running the fix-bugs command in Docker.
-
-**Usage:**
-```bash
-./run_fix_bugs.sh [--env-file ENVFILE] [--debug] [--working-tree] [--commit COMMIT_HASH]
-```
-
-**Example:**
-```bash
-./run_fix_bugs.sh --working-tree
-```
-
-**Features:**
-- Allows specifying a custom .env file
-- Passes all other arguments to the fix-bugs command
-- Sets the ORIGINAL_SRC_DIR_NAME environment variable automatically
+- Supports all available commands (find-source-files, explain-code, write-tests, find-bugs, analyze-complexity,
+  sonar-scan, sonar-analyze, bug-analyzer, fix-bugs)
 
 #### run_bug_analyzer_and_show_fixes.py
 
 A Python script that runs the bug analyzer in Docker and then displays and optionally applies fixes for the bugs found.
 
 **Usage:**
+
 ```bash
 python run_bug_analyzer_and_show_fixes.py [--commit COMMIT] [--working-tree] [--output OUTPUT] [--env-file ENV_FILE] [--debug] [--auto-apply-fixes]
 ```
 
 **Example:**
+
 ```bash
 python run_bug_analyzer_and_show_fixes.py --working-tree
 ```
 
 **Features:**
+
 - Runs bug-analyzer in Docker with a nice spinner animation
 - Parses the XML output and displays bugs in a user-friendly format
 - Allows interactive application of fixes for each bug
@@ -646,16 +645,19 @@ python run_bug_analyzer_and_show_fixes.py --working-tree
 A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
 
 **Usage:**
+
 ```bash
 ./publish_docker.sh [tag]
 ```
 
 **Example:**
+
 ```bash
 ./publish_docker.sh v1.0.0
 ```
 
 **Features:**
+
 - Builds the Docker image with the specified tag (defaults to "latest")
 - Checks if Docker is installed and if the user is logged in to DockerHub
 - Pushes the image to DockerHub
@@ -663,25 +665,29 @@ A script to build and publish the TFC Code Pipeline Docker image to DockerHub.
 
 ### GitHub Actions Workflow
 
-This repository includes a GitHub Actions workflow that automatically builds and publishes the Docker image to GitHub Container Registry (ghcr.io) when changes are pushed to the main branch or when a new tag is created.
+This repository includes a GitHub Actions workflow that automatically builds and publishes the Docker image to GitHub
+Container Registry (ghcr.io) when changes are pushed to the main branch or when a new tag is created.
 
 **Workflow File:** `.github/workflows/docker-publish.yml`
 
 **Triggers:**
+
 - Push to the `main` branch
 - Push of tags matching the pattern `v*.*.*` (e.g., v1.0.0)
 - Pull requests to the `main` branch (builds but doesn't publish)
 
 **Features:**
+
 - Automatically builds the Docker image
 - Publishes the image to GitHub Container Registry (ghcr.io)
 - Tags the image with:
-  - Semantic version tags (for tag pushes)
-  - Branch name (for branch pushes)
-  - Short SHA (for all pushes)
-  - `latest` tag (for main branch pushes)
+    - Semantic version tags (for tag pushes)
+    - Branch name (for branch pushes)
+    - Short SHA (for all pushes)
+    - `latest` tag (for main branch pushes)
 
 **Using the GitHub Container Registry Image:**
+
 ```bash
 # Pull the image from GitHub Container Registry
 docker pull ghcr.io/your-username/tfc-code-pipeline:latest
@@ -701,11 +707,13 @@ These scripts can be run using Poetry or as Docker entrypoint commands.
 The main CLI interface for the TFC Code Pipeline.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run tfc-code-pipeline [--build-only] [--skip-build] [--run] [--src /path/to/source] [--messages "custom message"] [--cmd explain_code|write_tests|find_bugs|analyze_complexity|sonar_scan|bug_analyzer]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest tfc-code-pipeline [options]
 ```
@@ -715,11 +723,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Finds source files in a directory, excluding dependencies, tests, and other non-core files.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run find-source-files --directory /path/to/source
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-source-files --directory /src
 ```
@@ -729,11 +739,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Explains code in source files using aider.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run explain-code --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest explain-code --directory /src [options]
 ```
@@ -743,11 +755,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Writes unit tests for source files using aider.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run write-tests --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest write-tests --directory /src [options]
 ```
@@ -757,11 +771,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Finds potential bugs in source files and outputs results as JSON.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run find-bugs --directory /path/to/source [--file /path/to/specific/file.js] [--message "custom message"]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-bugs --directory /src [options]
 ```
@@ -771,11 +787,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Analyzes code complexity using an LLM via aider.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run analyze-complexity --directory /path/to/source [--file /path/to/specific/file.py] [--message "custom analysis prompt"]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest analyze-complexity --directory /src [options]
 ```
@@ -785,11 +803,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Validates a complexity report against a JSON schema.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run validate-complexity-report --report-file /path/to/report.json
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest validate-complexity-report --report-file /src/report.json
 ```
@@ -799,11 +819,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Runs sonar-scanner on the entire codebase.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run sonar-scan --directory /path/to/source [--project-key "project-key"] [--host-url "http://sonarqube-server:9000"] [--login "auth-token"]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest sonar-scan --directory /src [options]
 ```
@@ -813,11 +835,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Analyzes Sonar scanner reports and generates improvement suggestions.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run sonar-analyze --report-file path/to/sonar/report.json [--min-severity SEVERITY] [--output-file path/to/output.json]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest sonar-analyze --report-file /src/report.json [options]
 ```
@@ -827,11 +851,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Analyzes code changes to identify potential bugs.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run bug-analyzer [--commit COMMIT_ID] [--working-tree] [--output OUTPUT_FILE]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest bug-analyzer [options]
 ```
@@ -841,11 +867,13 @@ docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:la
 Fixes bugs identified by bug-analyzer.
 
 **Usage with Poetry:**
+
 ```bash
 poetry run fix-bugs [--report-file REPORT_FILE] [--working-tree] [--commit COMMIT_ID]
 ```
 
 **Usage with Docker:**
+
 ```bash
 docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest fix-bugs [options]
 ```

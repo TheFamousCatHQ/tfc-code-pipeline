@@ -76,7 +76,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfccodepipeline/app:latest", build_cmd)
+            self.assertIn("tfc-code-pipeline:latest", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -143,7 +143,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(build_cmd[0], "docker")
             self.assertEqual(build_cmd[1], "build")
             self.assertIn("-t", build_cmd)
-            self.assertIn("tfccodepipeline/app:latest", build_cmd)
+            self.assertIn("tfc-code-pipeline:latest", build_cmd)
 
             # Verify that the temporary Dockerfile was removed
             mock_unlink.assert_called_once()
@@ -153,7 +153,7 @@ class TestMain(unittest.TestCase):
             docker_cmd = run_args[0]
 
             # Check that we're using the custom image
-            self.assertIn("tfccodepipeline/app:latest", docker_cmd)
+            self.assertIn("tfc-code-pipeline:latest", docker_cmd)
 
             # Check that no environment variables are passed to Docker when .env file doesn't exist
             # Convert docker_cmd to string for easier checking
@@ -196,7 +196,7 @@ class TestMain(unittest.TestCase):
         self.assertEqual(docker_cmd[0], "docker")
         self.assertEqual(docker_cmd[1], "build")
         self.assertIn("-t", docker_cmd)
-        self.assertIn("tfccodepipeline/app:latest", docker_cmd)
+        self.assertIn("tfc-code-pipeline:latest", docker_cmd)
 
         # Verify that the temporary Dockerfile was removed
         mock_unlink.assert_called_once()

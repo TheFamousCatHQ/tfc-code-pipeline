@@ -28,6 +28,7 @@ from logging_utils import get_logger
 # Set up logging
 logger = get_logger("tfc-code-pipeline.bug_analyzer")
 
+
 def force_debug_logging(logger):
     logger.setLevel('DEBUG')
     # Set all handlers for this logger and its parents to DEBUG
@@ -39,6 +40,7 @@ def force_debug_logging(logger):
             break
         current = getattr(current, 'parent', None)
 
+
 class BugAnalysis(BaseModel):
     """Model for bug analysis results."""
     file_path: str = Field(..., description="Path to the file containing the bug")
@@ -47,7 +49,8 @@ class BugAnalysis(BaseModel):
     severity: str = Field(..., description="Severity of the bug (high, medium, low)")
     confidence: str = Field(..., description="Confidence level of the analysis (high, medium, low)")
     suggested_fix: str = Field(..., description="Suggested fix for the bug")
-    code_snippet: str = Field(..., description="Code snippet containing the bug")
+    code_snippet: str = Field(...,
+                              description="Code snippet containing the bug, keep it short, not more than 5-10 lines.")
 
 
 class BugAnalysisReport(BaseModel):

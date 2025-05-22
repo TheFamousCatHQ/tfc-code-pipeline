@@ -8,7 +8,7 @@
 set -e
 
 # Configuration
-DOCKER_IMAGE="tfc-code-pipeline:python3.12"
+DOCKER_IMAGE="tfc-code-pipeline:latest"
 ENV_FILE=".env"
 SRC_DIR="$(pwd)"
 
