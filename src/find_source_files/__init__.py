@@ -28,8 +28,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--directory",
         type=str,
-        required=True,
-        help="Directory to search for source files"
+        required=False,
+        default="/src",
+        help="Directory to search for source files (default: /src)"
     )
     return parser.parse_args()
 

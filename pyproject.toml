@@ -5,17 +5,17 @@ description = "A tool to assist with writing tests for TFC"
 authors = ["Michael Lahr <michael.lahr@gmail.com>"]
 readme = "README.md"
 packages = [
-    {include = "tfc_code_pipeline", from = "src"},
-    {include = "find_source_files", from = "src"},
-    {include = "explain_code", from = "src"},
-    {include = "write_tests", from = "src"},
-    {include = "find_bugs", from = "src"},
-    {include = "code_processor", from = "src"},
-    {include = "complexity_analyzer", from = "src"},
-    {include = "validate_complexity_report", from = "src"},
-    {include = "sonar_scanner", from = "src"},
-    {include = "sonar_analyzer", from = "src"},
-    {include = "bug_analyzer", from = "src"}
+    { include = "tfc_code_pipeline", from = "src" },
+    { include = "find_source_files", from = "src" },
+    { include = "explain_code", from = "src" },
+    { include = "write_tests", from = "src" },
+    { include = "find_bugs", from = "src" },
+    { include = "code_processor", from = "src" },
+    { include = "complexity_analyzer", from = "src" },
+    { include = "validate_complexity_report", from = "src" },
+    { include = "sonar_scanner", from = "src" },
+    { include = "sonar_analyzer", from = "src" },
+    { include = "bug_analyzer", from = "src" }
 ]
 
 [tool.poetry.dependencies]
@@ -30,7 +30,7 @@ openai = "^1.76.2"
 bs4 = "^0.0.2"
 lxml = "^5.4.0"
 httpx = "^0.28.1"
-schema-cat = "0.1.10"
+schema-cat = "0.1.11"
 
 [tool.poetry.scripts]
 tfc-code-pipeline = "tfc_code_pipeline.cli:cli"
@@ -44,7 +44,7 @@ sonar-scan = "sonar_scanner:main"
 sonar-analyze = "sonar_analyzer:main"
 bug-analyzer = "bug_analyzer:main"
 fix-bugs = "tfc_code_pipeline.fix_bugs:main"
-run-bug-analyzer-and-show-fixes-local = "run_bug_analyzer_and_show_fixes_local:main"
+find-bugs-and-fix = "find_bugs_and_fix:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

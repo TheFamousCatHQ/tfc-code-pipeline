@@ -3,7 +3,7 @@
 Executable script to run the bug analyzer (natively, not via Docker) and interactively display suggested bug fixes.
 
 Usage:
-    poetry run run-bug-analyzer-and-show-fixes-local [--commit COMMIT] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
+    poetry run find-bugs-and-fix [--commit COMMIT] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
 
 This script runs the bug analyzer using the local Python modules, parses the output XML, and shows each bug fix suggestion
 one-by-one on the command line, pausing for user input between each.
