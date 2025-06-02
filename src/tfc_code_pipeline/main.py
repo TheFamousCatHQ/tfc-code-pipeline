@@ -121,6 +121,7 @@ def main(args: argparse.Namespace) -> int:
     run = args.run
     src = args.src
     cmd = args.cmd
+    platform = getattr(args, 'platform', None)
 
     # Define constants
     IMAGE_NAME = "tfc-code-pipeline:latest"
@@ -185,7 +186,11 @@ ENTRYPOINT ["/bin/bash"]
         # --- Build Logic --- (If build_only or first run)
         if needs_build:
             logger.info(f"Building Docker image: {IMAGE_NAME}")
-            build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME, "."]
+            build_cmd: List[str] = ["docker", "build", "-t", IMAGE_NAME]
+            if platform:
+                logger.info(f"Building for platform: {platform}")
+                build_cmd.extend(["--platform", platform])
+            build_cmd.append(".")
             result = subprocess.run(build_cmd, check=True)
             try:
                 # Always try to clean up temporary Dockerfile

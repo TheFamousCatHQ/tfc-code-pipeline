@@ -3,7 +3,7 @@
 Executable script to run the bug analyzer (natively, not via Docker) and display issues on a single line.
 
 Usage:
-    poetry run find-bugs-and-report [--commit COMMIT] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
+    poetry run find-bugs-and-report [--commit COMMIT] [--working-tree] [--branch-diff BRANCH] [--remote-diff] [--directory DIRECTORY] [--output OUTPUT_FILE]
                                     [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
 
 This script runs the bug analyzer using the local Python modules, parses the output XML, and shows each bug on a single line.
@@ -36,7 +36,7 @@ SEVERITY_LEVELS = {"high": 3, "medium": 2, "low": 1}
 CONFIDENCE_LEVELS = {"high": 3, "medium": 2, "low": 1}
 
 
-def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: str, directory: str = "/src", debug: bool = False, branch_diff: Optional[str] = None) -> int:
+def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: str, directory: str = "/src", debug: bool = False, branch_diff: Optional[str] = None, remote_diff: bool = False) -> int:
     """
     Run the bug analyzer using the local Python module and write output to the specified file.
     Show a spinner while waiting.
@@ -48,6 +48,7 @@ def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: st
         directory: Directory to analyze (default: /src)
         debug: Whether to enable debug mode
         branch_diff: Branch to compare with current branch (e.g., 'main')
+        remote_diff: Whether to analyze diff between local branch and its remote counterpart
     """
     spinner_running = True
     spinner_done = False
@@ -78,6 +79,8 @@ def run_bug_analyzer_local(commit: Optional[str], working_tree: bool, output: st
             args.append("--working-tree")
         if branch_diff:
             args.extend(["--branch-diff", branch_diff])
+        if remote_diff:
+            args.append("--remote-diff")
         if debug:
             args.append("--debug")
         processor = BugAnalyzerProcessor()
@@ -208,6 +211,11 @@ def main() -> None:
         help="Analyze diff between current branch and specified branch (e.g., 'main')"
     )
     parser.add_argument(
+        "--remote-diff",
+        action="store_true",
+        help="Analyze diff between local branch and its remote counterpart"
+    )
+    parser.add_argument(
         "--directory",
         type=str,
         default="/src",
@@ -253,7 +261,7 @@ def main() -> None:
 
     try:
         # Run the bug analyzer natively
-        ret = run_bug_analyzer_local(args.commit, args.working_tree, args.output, args.directory, debug=args.debug, branch_diff=args.branch_diff)
+        ret = run_bug_analyzer_local(args.commit, args.working_tree, args.output, args.directory, debug=args.debug, branch_diff=args.branch_diff, remote_diff=args.remote_diff)
         if ret != 0:
             print("Bug analyzer failed. Exiting.", file=sys.stderr)
             sys.exit(ret)

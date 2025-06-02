@@ -54,6 +54,9 @@ docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pi
 
 # Analyze diff between current branch and main branch
 docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest bug-analyzer --branch-diff main --output /src/bug_report.xml
+
+# Analyze diff between local branch and its remote counterpart
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest bug-analyzer --remote-diff --output /src/bug_report.xml
 ```
 
 ## Building the Docker Image
@@ -67,9 +70,12 @@ cd tfc-code-pipeline
 
 # Build the image
 docker build -t ghcr.io/thefamouscath/tfc-code-pipeline:latest .
+
+# Or build for a specific platform
+./build-docker.sh --platform linux/amd64
 ```
 
-The build process uses the `.dockerignore` file to exclude sensitive files like `.env` from the image.
+The build process uses the `.dockerignore` file to exclude sensitive files like `.env` from the image. You can use the `--platform` option to build the image for a specific platform (e.g., linux/amd64, linux/arm64).
 
 ## Publishing to DockerHub
 

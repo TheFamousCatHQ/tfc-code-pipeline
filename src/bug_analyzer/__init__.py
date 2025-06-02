@@ -2,9 +2,11 @@
 """
 Script to analyze bugs in code changes using OpenRouter.
 
-This script can operate in two modes:
+This script can operate in four modes:
 1. Commit mode: Takes the diff of a commit, plus the full source of all affected files.
 2. Working tree mode: Takes the diff between the working tree and HEAD, plus the full source of all affected files.
+3. Branch diff mode: Takes the diff between the current branch and a specified branch, plus the full source of all affected files.
+4. Remote diff mode: Takes the diff between the local branch and its remote counterpart, plus the full source of all affected files.
 
 It feeds the diff and file contents to OpenRouter and asks for a bug analysis. 
 The output is in a standardized XML format.
@@ -172,6 +174,11 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Analyze diff between current branch and specified branch (e.g., 'main')"
         )
         parser.add_argument(
+            "--remote-diff",
+            action="store_true",
+            help="Analyze diff between local branch and its remote counterpart"
+        )
+        parser.add_argument(
             "--output",
             type=str,
             default="bug_analysis_report.xml",
@@ -208,16 +215,17 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.warning(f"Error checking if directory is a git repository: {e}")
             return False
 
-    def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None) -> str:
-        """Get the diff of a commit, working tree changes, or branch diff.
+    def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None, remote_diff: bool = False) -> str:
+        """Get the diff of a commit, working tree changes, branch diff, or remote diff.
 
         Args:
-            commit_id: The ID of the commit to get the diff for (used if working_tree and branch_diff are False).
+            commit_id: The ID of the commit to get the diff for (used if working_tree, branch_diff, and remote_diff are False).
             working_tree: If True, get the diff between working tree and HEAD.
             branch_diff: If provided, get the diff between current branch and specified branch.
+            remote_diff: If True, get the diff between local branch and its remote counterpart.
 
         Returns:
-            The diff of the commit, working tree changes, or branch diff.
+            The diff of the commit, working tree changes, branch diff, or remote diff.
         """
         # Check if the current directory is a git repository
         if not self.is_git_repository():
@@ -225,7 +233,42 @@ class BugAnalyzerProcessor(CodeProcessor):
             return ""
 
         try:
-            if branch_diff:
+            if remote_diff:
+                # Get the current branch name
+                current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+                current_branch_result = subprocess.run(
+                    current_branch_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                current_branch = current_branch_result.stdout.strip()
+
+                # Get the remote tracking branch for the current branch
+                remote_branch_cmd = ["git", "rev-parse", "--abbrev-ref", f"{current_branch}@{{upstream}}"]
+                try:
+                    remote_branch_result = subprocess.run(
+                        remote_branch_cmd,
+                        check=True,
+                        text=True,
+                        capture_output=True
+                    )
+                    remote_branch = remote_branch_result.stdout.strip()
+                except subprocess.CalledProcessError:
+                    logger.error(f"No upstream branch found for {current_branch}. Please set an upstream branch with 'git push -u origin {current_branch}'.")
+                    return ""
+
+                # Get diff between local branch and remote branch
+                git_cmd = ["git", "diff", f"{remote_branch}...{current_branch}"]
+                logger.debug(f"Running git diff for remote comparison: {' '.join(git_cmd)}")
+                result = subprocess.run(
+                    git_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                logger.debug(f"git diff output (remote diff {remote_branch}...{current_branch}):\n{result.stdout}")
+            elif branch_diff:
                 # Get the current branch name
                 current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
                 current_branch_result = subprocess.run(
@@ -290,13 +333,14 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.warning(f"Error counting lines in file {file_path}: {e}")
             return 0
 
-    def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None) -> List[str]:
-        """Get the list of files affected by a commit, working tree changes, or branch diff.
+    def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None, remote_diff: bool = False) -> List[str]:
+        """Get the list of files affected by a commit, working tree changes, branch diff, or remote diff.
 
         Args:
-            commit_id: The ID of the commit to get affected files for (used if working_tree and branch_diff are False).
+            commit_id: The ID of the commit to get affected files for (used if working_tree, branch_diff, and remote_diff are False).
             working_tree: If True, get files changed in the working tree compared to HEAD.
             branch_diff: If provided, get files changed between current branch and specified branch.
+            remote_diff: If True, get files changed between local branch and its remote counterpart.
 
         Returns:
             List of affected file paths.
@@ -307,7 +351,39 @@ class BugAnalyzerProcessor(CodeProcessor):
             return []
 
         try:
-            if branch_diff:
+            if remote_diff:
+                # Get the current branch name
+                current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+                current_branch_result = subprocess.run(
+                    current_branch_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                current_branch = current_branch_result.stdout.strip()
+
+                # Get the remote tracking branch for the current branch
+                remote_branch_cmd = ["git", "rev-parse", "--abbrev-ref", f"{current_branch}@{{upstream}}"]
+                try:
+                    remote_branch_result = subprocess.run(
+                        remote_branch_cmd,
+                        check=True,
+                        text=True,
+                        capture_output=True
+                    )
+                    remote_branch = remote_branch_result.stdout.strip()
+                except subprocess.CalledProcessError:
+                    logger.error(f"No upstream branch found for {current_branch}. Please set an upstream branch with 'git push -u origin {current_branch}'.")
+                    return []
+
+                # Get files changed between local branch and remote branch
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", f"{remote_branch}...{current_branch}"],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+            elif branch_diff:
                 # Get the current branch name
                 current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
                 current_branch_result = subprocess.run(
@@ -396,6 +472,7 @@ class BugAnalyzerProcessor(CodeProcessor):
         output_file = args.output
         working_tree = args.working_tree
         branch_diff = getattr(args, 'branch_diff', None)
+        remote_diff = getattr(args, 'remote_diff', False)
         directory = getattr(args, 'directory', '/src') or '/src'
 
         # Set logger to debug level if --debug is passed
@@ -441,7 +518,9 @@ class BugAnalyzerProcessor(CodeProcessor):
             return {}
 
         # Determine the mode of operation
-        if branch_diff:
+        if remote_diff:
+            mode_desc = "diff between local branch and its remote counterpart"
+        elif branch_diff:
             mode_desc = f"diff between current branch and {branch_diff}"
         elif working_tree:
             mode_desc = "working tree changes"
@@ -453,8 +532,8 @@ class BugAnalyzerProcessor(CodeProcessor):
 
         # Get the diff
         logger.info(f"Getting diff for {mode_desc}")
-        logger.debug(f"About to gather diff for {mode_desc} (commit_id={commit_id}, working_tree={working_tree}, branch_diff={branch_diff})")
-        commit_diff = self.get_commit_diff(commit_id, working_tree, branch_diff)
+        logger.debug(f"About to gather diff for {mode_desc} (commit_id={commit_id}, working_tree={working_tree}, branch_diff={branch_diff}, remote_diff={remote_diff})")
+        commit_diff = self.get_commit_diff(commit_id, working_tree, branch_diff, remote_diff)
         logger.debug(f"Diff gathered for {mode_desc}:\n{commit_diff}")
         if not commit_diff:
             logger.error(f"Failed to get diff for {mode_desc}")
@@ -474,7 +553,7 @@ class BugAnalyzerProcessor(CodeProcessor):
 
         # Get the list of affected files
         logger.info(f"Getting affected files for {mode_desc}")
-        affected_files = self.get_affected_files(commit_id, working_tree, branch_diff)
+        affected_files = self.get_affected_files(commit_id, working_tree, branch_diff, remote_diff)
         if not affected_files:
             logger.warning(f"No affected files found for {mode_desc}")
             # Write minimal XML report with no bugs

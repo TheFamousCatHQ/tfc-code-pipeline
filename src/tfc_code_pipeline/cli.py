@@ -110,6 +110,11 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         required=True,  # Make cmd required
         help="Command (processor) to run. Available: explain_code, write_tests, find_bugs, analyze_complexity, sonar_scan, bug_analyzer, fix_bugs (run bug_analyzer, then feed XML to aider to fix bugs)."
     )
+    parser.add_argument(
+        "--platform",
+        type=str,
+        help="Platform to build the Docker image for (e.g., linux/amd64, linux/arm64)."
+    )
     # Add a group for processor-specific arguments for clarity in help message
     processor_group = parser.add_argument_group(f'{cmd} arguments' if processor else 'processor arguments')
 
