@@ -388,3 +388,34 @@ class TestMain(unittest.TestCase):
 
                 # Verify the result - should be 1 because src is not a directory
                 self.assertEqual(result, 1)
+
+    @patch('subprocess.run')
+    @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.unlink')
+    @patch('builtins.open', new_callable=unittest.mock.mock_open)
+    def test_main_generate_dockerfile(self, mock_open, mock_unlink, mock_exists, mock_run):
+        """Test the main function with generate_dockerfile=True."""
+        # Setup the mocks
+        mock_exists.return_value = False  # Pretend Dockerfile doesn't exist
+
+        # Call the main function with generate_dockerfile=True
+        args = Namespace(build_only=False, run=False, src=None, cmd=None, output=None, 
+                         skip_build=False, generate_dockerfile=True)
+        result = main(args)
+
+        # Verify the result
+        self.assertEqual(result, 0)
+
+        # Verify that a Dockerfile was created
+        mock_open.assert_called_once()
+        file_handle = mock_open()
+        file_content = file_handle.write.call_args[0][0]
+        self.assertIn("FROM python:3.12-slim", file_content)
+        self.assertIn("RUN pip install --no-cache-dir aider-chat", file_content)
+        self.assertIn("ENTRYPOINT [\"/bin/bash\"]", file_content)
+
+        # Verify that the Dockerfile was NOT removed (unlike with --build-only)
+        mock_unlink.assert_not_called()
+
+        # Verify that no Docker commands were run
+        mock_run.assert_not_called()

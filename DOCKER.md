@@ -4,10 +4,10 @@ This document provides instructions for using the TFC Code Pipeline with Docker.
 
 ## Quick Start
 
-The easiest way to use TFC Code Pipeline is with the pre-built Docker image:
+The easiest way to use TFC Code Pipeline is with the pre-built Docker image. The images on GitHub Container Registry are multi-platform and support both AMD64 (x86_64) and ARM64 architectures:
 
 ```bash
-# Pull the image
+# Pull the image (Docker will automatically select the appropriate platform for your system)
 docker pull ghcr.io/thefamouscath/tfc-code-pipeline:latest
 
 # Run a command (e.g., find-bugs)
@@ -76,6 +76,20 @@ docker build -t ghcr.io/thefamouscath/tfc-code-pipeline:latest .
 ```
 
 The build process uses the `.dockerignore` file to exclude sensitive files like `.env` from the image. You can use the `--platform` option to build the image for a specific platform (e.g., linux/amd64, linux/arm64).
+
+### Multi-Platform Builds
+
+The GitHub Actions workflow automatically builds and publishes multi-platform images (linux/amd64 and linux/arm64) to the GitHub Container Registry when changes are pushed to the main branch or when a new tag is created. This ensures that the published images work on both x86_64 and ARM-based systems like Apple Silicon Macs.
+
+If you need to build multi-platform images locally, you can use Docker Buildx:
+
+```bash
+# Set up Docker Buildx builder
+docker buildx create --use
+
+# Build and push multi-platform image
+docker buildx build --platform linux/amd64,linux/arm64 -t your-username/tfc-code-pipeline:latest --push .
+```
 
 ## Publishing to DockerHub
 

@@ -76,6 +76,18 @@ class TestCli(unittest.TestCase):
             self.assertEqual(args.src, "/path/to/src")
             self.assertEqual(args.cmd, "write_tests")
 
+    def test_parse_args_generate_dockerfile(self):
+        """Test parse_args with --generate-dockerfile flag."""
+        with patch('argparse.ArgumentParser.parse_args') as mock_parse_args:
+            mock_parse_args.return_value = Namespace(build_only=False, run=False, messages="Hello", src=None, cmd=None, generate_dockerfile=True)
+            args = parse_args(['--generate-dockerfile'])
+            self.assertFalse(args.build_only)
+            self.assertFalse(args.run)
+            self.assertEqual(args.messages, "Hello")
+            self.assertIsNone(args.src)
+            self.assertIsNone(args.cmd)
+            self.assertTrue(args.generate_dockerfile)
+
     @patch('tfc_code_pipeline.cli.parse_args')
     @patch('tfc_code_pipeline.cli.main')
     def test_cli(self, mock_main, mock_parse_args):
@@ -167,6 +179,23 @@ class TestCli(unittest.TestCase):
         """Test the cli function with run=True and cmd option."""
         # Setup mocks
         mock_parse_args.return_value = Namespace(build_only=False, run=True, src="/path/to/src", cmd="write_tests", output=None)
+        mock_main.return_value = 0
+
+        # Call the cli function
+        result = cli()
+
+        # Verify the result
+        self.assertEqual(result, 0)
+        mock_parse_args.assert_called_once()
+        # The args object should be passed directly to main
+        mock_main.assert_called_once_with(mock_parse_args.return_value)
+
+    @patch('tfc_code_pipeline.cli.parse_args')
+    @patch('tfc_code_pipeline.cli.main')
+    def test_cli_generate_dockerfile(self, mock_main, mock_parse_args):
+        """Test the cli function with --generate-dockerfile option."""
+        # Setup mocks
+        mock_parse_args.return_value = Namespace(build_only=False, run=False, src=None, cmd=None, generate_dockerfile=True, output=None)
         mock_main.return_value = 0
 
         # Call the cli function

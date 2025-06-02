@@ -23,6 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Set up Docker Buildx for multi-platform builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       # Login to GitHub Container Registry
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -45,7 +49,7 @@ jobs:
             type=sha,format=short
             latest
 
-      # Use the build-docker.sh script to create the Dockerfile and build the image
+      # Setup Python and Poetry for build script
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -56,24 +60,25 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Run build-docker script
+      # Generate Dockerfile using the Python CLI
+      - name: Generate Dockerfile
         run: |
-          chmod +x ./build-docker.sh
-          ./build-docker.sh
-
-      # Tag and push Docker image
-      - name: Tag and push Docker image
-        run: |
-          # Tag the image built by build-docker.sh with all the tags from metadata
-          for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '); do
-            echo "Tagging tfc-code-pipeline:latest as $tag"
-            docker tag tfc-code-pipeline:latest $tag
-          done
-
-          # Push all tags if not a pull request
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '); do
-              echo "Pushing $tag"
-              docker push $tag
-            done
+          poetry install
+          poetry run python -m tfc_code_pipeline.cli --generate-dockerfile
+          # Verify Dockerfile was created
+          if [ ! -f "Dockerfile" ]; then
+            echo "Error: Dockerfile was not generated"
+            exit 1
           fi
+
+      # Build and push multi-platform Docker image
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

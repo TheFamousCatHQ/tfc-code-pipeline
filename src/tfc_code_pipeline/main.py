@@ -122,6 +122,7 @@ def main(args: argparse.Namespace) -> int:
     src = args.src
     cmd = args.cmd
     platform = getattr(args, 'platform', None)
+    generate_dockerfile = getattr(args, 'generate_dockerfile', False)
 
     # Define constants
     IMAGE_NAME = "tfc-code-pipeline:latest"
@@ -158,8 +159,13 @@ ENTRYPOINT ["/bin/bash"]
     if build_only and skip_build:
         logger.error("Error: --build-only and --skip-build cannot be used together")
         return 1
+    if generate_dockerfile and (build_only or run):
+        logger.error("Error: --generate-dockerfile cannot be used with --build-only or --run")
+        return 1
 
-    if build_only:
+    if generate_dockerfile:
+        logger.info("TFC Code Pipeline - Generating Dockerfile only...")
+    elif build_only:
         logger.info(f"TFC Code Pipeline - Building Docker image: {IMAGE_NAME}...")
     elif run:
         if skip_build:
@@ -167,15 +173,25 @@ ENTRYPOINT ["/bin/bash"]
         else:
             logger.info(f"TFC Code Pipeline - Running {cmd} in Docker container...")
     else:
-        # Default action if neither --build-only nor --run is specified
+        # Default action if neither --build-only, --run, nor --generate-dockerfile is specified
         logger.error(
-            "Error: Please specify --build-only or --run (with --src and --cmd), or provide --src and --cmd to build and run. Use --skip-build with --run to skip the Docker image build.")
+            "Error: Please specify --generate-dockerfile, --build-only, or --run (with --src and --cmd), or provide --src and --cmd to build and run. Use --skip-build with --run to skip the Docker image build.")
         return 1
 
     try:
         # --- Dockerfile Creation --- (Common for build and run)
         dockerfile_path = Path("Dockerfile")
         dockerfile_already_unlinked = False  # Flag to track if we've already unlinked
+
+        # Handle --generate-dockerfile option
+        if generate_dockerfile:
+            logger.info("Creating Dockerfile...")
+            with open(dockerfile_path, "w") as f:
+                f.write(DOCKERFILE_CONTENT)
+            logger.info(f"Dockerfile created at {dockerfile_path.resolve()}")
+            dockerfile_already_unlinked = True  # Set flag to prevent deletion in finally block
+            return 0  # Success for generate-dockerfile
+
         # Skip build if skip_build flag is set, otherwise check if Dockerfile exists or build_only is set
         needs_build = (not skip_build) and (not dockerfile_path.exists() or build_only)
         if needs_build:

@@ -107,8 +107,13 @@ def parse_args(args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--cmd",
         type=str,
         choices=list(PROCESSOR_MAP.keys()),
-        required=True,  # Make cmd required
+        required=False,  # Not required if --generate-dockerfile is used
         help="Command (processor) to run. Available: explain_code, write_tests, find_bugs, analyze_complexity, sonar_scan, bug_analyzer, fix_bugs (run bug_analyzer, then feed XML to aider to fix bugs)."
+    )
+    parser.add_argument(
+        "--generate-dockerfile",
+        action="store_true",
+        help="Only generate the Dockerfile without building or running."
     )
     parser.add_argument(
         "--platform",
