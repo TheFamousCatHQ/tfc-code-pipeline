@@ -8,10 +8,10 @@ The easiest way to use TFC Code Pipeline is with the pre-built Docker image:
 
 ```bash
 # Pull the image
-docker pull yourusername/tfc-code-pipeline:latest
+docker pull ghcr.io/thefamouscath/tfc-code-pipeline:latest
 
 # Run a command (e.g., find-bugs)
-docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest find-bugs --directory /src
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest find-bugs-and-report --directory /src
 ```
 
 ## Environment Variables
@@ -20,7 +20,7 @@ The TFC Code Pipeline requires several API keys to function properly. These can 
 
 1. **Using an .env file** (recommended):
    ```bash
-   docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest [command]
+   docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest [command]
    ```
 
 2. **Passing environment variables directly**:
@@ -28,7 +28,7 @@ The TFC Code Pipeline requires several API keys to function properly. These can 
    docker run --rm -v $(pwd):/src \
      -e OPENAI_API_KEY=your_key \
      -e ANTHROPIC_API_KEY=your_key \
-     yourusername/tfc-code-pipeline:latest [command]
+     ghcr.io/thefamouscath/tfc-code-pipeline:latest [command]
    ```
 
 See `.env.example` for a list of all required environment variables.
@@ -47,9 +47,13 @@ The Docker image supports all the commands available in the TFC Code Pipeline:
 - `bug-analyzer`: Analyze bugs in code changes
 - `fix-bugs`: Fix bugs identified by bug-analyzer
 
-Example:
+Examples:
 ```bash
-docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest bug-analyzer --working-tree --output /src/bug_report.xml
+# Analyze working tree changes
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest bug-analyzer --working-tree --output /src/bug_report.xml
+
+# Analyze diff between current branch and main branch
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest bug-analyzer --branch-diff main --output /src/bug_report.xml
 ```
 
 ## Building the Docker Image
@@ -58,11 +62,11 @@ If you want to build the Docker image yourself:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/tfc-code-pipeline.git
+git clone https://github.com/ghcr.io/thefamouscath/tfc-code-pipeline.git
 cd tfc-code-pipeline
 
 # Build the image
-docker build -t yourusername/tfc-code-pipeline:latest .
+docker build -t ghcr.io/thefamouscath/tfc-code-pipeline:latest .
 ```
 
 The build process uses the `.dockerignore` file to exclude sensitive files like `.env` from the image.
@@ -93,7 +97,7 @@ The script will:
 You can also use the main CLI interface through Docker:
 
 ```bash
-docker run --rm -v $(pwd):/src --env-file .env yourusername/tfc-code-pipeline:latest tfc-code-pipeline --cmd bug_analyzer --working-tree --output /src/bug_report.xml
+docker run --rm -v $(pwd):/src --env-file .env ghcr.io/thefamouscath/tfc-code-pipeline:latest tfc-code-pipeline --cmd bug_analyzer --working-tree --output /src/bug_report.xml
 ```
 
 ## Security Notes

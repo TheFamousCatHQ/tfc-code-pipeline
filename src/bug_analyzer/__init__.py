@@ -167,6 +167,11 @@ class BugAnalyzerProcessor(CodeProcessor):
             help="Analyze diff between working tree and HEAD instead of a specific commit"
         )
         parser.add_argument(
+            "--branch-diff",
+            type=str,
+            help="Analyze diff between current branch and specified branch (e.g., 'main')"
+        )
+        parser.add_argument(
             "--output",
             type=str,
             default="bug_analysis_report.xml",
@@ -203,15 +208,16 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.warning(f"Error checking if directory is a git repository: {e}")
             return False
 
-    def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False) -> str:
-        """Get the diff of a commit or working tree changes.
+    def get_commit_diff(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None) -> str:
+        """Get the diff of a commit, working tree changes, or branch diff.
 
         Args:
-            commit_id: The ID of the commit to get the diff for (used if working_tree is False).
+            commit_id: The ID of the commit to get the diff for (used if working_tree and branch_diff are False).
             working_tree: If True, get the diff between working tree and HEAD.
+            branch_diff: If provided, get the diff between current branch and specified branch.
 
         Returns:
-            The diff of the commit or working tree changes.
+            The diff of the commit, working tree changes, or branch diff.
         """
         # Check if the current directory is a git repository
         if not self.is_git_repository():
@@ -219,7 +225,28 @@ class BugAnalyzerProcessor(CodeProcessor):
             return ""
 
         try:
-            if working_tree:
+            if branch_diff:
+                # Get the current branch name
+                current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+                current_branch_result = subprocess.run(
+                    current_branch_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                current_branch = current_branch_result.stdout.strip()
+
+                # Get diff between current branch and specified branch
+                git_cmd = ["git", "diff", f"{branch_diff}...{current_branch}"]
+                logger.debug(f"Running git diff for branch comparison: {' '.join(git_cmd)}")
+                result = subprocess.run(
+                    git_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                logger.debug(f"git diff output (branch diff {branch_diff}...{current_branch}):\n{result.stdout}")
+            elif working_tree:
                 git_cmd = ["git", "diff", "HEAD"]
                 logger.debug(f"Running git diff for working tree: {' '.join(git_cmd)}")
                 result = subprocess.run(
@@ -231,7 +258,7 @@ class BugAnalyzerProcessor(CodeProcessor):
                 logger.debug(f"git diff output (working tree):\n{result.stdout}")
             else:
                 if not commit_id:
-                    raise ValueError("commit_id must be provided when working_tree is False")
+                    raise ValueError("commit_id must be provided when working_tree and branch_diff are False")
                 git_cmd = ["git", "show", commit_id]
                 logger.debug(f"Running git show for commit: {' '.join(git_cmd)}")
                 result = subprocess.run(
@@ -263,12 +290,13 @@ class BugAnalyzerProcessor(CodeProcessor):
             logger.warning(f"Error counting lines in file {file_path}: {e}")
             return 0
 
-    def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False) -> List[str]:
-        """Get the list of files affected by a commit or working tree changes.
+    def get_affected_files(self, commit_id: Optional[str] = None, working_tree: bool = False, branch_diff: Optional[str] = None) -> List[str]:
+        """Get the list of files affected by a commit, working tree changes, or branch diff.
 
         Args:
-            commit_id: The ID of the commit to get affected files for (used if working_tree is False).
+            commit_id: The ID of the commit to get affected files for (used if working_tree and branch_diff are False).
             working_tree: If True, get files changed in the working tree compared to HEAD.
+            branch_diff: If provided, get files changed between current branch and specified branch.
 
         Returns:
             List of affected file paths.
@@ -279,7 +307,25 @@ class BugAnalyzerProcessor(CodeProcessor):
             return []
 
         try:
-            if working_tree:
+            if branch_diff:
+                # Get the current branch name
+                current_branch_cmd = ["git", "rev-parse", "--abbrev-ref", "HEAD"]
+                current_branch_result = subprocess.run(
+                    current_branch_cmd,
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+                current_branch = current_branch_result.stdout.strip()
+
+                # Get files changed between current branch and specified branch
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", f"{branch_diff}...{current_branch}"],
+                    check=True,
+                    text=True,
+                    capture_output=True
+                )
+            elif working_tree:
                 # Get files changed in the working tree compared to HEAD
                 result = subprocess.run(
                     ["git", "diff", "--name-only", "HEAD"],
@@ -289,7 +335,7 @@ class BugAnalyzerProcessor(CodeProcessor):
                 )
             else:
                 if not commit_id:
-                    raise ValueError("commit_id must be provided when working_tree is False")
+                    raise ValueError("commit_id must be provided when working_tree and branch_diff are False")
                 # Get files affected by a specific commit
                 result = subprocess.run(
                     ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
@@ -349,6 +395,7 @@ class BugAnalyzerProcessor(CodeProcessor):
         commit_id = args.commit
         output_file = args.output
         working_tree = args.working_tree
+        branch_diff = getattr(args, 'branch_diff', None)
         directory = getattr(args, 'directory', '/src') or '/src'
 
         # Set logger to debug level if --debug is passed
@@ -394,15 +441,20 @@ class BugAnalyzerProcessor(CodeProcessor):
             return {}
 
         # Determine the mode of operation
-        mode_desc = "working tree changes" if working_tree else f"commit {commit_id}"
+        if branch_diff:
+            mode_desc = f"diff between current branch and {branch_diff}"
+        elif working_tree:
+            mode_desc = "working tree changes"
+        else:
+            mode_desc = f"commit {commit_id}"
 
         # Create timestamp for the report
         timestamp = datetime.now().isoformat()
 
         # Get the diff
         logger.info(f"Getting diff for {mode_desc}")
-        logger.debug(f"About to gather diff for {mode_desc} (commit_id={commit_id}, working_tree={working_tree})")
-        commit_diff = self.get_commit_diff(commit_id, working_tree)
+        logger.debug(f"About to gather diff for {mode_desc} (commit_id={commit_id}, working_tree={working_tree}, branch_diff={branch_diff})")
+        commit_diff = self.get_commit_diff(commit_id, working_tree, branch_diff)
         logger.debug(f"Diff gathered for {mode_desc}:\n{commit_diff}")
         if not commit_diff:
             logger.error(f"Failed to get diff for {mode_desc}")
@@ -422,7 +474,7 @@ class BugAnalyzerProcessor(CodeProcessor):
 
         # Get the list of affected files
         logger.info(f"Getting affected files for {mode_desc}")
-        affected_files = self.get_affected_files(commit_id, working_tree)
+        affected_files = self.get_affected_files(commit_id, working_tree, branch_diff)
         if not affected_files:
             logger.warning(f"No affected files found for {mode_desc}")
             # Write minimal XML report with no bugs

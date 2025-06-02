@@ -192,21 +192,23 @@ docker run -it -v .:/src --entrypoint sonar-analyze ghcr.io/thefamouscathq/tfc-c
 
 ### Bug Analyzer
 
-The `bug-analyzer` tool analyzes code changes to identify potential bugs. It can operate in two modes:
+The `bug-analyzer` tool analyzes code changes to identify potential bugs. It can operate in three modes:
 
 1. **Commit mode**: Analyzes the diff of a specific commit
 2. **Working tree mode**: Analyzes the diff between the working tree and HEAD
+3. **Branch diff mode**: Analyzes the diff between the current branch and a specified branch
 
 #### Usage
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--output /src/OUTPUT_FILE]
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint bug-analyzer ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--branch-diff BRANCH] [--output /src/OUTPUT_FILE]
 ```
 
 #### Options
 
-- `--commit`: Commit ID to analyze (default: HEAD, used only if --working-tree is not specified)
+- `--commit`: Commit ID to analyze (default: HEAD, used only if --working-tree and --branch-diff are not specified)
 - `--working-tree`: Analyze diff between working tree and HEAD instead of a specific commit
+- `--branch-diff`: Analyze diff between current branch and specified branch (e.g., 'main')
 - `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 
 ### Fix Bugs
@@ -235,20 +237,21 @@ The `find-bugs-and-fix` tool combines bug analysis and fixing in an interactive 
 #### Usage with Docker
 
 ```bash
-docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--directory /src] [--output /src/bug_analysis_report.xml]
+docker run -it -e OPENAI_API_KEY -v .:/src --entrypoint find-bugs-and-fix ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--branch-diff BRANCH] [--directory /src] [--output /src/bug_analysis_report.xml]
 ```
 
 #### Usage with Poetry
 
 ```bash
 # Run from the project root directory
-poetry run find-bugs-and-fix [--commit COMMIT_ID] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE]
+poetry run find-bugs-and-fix [--commit COMMIT_ID] [--working-tree] [--branch-diff BRANCH] [--directory DIRECTORY] [--output OUTPUT_FILE]
 ```
 
 #### Options
 
 - `--commit`: Commit ID to analyze (default: HEAD)
 - `--working-tree`: Analyze diff between working tree and HEAD instead of a specific commit
+- `--branch-diff`: Analyze diff between current branch and specified branch (e.g., 'main')
 - `--directory`: Directory to analyze (default: /src)
 - `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 - `--debug`: Enable debug mode with additional output
@@ -269,20 +272,21 @@ The `find-bugs-and-report` tool runs the bug analyzer and displays each issue on
 #### Usage with Docker
 
 ```bash
-docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-report ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--directory /src] [--output /src/bug_analysis_report.xml] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
+docker run -it -e OPENROUTER_API_KEY -v .:/src --entrypoint find-bugs-and-report ghcr.io/thefamouscathq/tfc-code-pipeline [--commit COMMIT_ID] [--working-tree] [--branch-diff BRANCH] [--directory /src] [--output /src/bug_analysis_report.xml] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
 ```
 
 #### Usage with Poetry
 
 ```bash
 # Run from the project root directory
-poetry run find-bugs-and-report [--commit COMMIT_ID] [--working-tree] [--directory DIRECTORY] [--output OUTPUT_FILE] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
+poetry run find-bugs-and-report [--commit COMMIT_ID] [--working-tree] [--branch-diff BRANCH] [--directory DIRECTORY] [--output OUTPUT_FILE] [--severity-threshold {high,medium,low}] [--confidence-threshold {high,medium,low}]
 ```
 
 #### Options
 
 - `--commit`: Commit ID to analyze (default: HEAD)
 - `--working-tree`: Analyze diff between working tree and HEAD instead of a specific commit
+- `--branch-diff`: Analyze diff between current branch and specified branch (e.g., 'main')
 - `--directory`: Directory to analyze (default: /src)
 - `--output`: Output file path for the bug analysis report (default: bug_analysis_report.xml)
 - `--severity-threshold`: Severity threshold at or above which to break the build (default: high)
